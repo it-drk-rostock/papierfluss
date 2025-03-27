@@ -1,15 +1,14 @@
 "use client";
-import { Box, Container } from "@mantine/core";
+import { Box, Center, Container } from "@mantine/core";
 import React from "react";
+import { Navbar } from "./navbar";
 
 export const BaseLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <Box h="100%" mih="100vh">
       <Container fluid p="md">
-        <Box bg="red" w="100%">
-          Navbar
-        </Box>
-        {children}
+        <Navbar />
+        <Center> {children}</Center>
       </Container>
     </Box>
   );
