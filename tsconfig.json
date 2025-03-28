@@ -22,9 +22,10 @@
       "@/*": ["./*"],
       "@lib/*": ["./lib/*"],
       "@components/*": ["./components/*"],
-      "@utils/*": ["./utils/*"]
+      "@utils/*": ["./utils/*"],
+      "@server/*": ["./server/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/(app)/forbidden.tsx"],
   "exclude": ["node_modules"]
 }
