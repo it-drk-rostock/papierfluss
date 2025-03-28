@@ -1,6 +1,7 @@
 "use client";
 import { authClient } from "@lib/auth-client";
 import { Paper, Stack, Title, Text, Button } from "@mantine/core";
+import { showNotification } from "@utils/notification";
 import React, { useTransition } from "react";
 
 export const SignInForm = () => {
@@ -9,8 +10,14 @@ export const SignInForm = () => {
     startTransition(async () => {
       const data = await authClient.signIn.social({
         provider: "microsoft",
-        callbackURL: "/dashboard", //the url to redirect to after the sign in
+        callbackURL: "/dashboard",
       });
+      if (data.error) {
+        showNotification(
+          data.error.message ?? "Fehler versuchen Sie es später erneut",
+          "error"
+        );
+      }
     });
   };
 

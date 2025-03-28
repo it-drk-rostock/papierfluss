@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
 import {
   ColorSchemeScript,
   MantineProvider,
   mantineHtmlProps,
 } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
+import { ModalsProvider } from "@mantine/modals";
+import "dayjs/locale/de";
+import { DatesProvider } from "@mantine/dates";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { theme } from "@lib/theme";
@@ -35,7 +40,17 @@ export default function RootLayout({
         <ColorSchemeScript />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <MantineProvider theme={theme}>{children}</MantineProvider>
+        <MantineProvider theme={theme}>
+          <Notifications />
+          <DatesProvider
+            settings={{
+              locale: "de",
+              timezone: "Europe/Berlin",
+            }}
+          >
+            <ModalsProvider>{children}</ModalsProvider>
+          </DatesProvider>
+        </MantineProvider>
       </body>
     </html>
   );
