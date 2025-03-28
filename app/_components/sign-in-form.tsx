@@ -1,6 +1,7 @@
 "use client";
 import { authClient } from "@lib/auth-client";
 import { Paper, Stack, Title, Text, Button } from "@mantine/core";
+import { showNotification } from "@utils/notification";
 import React, { useTransition } from "react";
 
 export const SignInForm = () => {
@@ -11,6 +12,9 @@ export const SignInForm = () => {
         provider: "microsoft",
         callbackURL: "/dashboard", //the url to redirect to after the sign in
       });
+      if (data.error) {
+        showNotification(data.error.message, "error");
+      }
     });
   };
 
