@@ -14,6 +14,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { theme } from "@lib/theme";
 
+import { Providers } from "@lib/providers";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -48,7 +50,9 @@ export default function RootLayout({
               timezone: "Europe/Berlin",
             }}
           >
-            <ModalsProvider>{children}</ModalsProvider>
+            <ModalsProvider>
+              <Providers>{children}</Providers>
+            </ModalsProvider>
           </DatesProvider>
         </MantineProvider>
       </body>

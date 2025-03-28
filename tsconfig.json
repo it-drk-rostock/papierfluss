@@ -26,6 +26,13 @@
       "@server/*": ["./server/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/(app)/forbidden.tsx"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "app/(app)/forbidden.tsx",
+    "app/(app)/admin/users/_components/users.tsx"
+  ],
   "exclude": ["node_modules"]
 }
