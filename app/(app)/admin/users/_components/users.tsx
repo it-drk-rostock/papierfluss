@@ -1,17 +1,23 @@
 import React from "react";
-import { adminQuery } from "@server/utils/admin-query";
 import { Stack, Title } from "@mantine/core";
 import { UserList } from "./user-list";
 import { QuickSearch } from "@/components/quick-search";
+import { getUsers } from "../_actions";
+import { UserSearchParams } from "../_actions";
 
-export const Users = async () => {
-  await adminQuery();
+export const Users = async ({
+  params,
+}: {
+  params: Promise<UserSearchParams>;
+}) => {
+  const searchParams = await params;
+  const users = await getUsers(searchParams.name);
 
   return (
     <Stack align="center" gap="xl">
       <Title order={2}>Benutzer</Title>
       <QuickSearch param="name" />
-      <UserList />
+      <UserList users={users.users} />
     </Stack>
   );
 };
