@@ -1,10 +1,11 @@
 "use client";
 import { Group, Image, Text, Stack } from "@mantine/core";
+import Link from "next/link";
 import React from "react";
 
 export const Branding = () => {
   return (
-    <Group gap="sm">
+    <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
       <Image
         src={process.env.NEXT_PUBLIC_LOGO_URL}
         alt="logo"
@@ -21,6 +22,6 @@ export const Branding = () => {
           {process.env.NEXT_PUBLIC_APP_NAME}
         </Text>
       </Stack>
-    </Group>
+    </Link>
   );
 };
