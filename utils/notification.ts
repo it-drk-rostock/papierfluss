@@ -6,20 +6,20 @@ const notificationConfig = {
   error: {
     color: "red",
     Icon: IconX,
-    title: "Error",
+    title: "Fehler",
     autoClose: 5000,
   },
   success: {
     color: "green",
     Icon: IconCheck,
-    title: "Success",
+    title: "Erfolgreich",
     autoClose: 5000,
   },
   info: {
     color: "yellow",
     Icon: undefined,
-    title: "Info",
-    autoClose: false,
+    title: "Aktion wird ausgeführt",
+    autoClose: 30000,
   },
 } as const;
 
@@ -33,6 +33,7 @@ export const showNotification = (
   notifications.show({
     withBorder: true,
     id,
+
     position: "top-right",
     withCloseButton: true,
     loading: type === "info",
@@ -40,6 +41,7 @@ export const showNotification = (
     title: config.title,
     message,
     color: config.color,
+
     icon: config.Icon ? createElement(config.Icon) : undefined,
   });
 };
