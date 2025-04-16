@@ -50,7 +50,7 @@ export const MemberList = ({ members, actions }: MemberListProps) => {
               <Group justify="space-between" w="100%">
                 <Text>{member.name}</Text>
                 <Group gap="xs">
-                  <ViewActionIcon href={`/users/${member.id}`} />
+                  <ViewActionIcon href={`/admin/users/${member.id}`} />
                   {actions?.(member)}
                 </Group>
               </Group>
