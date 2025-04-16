@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Title } from "@mantine/core";
-import { Users } from "./_components/users";
+import { Teams } from "./_components/teams";
 import { teamSearchParamsLoader } from "./_searchParams";
 import { TeamSearchParams } from "./_actions";
 
@@ -15,7 +15,7 @@ export default function Page({
     <>
       <Title order={1}>Teams</Title>
       <Suspense fallback={<div>Loading...</div>}>
-        <Users params={Promise.resolve(paramsPromise)} />
+        <Teams params={Promise.resolve(paramsPromise)} />
       </Suspense>
     </>
   );

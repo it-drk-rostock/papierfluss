@@ -4,7 +4,6 @@ import { DrawerMenuItem } from "@/components/drawer-menu-item";
 import { MenuItemLink } from "@/components/link-menu-item";
 import {
   Card,
-  Avatar,
   Title,
   Text,
   Divider,
@@ -12,47 +11,39 @@ import {
   Button,
   Group,
   Stack,
-  Select,
   TextInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
-import { type UserWithRole } from "better-auth/plugins/admin";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { editUserSchema } from "../_schemas";
+import { updateTeamSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
-import { deleteUser, editUser } from "../_actions";
-import { userRoles } from "../_constants";
-
+import { deleteTeam, TeamProps, updateTeam } from "../_actions";
 import { ButtonAction } from "@/components/button-action";
 import { ModalMenuItem } from "@/components/modal-menu-item";
-export const UserCard = ({ user }: { user: UserWithRole }) => {
+
+export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
 
   const form = useForm({
-    validate: zodResolver(editUserSchema),
+    validate: zodResolver(updateTeamSchema),
     mode: "uncontrolled",
     initialValues: {
-      role: user.role,
-      name: user.name,
-      userId: user.id,
+      id: team.id,
+      name: team.name,
     },
   });
 
   const { execute, status } = useEnhancedAction({
-    action: editUser,
+    action: updateTeam,
     hideModals: true,
   });
 
   return (
-    <Card key={user.id} padding="lg" withBorder w={300}>
-      <Avatar color="red" radius="sm" size="xl">
-        MP
-      </Avatar>
-      <Title order={2}>{user.name}</Title>
-      <Text c="dimmed">{user.email}</Text>
-      <Text c="dimmed">{user.role}</Text>
+    <Card key={team.id} padding="lg" withBorder w={300}>
+      <Title order={2}>{team.name}</Title>
+      <Text c="dimmed">Mitglieder: {team.users.length} </Text>
       <Card.Section>
         <Divider my="lg" />
       </Card.Section>
@@ -69,15 +60,13 @@ export const UserCard = ({ user }: { user: UserWithRole }) => {
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          <MenuItemLink href={`/admin/users/${user.id}`}>
-            Zum Nutzer
-          </MenuItemLink>
+          <MenuItemLink href={`/admin/teams/${team.id}`}>Zum Team</MenuItemLink>
           <DrawerMenuItem
             leftSection={<IconEdit size={14} />}
             drawers={[
               {
-                id: "update-user",
-                title: "Benutzer bearbeiten",
+                id: "update-team",
+                title: "Team bearbeiten",
                 children: (stack) => (
                   <Stack gap="sm">
                     <form
@@ -91,12 +80,7 @@ export const UserCard = ({ user }: { user: UserWithRole }) => {
                           key={form.key("name")}
                           {...form.getInputProps("name")}
                         />
-                        <Select
-                          label="App Berechtigung"
-                          data={userRoles}
-                          key={form.key("role")}
-                          {...form.getInputProps("role")}
-                        />
+
                         <Group mt="lg" justify="flex-end">
                           <Button onClick={stack.closeAll} variant="outline">
                             Abbrechen
@@ -115,19 +99,19 @@ export const UserCard = ({ user }: { user: UserWithRole }) => {
                 ),
               },
             ]}
-            initialDrawerId="update-user"
+            initialDrawerId="update-team"
           >
             Bearbeiten
           </DrawerMenuItem>
           <ModalMenuItem
             leftSection={<IconTrash size={14} />}
             color="red"
-            title="Benutzer löschen"
+            title="Team löschen"
             content={
               <ButtonAction
                 fullWidth
-                action={deleteUser}
-                values={{ userId: user.id }}
+                action={deleteTeam}
+                values={{ id: team.id }}
               >
                 Löschen
               </ButtonAction>

@@ -1,14 +1,16 @@
 "use server";
 
-import { actionClient } from "@/server/utils/action-clients";
+import { actionClient, adminActionClient } from "@/server/utils/action-clients";
 import { revalidatePath } from "next/cache";
-import { editUserSchema } from "./_schemas";
+import { createTeamSchema, editUserSchema, updateTeamSchema } from "./_schemas";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { unstable_cacheTag as cacheTag } from "next/cache";
 import { adminQuery } from "@/server/utils/admin-query";
 import { z } from "zod";
+import { idSchema } from "@/schemas/id-schema";
+import { formatError } from "@/utils/format-error";
 
 /**
  * Accepts the privacy policy and updates or creates a user record in the database.
@@ -26,55 +28,104 @@ import { z } from "zod";
  *
  * @throws {Error} If user is not authenticated or if any database operation fails
  */
-export const editUser = actionClient
-  .schema(editUserSchema)
+
+export const createTeam = adminActionClient
+  .schema(createTeamSchema)
+  .metadata({
+    event: "createTeamAction",
+  })
   .stateAction(async ({ parsedInput }) => {
-    const { userId, name, role } = parsedInput;
+    const { name } = parsedInput;
     try {
-      await prisma.user.update({
-        where: {
-          id: userId,
-        },
+      await prisma.team.create({
         data: {
-          role,
           name,
         },
       });
     } catch (error) {
-      throw new Error(`Fehler beim Bearbeiten des Benutzers: ${error}`);
+      throw formatError(error);
     }
 
-    revalidatePath("/admin/users");
+    revalidatePath("/admin/teams");
     return {
-      message: "Benutzer erfolgreich bearbeitet",
+      message: "Team erstellt",
     };
   });
 
-export const deleteUser = actionClient
-  .schema(z.object({ userId: z.string() }))
+export const updateTeam = adminActionClient
+  .schema(updateTeamSchema)
+  .metadata({
+    event: "updateTeamAction",
+  })
   .stateAction(async ({ parsedInput }) => {
-    const { userId } = parsedInput;
+    const { id, name } = parsedInput;
     try {
-      await auth.api.removeUser({
-        headers: await headers(),
-        body: {
-          userId,
+      await prisma.team.update({
+        where: {
+          id,
+        },
+        data: {
+          name,
         },
       });
-
-      
-
-      revalidatePath("/admin/users");
     } catch (error) {
-      throw new Error(`Fehler beim Bearbeiten des Benutzers: ${error}`);
+      throw formatError(error);
     }
+
+    revalidatePath("/admin/teams");
+    return {
+      message: "Team aktualisiert",
+    };
   });
 
-export const getTeams = async () => {
+export const deleteTeam = adminActionClient
+  .schema(idSchema)
+  .metadata({
+    event: "deleteTeamAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { id } = parsedInput;
+    try {
+      await prisma.team.delete({
+        where: {
+          id,
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath("/admin/teams");
+    return {
+      message: "Team gelöscht",
+    };
+  });
+
+export type TeamSearchParams = {
+  name: string;
+};
+
+export const getTeams = async (name?: string) => {
   await adminQuery();
-  const teams = await auth.api.listOrganizationTeams({
-    headers: await headers(),
+  const teams = await prisma.team.findMany({
+    where: {
+      ...(name && {
+        name: { contains: name, mode: "insensitive" },
+      }),
+    },
+    select: {
+      id: true,
+      name: true,
+      users: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
   });
 
   return teams;
 };
+
+export type TeamProps = Awaited<ReturnType<typeof getTeams>>;
