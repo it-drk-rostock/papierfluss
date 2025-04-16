@@ -18,12 +18,21 @@ import { formatError } from "@/utils/format-error";
  *
  * @throws {Error} If user is not authenticated or if any database operation fails
  */
-export const updateUser = actionClient
+export const updateUser = adminActionClient
   .schema(updateUserSchema)
-  .stateAction(async ({ parsedInput }) => {
+  .metadata({
+    event: "updateUserAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
     const { userId, name, role } = parsedInput;
 
     try {
+      if (userId === ctx.session.user.id && role === "user") {
+        throw formatError(
+          "Sie können sich nicht selbst zu einem Benutzer degradieren"
+        );
+      }
+
       await prisma.user.update({
         where: {
           id: userId,
@@ -39,7 +48,7 @@ export const updateUser = actionClient
 
     revalidatePath("/admin/users");
     return {
-      message: "Benutzer erfolgreich bearbeitet",
+      message: "Benutzer aktualisiert",
     };
   });
 
@@ -67,11 +76,13 @@ export const deleteUser = adminActionClient
           id: userId,
         },
       });
-
-      revalidatePath("/admin/users");
     } catch (error) {
       throw formatError(error);
     }
+    revalidatePath("/admin/users");
+    return {
+      message: "Benutzer gelöscht",
+    };
   });
 
 export type UserSearchParams = {
