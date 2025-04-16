@@ -14,14 +14,16 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconTrash, IconUsersGroup } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { updateTeamSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
-import { deleteTeam, TeamProps, updateTeam } from "../_actions";
+import { deleteTeam, removeMember, TeamProps, updateTeam } from "../_actions";
 import { ButtonAction } from "@/components/button-action";
 import { ModalMenuItem } from "@/components/modal-menu-item";
+import { MemberList } from "@/components/member-list";
+import { ModalButton } from "@/components/modal-button";
 
 export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
@@ -39,6 +41,12 @@ export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
     action: updateTeam,
     hideModals: true,
   });
+
+  const { execute: executeRemoveMember, status: statusRemoveMember } =
+    useEnhancedAction({
+      action: removeMember,
+      hideModals: true,
+    });
 
   return (
     <Card key={team.id} padding="lg" withBorder w={300}>
@@ -102,6 +110,43 @@ export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
             initialDrawerId="update-team"
           >
             Bearbeiten
+          </DrawerMenuItem>
+          <DrawerMenuItem
+            leftSection={<IconUsersGroup size={14} />}
+            drawers={[
+              {
+                id: "update-members",
+                title: "Mitglieder bearbeiten",
+                children: (stack) => (
+                  <Stack gap="sm">
+                    <Title order={2}>Mitglieder</Title>
+
+                    <MemberList
+                      members={team.users}
+                      actions={(member) => (
+                        <ModalButton
+                          title="Mitglied entfernen"
+                          content={
+                            <ButtonAction
+                              fullWidth
+                              action={removeMember}
+                              values={{ id: team.id, userId: member.id }}
+                            >
+                              Entfernen
+                            </ButtonAction>
+                          }
+                        >
+                          Entfernen
+                        </ModalButton>
+                      )}
+                    />
+                  </Stack>
+                ),
+              },
+            ]}
+            initialDrawerId="update-members"
+          >
+            Mitglieder bearbeiten
           </DrawerMenuItem>
           <ModalMenuItem
             leftSection={<IconTrash size={14} />}

@@ -26,6 +26,7 @@ export const ModalButton = ({
           size: modalSize,
           title: title,
           children: <>{content}</>,
+          zIndex: 1000,
         });
       }}
     >

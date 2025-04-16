@@ -15,3 +15,10 @@ export const updateTeamSchema = z
     }),
   })
   .extend(idSchema.shape);
+
+
+  export const removeMemberSchema = z
+    .object({
+      userId: z.string().min(1),
+    })
+    .extend(idSchema.shape);

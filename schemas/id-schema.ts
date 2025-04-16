@@ -1,5 +1,7 @@
 import { z } from "zod";
 
 export const idSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
+
+

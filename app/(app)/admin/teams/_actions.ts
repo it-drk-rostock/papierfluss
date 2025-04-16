@@ -2,7 +2,12 @@
 
 import { actionClient, adminActionClient } from "@/server/utils/action-clients";
 import { revalidatePath } from "next/cache";
-import { createTeamSchema, editUserSchema, updateTeamSchema } from "./_schemas";
+import {
+  createTeamSchema,
+  editUserSchema,
+  removeMemberSchema,
+  updateTeamSchema,
+} from "./_schemas";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -11,6 +16,7 @@ import { adminQuery } from "@/server/utils/admin-query";
 import { z } from "zod";
 import { idSchema } from "@/schemas/id-schema";
 import { formatError } from "@/utils/format-error";
+import { after } from "next/server";
 
 /**
  * Accepts the privacy policy and updates or creates a user record in the database.
@@ -98,6 +104,37 @@ export const deleteTeam = adminActionClient
     revalidatePath("/admin/teams");
     return {
       message: "Team gelöscht",
+    };
+  });
+
+export const removeMember = adminActionClient
+  .schema(removeMemberSchema)
+  .metadata({
+    event: "removeMemberAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { id, userId } = parsedInput;
+    try {
+      await prisma.team.update({
+        where: {
+          id,
+        },
+        data: {
+          users: {
+            disconnect: {
+              id: userId,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath("/admin/teams");
+
+    return {
+      message: "Mitglied entfernt",
     };
   });
 
