@@ -1,35 +1,28 @@
 "use server";
 
-import { actionClient } from "@/server/utils/action-clients";
+import { actionClient, adminActionClient } from "@/server/utils/action-clients";
 import { revalidatePath } from "next/cache";
-import { editUserSchema } from "./_schemas";
+import { updateUserSchema } from "./_schemas";
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { unstable_cacheTag as cacheTag } from "next/cache";
 import { adminQuery } from "@/server/utils/admin-query";
 import { z } from "zod";
+import { formatError } from "@/utils/format-error";
 
 /**
- * Accepts the privacy policy and updates or creates a user record in the database.
+ * Updates a user's role and name in the database.
  *
  * The function:
- * 1. Authenticates the user using Clerk authentication.
- * 2. Applies rate limiting to prevent abuse.
- * 3. Retrieves the current user information from Clerk.
- * 4. If user exists in database:
- *    - Updates their privacy policy acceptance status
- * 5. If user doesn't exist:
- *    - Creates a new user record with basic information and privacy policy status
- * 6. Revalidates the user cache tag to ensure data consistency.
- * 7. Redirects to the personal details page upon completion.
+ * 1. Updates the user's role and name in the database.
+ * 2. Revalidates the user cache tag to ensure data consistency.
+ * 3. Redirects to the personal details page upon completion.
  *
  * @throws {Error} If user is not authenticated or if any database operation fails
  */
-export const editUser = actionClient
-  .schema(editUserSchema)
+export const updateUser = actionClient
+  .schema(updateUserSchema)
   .stateAction(async ({ parsedInput }) => {
     const { userId, name, role } = parsedInput;
+
     try {
       await prisma.user.update({
         where: {
@@ -41,7 +34,7 @@ export const editUser = actionClient
         },
       });
     } catch (error) {
-      throw new Error(`Fehler beim Bearbeiten des Benutzers: ${error}`);
+      throw formatError(error);
     }
 
     revalidatePath("/admin/users");
@@ -50,21 +43,34 @@ export const editUser = actionClient
     };
   });
 
-export const deleteUser = actionClient
+/**
+ * Deletes a user from the database
+ * @param {Object} options.parsedInput - The validated input data
+ * @param {string} options.parsedInput.userId - The ID of the user to delete
+ * @returns {Promise<void>}
+ * @throws {Error} If the delete operation fails
+ */
+export const deleteUser = adminActionClient
   .schema(z.object({ userId: z.string() }))
-  .stateAction(async ({ parsedInput }) => {
+  .metadata({
+    event: "deleteUserAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
     const { userId } = parsedInput;
     try {
-      await auth.api.removeUser({
-        headers: await headers(),
-        body: {
-          userId,
+      if (userId === ctx.session.user.id) {
+        throw formatError("Sie können sich nicht selbst löschen");
+      }
+
+      await prisma.user.delete({
+        where: {
+          id: userId,
         },
       });
 
       revalidatePath("/admin/users");
     } catch (error) {
-      throw new Error(`Fehler beim Bearbeiten des Benutzers: ${error}`);
+      throw formatError(error);
     }
   });
 
@@ -72,17 +78,24 @@ export type UserSearchParams = {
   name: string;
 };
 
+/**
+ * Retrieves users from the database with optional name filtering
+ * @param {string} [name] - Optional name filter for searching users
+ * @returns {Promise<User[]>} Array of user objects matching the search criteria
+ * @throws {Error} If the query fails or if the user is not authorized
+ */
 export const getUsers = async (name?: string) => {
   await adminQuery();
-  const users = await auth.api.listUsers({
-    headers: await headers(),
-    query: {
-      limit: 100,
-      searchField: "name",
-      searchOperator: "contains",
-      searchValue: name ?? undefined,
+
+  const users = await prisma.user.findMany({
+    where: {
+      ...(name && {
+        name: { contains: name, mode: "insensitive" },
+      }),
     },
   });
 
   return users;
 };
+
+export type UserProps = Awaited<ReturnType<typeof getUsers>>;

@@ -20,18 +20,18 @@ import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { type UserWithRole } from "better-auth/plugins/admin";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { updateUserSchema } from "../_schemas";
+import { editUserSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
-import { deleteUser, updateUser } from "../_actions";
+import { deleteUser, editUser } from "../_actions";
 import { userRoles } from "../_constants";
+
 import { ButtonAction } from "@/components/button-action";
 import { ModalMenuItem } from "@/components/modal-menu-item";
-
 export const UserCard = ({ user }: { user: UserWithRole }) => {
   const [opened, handlers] = useDisclosure(false);
 
   const form = useForm({
-    validate: zodResolver(updateUserSchema),
+    validate: zodResolver(editUserSchema),
     mode: "uncontrolled",
     initialValues: {
       role: user.role,
@@ -41,7 +41,7 @@ export const UserCard = ({ user }: { user: UserWithRole }) => {
   });
 
   const { execute, status } = useEnhancedAction({
-    action: updateUser,
+    action: editUser,
     hideModals: true,
   });
 

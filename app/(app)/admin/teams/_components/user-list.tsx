@@ -3,9 +3,10 @@
 import React from "react";
 import { Group } from "@mantine/core";
 import { UserCard } from "./user-card";
-import { UserProps } from "../_actions";
+import { UserWithRole } from "better-auth/plugins";
 
-export const UserList = ({ users }: { users: UserProps }) => {
+export const UserList = ({ users }: { users: UserWithRole[] }) => {
+  
   return (
     <>
       <Group justify="center" gap="xl">

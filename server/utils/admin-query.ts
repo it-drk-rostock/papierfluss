@@ -1,13 +1,13 @@
-"use server"
+"use server";
 import { getSession } from "./get-session";
 import { forbidden } from "next/navigation";
-
-export const adminQuery = async () => {
+import { cache } from "react";
+export const adminQuery = cache(async () => {
   const session = await getSession();
 
-  if (session?.user.role !== "admin") {
+  if (!session || session.user.role !== "admin") {
     forbidden();
   }
 
   return session;
-};
+});

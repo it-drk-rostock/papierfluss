@@ -43,7 +43,6 @@ export const useEnhancedAction = ({
         notifications.hide(executeNotification);
 
         if (data) {
-          console.
           showNotification(data.data?.message as string, "success", uuidv4());
         }
       }

@@ -17,7 +17,7 @@ export const Users = async ({
     <Stack align="center" gap="xl">
       <Title order={2}>Benutzer</Title>
       <QuickSearch param="name" />
-      <UserList users={users} />
+      <UserList users={users.users} />
     </Stack>
   );
 };
