@@ -1,0 +1,39 @@
+model Formular {
+    id          String   @id @default(cuid())
+    title       String
+    description String?
+    schema      Json // This will store the SurveyJS JSON schema
+    isPublic    Boolean  @default(false)
+    isActive    Boolean  @default(true)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Relations
+    createdBy   User?                @relation("FormularCreator", fields: [createdById], references: [id])
+    createdById String?
+    teams       Team[]
+    submissions FormularSubmission[]
+
+    @@index([createdById])
+}
+
+model FormularSubmission {
+    id            String           @id @default(cuid())
+    data          Json
+    status        SubmissionStatus @default(open)
+    createdAt     DateTime         @default(now())
+    updatedAt     DateTime         @updatedAt
+    formular      Formular         @relation(fields: [formularId], references: [id])
+    formularId    String
+    submittedBy   User?            @relation(fields: [submittedById], references: [id])
+    submittedById String?
+
+    @@index([formularId])
+    @@index([submittedById])
+}
+
+enum SubmissionStatus {
+    open
+    ongoing
+    completed
+}

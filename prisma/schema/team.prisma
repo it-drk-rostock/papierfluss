@@ -4,7 +4,8 @@ model Team {
     updatedAt DateTime @updatedAt
     name      String
 
-    users User[]
+    users     User[]
+    formulars Formular[]
 
     @@unique([name])
 }

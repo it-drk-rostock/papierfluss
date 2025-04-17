@@ -1,15 +1,17 @@
 model User {
-    id            String    @id
-    name          String
-    email         String
-    emailVerified Boolean
-    image         String?
-    role          UserRole  @default(user)
-    createdAt     DateTime  @default(now())
-    updatedAt     DateTime  @updatedAt
-    sessions      Session[]
-    accounts      Account[]
-    teams         Team[]
+    id                  String               @id
+    name                String
+    email               String
+    emailVerified       Boolean
+    image               String?
+    role                UserRole             @default(user)
+    createdAt           DateTime             @default(now())
+    updatedAt           DateTime             @updatedAt
+    sessions            Session[]
+    accounts            Account[]
+    teams               Team[]
+    createdFormulars    Formular[]           @relation("FormularCreator")
+    formularSubmissions FormularSubmission[]
 
     @@unique([email])
     @@map("user")
@@ -17,6 +19,7 @@ model User {
 
 enum UserRole {
     admin
+    moderator
     user
 }
 
