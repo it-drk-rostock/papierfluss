@@ -14,7 +14,7 @@ export const ViewActionIcon = ({ href }: { href: string }) => {
       loading={isPending}
       component={Link}
       href={href}
-      variant="subtle"
+      variant="light"
       onClick={() => startTransition(() => router.push(href))}
     >
       <IconEye style={baseIconStyles} stroke={1.5} />
