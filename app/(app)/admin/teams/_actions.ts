@@ -3,6 +3,7 @@
 import { actionClient, adminActionClient } from "@/server/utils/action-clients";
 import { revalidatePath } from "next/cache";
 import {
+  assignUsersSchema,
   createTeamSchema,
   editUserSchema,
   removeMemberSchema,
@@ -138,6 +139,35 @@ export const removeMember = adminActionClient
     };
   });
 
+export const assignUsers = adminActionClient
+  .schema(assignUsersSchema)
+  .metadata({
+    event: "assignUsersAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { users, id } = parsedInput;
+    try {
+      await prisma.team.update({
+        where: {
+          id,
+        },
+        data: {
+          users: {
+            connect: users.map((user) => ({ id: user.id })),
+          },
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath("/admin/teams");
+
+    return {
+      message: "Mitglieder hinzugefügt",
+    };
+  });
+
 export type TeamSearchParams = {
   name: string;
 };
@@ -166,3 +196,26 @@ export const getTeams = async (name?: string) => {
 };
 
 export type TeamProps = Awaited<ReturnType<typeof getTeams>>;
+
+export type AvailableUsersParams = {
+  teamId: string;
+};
+
+export const getAvailableUsers = async ({ teamId }: AvailableUsersParams) => {
+  await adminQuery();
+  const users = await prisma.user.findMany({
+    where: {
+      teams: {
+        none: {
+          id: teamId,
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return users;
+};

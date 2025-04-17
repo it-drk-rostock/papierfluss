@@ -14,7 +14,10 @@ export type MemberListProps = {
     image?: string | null;
     id: string;
   }[];
-  actions?: (member: MemberListProps["members"][0]) => React.ReactNode;
+  actions?: (
+    member: MemberListProps["members"][0],
+    index: number
+  ) => React.ReactNode;
 };
 
 export const MemberList = ({ members, actions }: MemberListProps) => {
@@ -41,7 +44,7 @@ export const MemberList = ({ members, actions }: MemberListProps) => {
           itemWrapper: { width: "100%" },
         }}
       >
-        {members.map((member) => (
+        {members.map((member, index) => (
           <React.Fragment key={member.id}>
             <List.Item
               w="100%"
@@ -51,7 +54,7 @@ export const MemberList = ({ members, actions }: MemberListProps) => {
                 <Text>{member.name}</Text>
                 <Group gap="xs">
                   <ViewActionIcon href={`/admin/users/${member.id}`} />
-                  {actions?.(member)}
+                  {actions?.(member, index)}
                 </Group>
               </Group>
             </List.Item>

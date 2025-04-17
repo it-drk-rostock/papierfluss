@@ -24,6 +24,9 @@ import { ButtonAction } from "@/components/button-action";
 import { ModalMenuItem } from "@/components/modal-menu-item";
 import { MemberList } from "@/components/member-list";
 import { ModalButton } from "@/components/modal-button";
+import { AssignUsersForm } from "./assign-users-form";
+import { ModalActionIcon } from "@/components/modal-action-icon";
+import { baseIconStyles } from "@/constants/base-icon-styles";
 
 export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
@@ -41,12 +44,6 @@ export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
     action: updateTeam,
     hideModals: true,
   });
-
-  const { execute: executeRemoveMember, status: statusRemoveMember } =
-    useEnhancedAction({
-      action: removeMember,
-      hideModals: true,
-    });
 
   return (
     <Card key={team.id} padding="lg" withBorder w={300}>
@@ -119,13 +116,22 @@ export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
                 title: "Mitglieder bearbeiten",
                 children: (stack) => (
                   <Stack gap="sm">
-                    <Title order={2}>Mitglieder</Title>
+                    <Group justify="space-between">
+                      <Title order={2}>Mitglieder</Title>
+                      <ModalButton
+                        title="Mitglieder hinzufügen"
+                        content={<AssignUsersForm teamId={team.id} />}
+                      >
+                        Mitglieder hinzufügen
+                      </ModalButton>
+                    </Group>
 
                     <MemberList
                       members={team.users}
                       actions={(member) => (
-                        <ModalButton
+                        <ModalActionIcon
                           title="Mitglied entfernen"
+                          variant="light"
                           content={
                             <ButtonAction
                               fullWidth
@@ -136,8 +142,8 @@ export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
                             </ButtonAction>
                           }
                         >
-                          Entfernen
-                        </ModalButton>
+                          <IconTrash style={baseIconStyles} />
+                        </ModalActionIcon>
                       )}
                     />
                   </Stack>

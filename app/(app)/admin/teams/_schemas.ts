@@ -16,9 +16,16 @@ export const updateTeamSchema = z
   })
   .extend(idSchema.shape);
 
+export const removeMemberSchema = z
+  .object({
+    userId: z.string().min(1),
+  })
+  .extend(idSchema.shape);
 
-  export const removeMemberSchema = z
-    .object({
-      userId: z.string().min(1),
+export const assignUsersSchema = z.object({
+  users: z.array(
+    z.object({
+      id: z.string().min(1),
     })
-    .extend(idSchema.shape);
+  ),
+}).extend(idSchema.shape);
