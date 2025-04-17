@@ -2,6 +2,7 @@ model Formular {
     id          String   @id @default(cuid())
     title       String
     description String?
+    icon        String?
     schema      Json // This will store the SurveyJS JSON schema
     isPublic    Boolean  @default(false)
     isActive    Boolean  @default(true)
