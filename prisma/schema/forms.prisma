@@ -3,7 +3,7 @@ model Formular {
     title       String
     description String?
     icon        String?
-    schema      Json // This will store the SurveyJS JSON schema
+    schema      Json?
     isPublic    Boolean  @default(false)
     isActive    Boolean  @default(true)
     createdAt   DateTime @default(now())
@@ -20,7 +20,7 @@ model Formular {
 
 model FormularSubmission {
     id            String           @id @default(cuid())
-    data          Json
+    data          Json?
     status        SubmissionStatus @default(open)
     createdAt     DateTime         @default(now())
     updatedAt     DateTime         @updatedAt
@@ -36,5 +36,6 @@ model FormularSubmission {
 enum SubmissionStatus {
     open
     ongoing
+    submitted
     completed
 }
