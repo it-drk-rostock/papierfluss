@@ -67,9 +67,11 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          <MenuItemLink href={`/forms/${form.id}`}>Zum Designer</MenuItemLink>
+          <MenuItemLink href={`/forms/${form.id}/designer`}>
+            Zum Designer
+          </MenuItemLink>
           <MenuItemLink href={`/forms/${form.id}`}>
-            Formular ausfüllen
+            Formular Dashboard
           </MenuItemLink>
           <DrawerMenuItem
             leftSection={<IconWriting size={14} />}
