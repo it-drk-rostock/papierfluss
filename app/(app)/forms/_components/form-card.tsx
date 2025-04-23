@@ -21,6 +21,7 @@ import { ButtonAction } from "@/components/button-action";
 import { ModalMenuItem } from "@/components/modal-menu-item";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { FormForm } from "./form-form";
+import { SurveyPreview } from "@/components/survey-preview";
 
 export const FormCard = ({ form }: { form: FormProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
@@ -94,7 +95,7 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
                 title: "Formular Vorschau",
                 children: (stack) => (
                   <Stack gap="sm">
-                    <Text>Formular vorschau</Text>
+                    <SurveyPreview json={form.schema} />
                   </Stack>
                 ),
               },

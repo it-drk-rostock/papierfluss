@@ -40,8 +40,7 @@ export const SurveyDesignerForm = (props: {
           schema: surveyJSON,
         });
         callback(no, true);
-      } catch (error) {
-        console.error("Failed to save survey:", error);
+      } catch {
         callback(no, false);
       }
     };
