@@ -5,7 +5,7 @@ model Team {
     name      String
 
     users     User[]
-    formulars Formular[]
+    forms Form[]
 
     @@unique([name])
 }

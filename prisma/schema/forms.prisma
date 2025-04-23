@@ -1,4 +1,4 @@
-model Formular {
+model Form {
     id          String   @id @default(cuid())
     title       String
     description String?
@@ -10,26 +10,26 @@ model Formular {
     updatedAt   DateTime @updatedAt
 
     // Relations
-    createdBy   User?                @relation("FormularCreator", fields: [createdById], references: [id])
+    createdBy   User?            @relation("FormCreator", fields: [createdById], references: [id])
     createdById String?
     teams       Team[]
-    submissions FormularSubmission[]
+    submissions FormSubmission[]
 
     @@index([createdById])
 }
 
-model FormularSubmission {
+model FormSubmission {
     id            String           @id @default(cuid())
     data          Json?
     status        SubmissionStatus @default(open)
     createdAt     DateTime         @default(now())
     updatedAt     DateTime         @updatedAt
-    formular      Formular         @relation(fields: [formularId], references: [id])
-    formularId    String
+    form          Form             @relation(fields: [formId], references: [id])
+    formId        String
     submittedBy   User?            @relation(fields: [submittedById], references: [id])
     submittedById String?
 
-    @@index([formularId])
+    @@index([formId])
     @@index([submittedById])
 }
 
