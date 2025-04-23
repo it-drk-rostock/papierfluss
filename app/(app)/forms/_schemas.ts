@@ -1,4 +1,5 @@
 import { requiredFieldMessage } from "@/constants/required-field-message";
+import { idSchema } from "@/schemas/id-schema";
 import { z } from "zod";
 
 export const formSchema = z.object({
@@ -12,3 +13,5 @@ export const formSchema = z.object({
   isPublic: z.boolean().default(false),
   isActive: z.boolean().default(true),
 });
+
+export const updateFormSchema = formSchema.extend(idSchema.shape);

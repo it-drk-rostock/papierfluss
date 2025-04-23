@@ -2,7 +2,7 @@
 
 import { authActionClient } from "@/server/utils/action-clients";
 import { revalidatePath } from "next/cache";
-import { formSchema } from "./_schemas";
+import { formSchema, updateFormSchema } from "./_schemas";
 import prisma from "@/lib/prisma";
 import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
@@ -44,6 +44,39 @@ export const createForm = authActionClient
     revalidatePath("/forms");
     return {
       message: "Formular erstellt",
+    };
+  });
+
+/**
+ * Updates an existing form in the database.
+ *
+ * The function:
+ * 1. Updates the form in the database.
+ * 2. Revalidates the form cache tag to ensure data consistency.
+ * 3. Redirects to the form list page upon completion.
+ *
+ * @throws {Error} If user is not authenticated or if any database operation fails
+ */
+export const updateForm = authActionClient
+  .schema(updateFormSchema)
+  .metadata({
+    event: "updateFormAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { id, title, description, icon, isPublic, isActive } = parsedInput;
+
+    try {
+      await prisma.form.update({
+        where: { id },
+        data: { title, description, icon, isPublic, isActive },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath("/forms");
+    return {
+      message: "Formular aktualisiert",
     };
   });
 

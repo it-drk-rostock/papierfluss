@@ -14,12 +14,13 @@ import {
   Badge,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEye, IconTrash } from "@tabler/icons-react";
+import { IconEye, IconTrash, IconWriting } from "@tabler/icons-react";
 import { deleteForm, FormProps } from "../_actions";
 
 import { ButtonAction } from "@/components/button-action";
 import { ModalMenuItem } from "@/components/modal-menu-item";
 import { DynamicIcon } from "@/components/dynamic-icon";
+import { FormForm } from "./form-form";
 
 export const FormCard = ({ form }: { form: FormProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
@@ -70,6 +71,19 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
           <MenuItemLink href={`/forms/${form.id}`}>
             Formular ausfüllen
           </MenuItemLink>
+          <DrawerMenuItem
+            leftSection={<IconWriting size={14} />}
+            drawers={[
+              {
+                id: "update-form",
+                title: "Formular bearbeiten",
+                children: (stack) => <FormForm form={form} />,
+              },
+            ]}
+            initialDrawerId="update-form"
+          >
+            Formular bearbeiten
+          </DrawerMenuItem>
           <DrawerMenuItem
             leftSection={<IconEye size={14} />}
             drawers={[

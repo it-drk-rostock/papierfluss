@@ -1,9 +1,9 @@
 "use client";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { formSchema } from "../_schemas";
+import { formSchema, updateFormSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
-import { createForm } from "../_actions";
+import { createForm, FormProps, updateForm } from "../_actions";
 import {
   Button,
   Group,
@@ -14,30 +14,37 @@ import {
 } from "@mantine/core";
 import { IconPicker } from "@/components/icon-picker";
 
-export const FormForm = () => {
-  const form = useForm({
-    validate: zodResolver(formSchema),
+export const FormForm = ({ form }: { form?: FormProps[0] }) => {
+  const formForm = useForm({
+    validate: zodResolver(form ? updateFormSchema : formSchema),
     mode: "uncontrolled",
     name: "create-form",
-    initialValues: {
-      title: "",
-      description: "",
-      icon: "",
-      isPublic: false,
-      isActive: true,
-    },
+    initialValues: form
+      ? {
+          id: form.id,
+          title: form.title,
+          description: form.description,
+          icon: form.icon,
+          isPublic: form.isPublic,
+          isActive: form.isActive,
+        }
+      : {
+          title: "",
+          description: "",
+          icon: "",
+          isPublic: false,
+          isActive: true,
+        },
   });
 
-  console.log(form.values);
-
   const { execute, status } = useEnhancedAction({
-    action: createForm,
+    action: form ? updateForm : createForm,
     hideModals: true,
   });
 
   return (
     <form
-      onSubmit={form.onSubmit(async (values) => {
+      onSubmit={formForm.onSubmit(async (values) => {
         execute(values);
       })}
     >
@@ -45,23 +52,26 @@ export const FormForm = () => {
         <IconPicker
           formName="create-form"
           fieldName="icon"
-          value={form.values.icon}
+          value={formForm.values.icon}
         />
-        <TextInput label="Titel" {...form.getInputProps("title")} />
-        <Textarea label="Beschreibung" {...form.getInputProps("description")} />
+        <TextInput label="Titel" {...formForm.getInputProps("title")} />
+        <Textarea
+          label="Beschreibung"
+          {...formForm.getInputProps("description")}
+        />
 
         <Checkbox
           label="Öffentlich"
-          {...form.getInputProps("isPublic", { type: "checkbox" })}
+          {...formForm.getInputProps("isPublic", { type: "checkbox" })}
         />
         <Checkbox
           label="Aktiv"
-          {...form.getInputProps("isActive", { type: "checkbox" })}
+          {...formForm.getInputProps("isActive", { type: "checkbox" })}
         />
 
         <Group mt="lg" justify="flex-end">
           <Button loading={status === "executing"} type="submit">
-            Hinzufügen
+            {form ? "Speichern" : "Hinzufügen"}
           </Button>
         </Group>
       </Stack>
