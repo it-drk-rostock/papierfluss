@@ -1,12 +1,14 @@
 import { Title } from "@mantine/core";
 import { Suspense } from "react";
-import { SurveyCreatorWidget } from "./_components/survey-designer";
-export default function Page() {
+import { SurveyDesigner } from "./_components/survey-designer.tsx";
+
+export default async function Page({ params }: { params: { id: string } }) {
+  const { id } = await params;
   return (
     <>
       <Title order={1}>Designer</Title>
       <Suspense fallback={<div>Loading...</div>}>
-        <SurveyCreatorWidget />
+        <SurveyDesigner id={id} />
       </Suspense>
     </>
   );
