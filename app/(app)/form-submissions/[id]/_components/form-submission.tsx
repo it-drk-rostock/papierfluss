@@ -1,6 +1,7 @@
 import React from "react";
 import { getFormSubmission } from "../_actions";
 import { FormSubmissionForm } from "./form-submission-form";
+import { notFound } from "next/navigation";
 
 export const FormSubmission = async ({
   params,
@@ -12,7 +13,7 @@ export const FormSubmission = async ({
   const submission = await getFormSubmission(id);
 
   if (!submission) {
-    return <div>Submission not found</div>;
+    return notFound();
   }
 
   return <FormSubmissionForm submission={submission} />;
