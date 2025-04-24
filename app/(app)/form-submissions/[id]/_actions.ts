@@ -1,7 +1,11 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { authActionClient } from "@/server/utils/action-clients";
 import { authQuery } from "@/server/utils/auth-query";
+import { updateFormSubmissionSchema } from "./_schemas";
+import { formatError } from "@/utils/format-error";
+import { revalidatePath } from "next/cache";
 
 /**
  * Retrieves forms from the database based on user's role and access permissions.
@@ -80,3 +84,33 @@ export const getFormSubmission = async (id: string) => {
 };
 
 export type FormSubmissionProps = Awaited<ReturnType<typeof getFormSubmission>>;
+
+export const updateFormSubmission = authActionClient
+  .schema(updateFormSubmissionSchema)
+  .metadata({
+    event: "updateFormSubmissionAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, data } = parsedInput;
+
+    try {
+      await prisma.formSubmission.update({
+        where: {
+          id,
+          submittedById: ctx.session.user.id,
+          status: "ongoing",
+        },
+        data: {
+          data,
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/form-submissions/${id}`);
+
+    return {
+      message: "Formular wurde erfolgreich gespeichert",
+    };
+  });

@@ -2,6 +2,8 @@ import React from "react";
 import { getFormSubmission } from "../_actions";
 import { FormSubmissionForm } from "./form-submission-form";
 import { notFound } from "next/navigation";
+import { FormSubmissionStatusBadge } from "@/components/form-submission-status-badge";
+import { Stack } from "@mantine/core";
 
 export const FormSubmission = async ({
   params,
@@ -16,5 +18,10 @@ export const FormSubmission = async ({
     return notFound();
   }
 
-  return <FormSubmissionForm submission={submission} />;
+  return (
+    <Stack gap="sm">
+      <FormSubmissionStatusBadge status={submission.status} />
+      <FormSubmissionForm submission={submission} />
+    </Stack>
+  );
 };

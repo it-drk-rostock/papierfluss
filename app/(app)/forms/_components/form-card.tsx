@@ -21,7 +21,6 @@ import {
   IconWriting,
 } from "@tabler/icons-react";
 import { deleteForm, fillOutForm, FormProps } from "../_actions";
-
 import { ButtonAction } from "@/components/button-action";
 import { ModalMenuItem } from "@/components/modal-menu-item";
 import { DynamicIcon } from "@/components/dynamic-icon";
@@ -123,13 +122,15 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
             color="red"
             title="Formular löschen"
             content={
-              <ButtonAction
-                fullWidth
-                action={deleteForm}
-                values={{ id: form.id }}
-              >
-                Löschen
-              </ButtonAction>
+              <>
+                <ButtonAction
+                  fullWidth
+                  action={deleteForm}
+                  values={{ id: form.id }}
+                >
+                  Löschen
+                </ButtonAction>
+              </>
             }
           >
             Löschen

@@ -10,7 +10,7 @@ model Form {
     updatedAt   DateTime @updatedAt
 
     // Relations
-    createdBy   User?            @relation("FormCreator", fields: [createdById], references: [id])
+    createdBy   User?            @relation("FormCreator", fields: [createdById], references: [id], onDelete: SetNull)
     createdById String?
     teams       Team[]
     submissions FormSubmission[]
@@ -19,25 +19,27 @@ model Form {
 }
 
 model FormSubmission {
-    id            String           @id @default(uuid())
-    data          Json?
-    status        SubmissionStatus @default(open)
-    reviewNotes   String?
-    createdAt     DateTime         @default(now())
-    updatedAt     DateTime         @updatedAt
-    form          Form             @relation(fields: [formId], references: [id])
-    formId        String
-    submittedBy   User?            @relation(fields: [submittedById], references: [id])
-    submittedById String?
+    id             String           @id @default(uuid())
+    data           Json?
+    status         SubmissionStatus @default(ongoing)
+    reviewNotes    String? // Notes for when sending back for revision (shown in ongoing status)
+    rejectedNotes  String? // Final rejection reason (shown in rejected status)
+    completedNotes String? // Final approval notes (shown in completed status)
+    createdAt      DateTime         @default(now())
+    updatedAt      DateTime         @updatedAt
+    form           Form             @relation(fields: [formId], references: [id], onDelete: Cascade)
+    formId         String
+    submittedBy    User?            @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+    submittedById  String?
 
     @@index([formId])
     @@index([submittedById])
 }
 
 enum SubmissionStatus {
-    open // Initial state, no data entered yet
-    ongoing // User has saved some data at least once
+    ongoing // Form is being worked on (initial state)
     submitted // User has submitted for review
-    rejected // Reviewer rejected, set back to ongoing for revisions
-    completed // Reviewer approved (same as approved/completed)
+    reviewing // Reviewer has started the review process
+    rejected // Final state: Reviewer rejected the submission permanently
+    completed // Final state: Reviewer approved the submission
 }
