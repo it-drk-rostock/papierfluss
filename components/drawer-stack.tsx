@@ -48,7 +48,6 @@ export function DrawerStack({
             {...stack.register(drawer.id)}
             title={drawer.title}
             size={drawer.size}
-            
           >
             {typeof drawer.children === "function"
               ? drawer.children(stackActions)

@@ -1,5 +1,5 @@
 model Form {
-    id          String   @id @default(cuid())
+    id          String   @id @default(uuid())
     title       String
     description String?
     icon        String?
@@ -19,9 +19,10 @@ model Form {
 }
 
 model FormSubmission {
-    id            String           @id @default(cuid())
+    id            String           @id @default(uuid())
     data          Json?
     status        SubmissionStatus @default(open)
+    reviewNotes   String?
     createdAt     DateTime         @default(now())
     updatedAt     DateTime         @updatedAt
     form          Form             @relation(fields: [formId], references: [id])
@@ -34,8 +35,9 @@ model FormSubmission {
 }
 
 enum SubmissionStatus {
-    open
-    ongoing
-    submitted
-    completed
+    open // Initial state, no data entered yet
+    ongoing // User has saved some data at least once
+    submitted // User has submitted for review
+    rejected // Reviewer rejected, set back to ongoing for revisions
+    completed // Reviewer approved (same as approved/completed)
 }

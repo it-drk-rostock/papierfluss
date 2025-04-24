@@ -7,6 +7,7 @@ import prisma from "@/lib/prisma";
 import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
+import { redirect } from "next/navigation";
 
 /**
  * Creates a new form in the database.
@@ -107,6 +108,33 @@ export const deleteForm = authActionClient
     return {
       message: "Formular gelöscht",
     };
+  });
+
+export const fillOutForm = authActionClient
+  .schema(idSchema)
+  .metadata({
+    event: "fillOutFormAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id } = parsedInput;
+    let formSubmissionId: string;
+
+    try {
+      const formSubmission = await prisma.formSubmission.create({
+        data: {
+          formId: id,
+          submittedById: ctx.session.user.id,
+        },
+        select: {
+          id: true,
+        },
+      });
+      formSubmissionId = formSubmission.id;
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    redirect(`/form-submissions/${formSubmissionId}`);
   });
 
 export type UserSearchParams = {

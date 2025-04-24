@@ -14,14 +14,20 @@ import {
   Badge,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEye, IconTrash, IconWriting } from "@tabler/icons-react";
-import { deleteForm, FormProps } from "../_actions";
+import {
+  IconEye,
+  IconPencil,
+  IconTrash,
+  IconWriting,
+} from "@tabler/icons-react";
+import { deleteForm, fillOutForm, FormProps } from "../_actions";
 
 import { ButtonAction } from "@/components/button-action";
 import { ModalMenuItem } from "@/components/modal-menu-item";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { FormForm } from "./form-form";
 import { SurveyPreview } from "@/components/survey-preview";
+import { MenuItemAction } from "@/components/menu-item-action";
 
 export const FormCard = ({ form }: { form: FormProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
@@ -74,6 +80,14 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
           <MenuItemLink href={`/forms/${form.id}`}>
             Formular Dashboard
           </MenuItemLink>
+          <MenuItemAction
+            action={fillOutForm}
+            values={{ id: form.id }}
+            leftSection={<IconPencil size={14} />}
+            hideNotification={true}
+          >
+            Formular Ausfüllen
+          </MenuItemAction>
           <DrawerMenuItem
             leftSection={<IconWriting size={14} />}
             drawers={[
