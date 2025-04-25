@@ -3,7 +3,10 @@
 import prisma from "@/lib/prisma";
 import { authActionClient } from "@/server/utils/action-clients";
 import { authQuery } from "@/server/utils/auth-query";
-import { updateFormSubmissionSchema } from "./_schemas";
+import {
+  updateFormSubmissionSchema,
+  updateFormSubmissionStatusSchema,
+} from "./_schemas";
 import { formatError } from "@/utils/format-error";
 import { revalidatePath } from "next/cache";
 import { idSchema } from "@/schemas/id-schema";
@@ -40,6 +43,9 @@ export const getFormSubmission = async (id: string) => {
             schema: true,
           },
         },
+        reviewNotes: true,
+        rejectedNotes: true,
+        completedNotes: true,
         status: true,
         data: true,
       },
@@ -76,6 +82,9 @@ export const getFormSubmission = async (id: string) => {
           schema: true,
         },
       },
+      reviewNotes: true,
+      rejectedNotes: true,
+      completedNotes: true,
       status: true,
       data: true,
     },
@@ -116,6 +125,65 @@ export const updateFormSubmission = authActionClient
     };
   });
 
+export const updateFormSubmissionStatus = authActionClient
+  .schema(updateFormSubmissionStatusSchema)
+  .metadata({
+    event: "updateFormSubmissionStatusAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, status, message } = parsedInput;
+
+    try {
+      if (status === "ongoing") {
+        await prisma.formSubmission.update({
+          where: {
+            id,
+            submittedById: ctx.session.user.id,
+            status: "inReview",
+          },
+          data: {
+            status,
+            reviewNotes: message,
+          },
+        });
+      }
+
+      if (status === "rejected") {
+        await prisma.formSubmission.update({
+          where: {
+            id,
+            status: "inReview",
+          },
+          data: {
+            status,
+            rejectedNotes: message,
+          },
+        });
+      }
+
+      if (status === "completed") {
+        await prisma.formSubmission.update({
+          where: {
+            id,
+            status: "inReview",
+          },
+          data: {
+            status,
+            completedNotes: message,
+          },
+        });
+      }
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/form-submissions/${id}`);
+
+    return {
+      message: "Formular wurde aktualisiert",
+    };
+  });
+
 export const submitFormSubmission = authActionClient
   .schema(updateFormSubmissionSchema)
   .metadata({
@@ -134,6 +202,7 @@ export const submitFormSubmission = authActionClient
         data: {
           status: "submitted",
           data,
+          reviewNotes: null,
         },
       });
     } catch (error) {

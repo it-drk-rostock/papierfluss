@@ -5,17 +5,17 @@ import { Survey } from "survey-react-ui";
 import "survey-core/survey-core.css";
 import "survey-core/i18n/german";
 import { Box, LoadingOverlay } from "@mantine/core";
-import React, { useState } from "react";
+import React from "react";
 import {
   FormSubmissionProps,
   reviewFormSubmission,
   submitFormSubmission,
   updateFormSubmission,
 } from "../_actions";
-import { ModalButton } from "@/components/modal-button";
 import { modals } from "@mantine/modals";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { ButtonAction } from "@/components/button-action";
+import { FormSubmissionStatusForm } from "./form-submission-status-form";
 
 export const FormSubmissionForm = ({
   submission,
@@ -77,6 +77,51 @@ export const FormSubmissionForm = ({
       innerCss: "sd-btn review-form",
       action: () => {
         executeReview({ id: submission.id });
+      },
+    });
+  }
+
+  if (submission.status === "inReview") {
+    model.addNavigationItem({
+      id: "edit-form",
+      title: "Formular überarbeiten",
+      innerCss: "sd-btn edit-form",
+      action: () => {
+        modals.open({
+          closeOnClickOutside: false,
+          title: "Formular überarbeiten",
+          children: (
+            <FormSubmissionStatusForm id={submission.id} status="ongoing" />
+          ),
+        });
+      },
+    });
+    model.addNavigationItem({
+      id: "reject-form",
+      title: "Formular ablehnen",
+      innerCss: "sd-btn reject-form",
+      action: () => {
+        modals.open({
+          closeOnClickOutside: false,
+          title: "Formular ablehnen",
+          children: (
+            <FormSubmissionStatusForm id={submission.id} status="rejected" />
+          ),
+        });
+      },
+    });
+    model.addNavigationItem({
+      id: "complete-form",
+      title: "Formular genehmigen",
+      innerCss: "sd-btn complete-form",
+      action: () => {
+        modals.open({
+          closeOnClickOutside: false,
+          title: "Formular genehmigen",
+          children: (
+            <FormSubmissionStatusForm id={submission.id} status="completed" />
+          ),
+        });
       },
     });
   }

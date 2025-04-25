@@ -48,3 +48,30 @@ a {
 .review-form:hover {
   background-color: var(--mantine-color-orange-filled-hover) !important;
 }
+
+.edit-form {
+  background-color: var(--mantine-color-yellow-filled) !important;
+  color: var(--mantine-color-white) !important;
+}
+
+.edit-form:hover {
+  background-color: var(--mantine-color-yellow-filled-hover) !important;
+}
+
+.reject-form {
+  background-color: var(--mantine-color-red-filled) !important;
+  color: var(--mantine-color-white) !important;
+}
+
+.reject-form:hover {
+  background-color: var(--mantine-color-red-filled-hover) !important;
+}
+
+.complete-form {
+  background-color: var(--mantine-color-green-filled) !important;
+  color: var(--mantine-color-white) !important;
+}
+
+.complete-form:hover {
+  background-color: var(--mantine-color-green-filled-hover) !important;
+}
