@@ -6,6 +6,7 @@ import { authQuery } from "@/server/utils/auth-query";
 import { updateFormSubmissionSchema } from "./_schemas";
 import { formatError } from "@/utils/format-error";
 import { revalidatePath } from "next/cache";
+import { idSchema } from "@/schemas/id-schema";
 
 /**
  * Retrieves forms from the database based on user's role and access permissions.
@@ -111,6 +112,67 @@ export const updateFormSubmission = authActionClient
     revalidatePath(`/form-submissions/${id}`);
 
     return {
-      message: "Formular wurde erfolgreich gespeichert",
+      message: "Formular wurde gespeichert",
+    };
+  });
+
+export const submitFormSubmission = authActionClient
+  .schema(updateFormSubmissionSchema)
+  .metadata({
+    event: "submitFormSubmissionAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, data } = parsedInput;
+
+    try {
+      await prisma.formSubmission.update({
+        where: {
+          id,
+          submittedById: ctx.session.user.id,
+          status: "ongoing",
+        },
+        data: {
+          status: "submitted",
+          data,
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/form-submissions/${id}`);
+
+    return {
+      message: "Formular wurde gespeichert und eingereicht",
+    };
+  });
+
+export const reviewFormSubmission = authActionClient
+  .schema(idSchema)
+  .metadata({
+    event: "reviewFormSubmissionAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { id } = parsedInput;
+
+    try {
+      await prisma.formSubmission.update({
+        where: {
+          id,
+          status: "submitted",
+        },
+        data: {
+          status: "inReview",
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      throw formatError(error);
+    }
+
+    revalidatePath(`/form-submissions/${id}`);
+
+    return {
+      message: "Formular wurde zur Prüfung aktualisiert",
     };
   });

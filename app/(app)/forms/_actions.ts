@@ -116,20 +116,28 @@ export const fillOutForm = authActionClient
     event: "fillOutFormAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { id } = parsedInput;
     let formSubmissionId: string;
 
     try {
-      const formSubmission = await prisma.formSubmission.create({
-        data: {
-          formId: id,
-          submittedById: ctx.session.user.id,
-        },
-        select: {
-          id: true,
-        },
+      const submission = await prisma.$transaction(async (tx) => {
+        const form = await tx.form.findUnique({
+          where: { id: parsedInput.id },
+          select: { isActive: true },
+        });
+
+        if (!form?.isActive) {
+          throw new Error("Formular ist nicht aktiviert");
+        }
+
+        return await tx.formSubmission.create({
+          data: {
+            formId: parsedInput.id,
+            submittedById: ctx.session.user.id,
+          },
+        });
       });
-      formSubmissionId = formSubmission.id;
+
+      formSubmissionId = submission.id;
     } catch (error) {
       throw formatError(error);
     }

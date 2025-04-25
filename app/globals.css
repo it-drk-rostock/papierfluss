@@ -39,3 +39,12 @@ a {
 .submit-form:hover {
   background-color: var(--mantine-color-red-filled-hover) !important;
 }
+
+.review-form {
+  background-color: var(--mantine-color-orange-filled) !important;
+  color: var(--mantine-color-white) !important;
+}
+
+.review-form:hover {
+  background-color: var(--mantine-color-orange-filled-hover) !important;
+}

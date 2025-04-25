@@ -7,7 +7,7 @@ export const formSubmissionStatus = {
     label: "Eingereicht",
     color: "yellow",
   },
-  reviewing: {
+  inReview: {
     label: "In Prüfung",
     color: "orange",
   },

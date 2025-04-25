@@ -39,7 +39,7 @@ model FormSubmission {
 enum SubmissionStatus {
     ongoing // Form is being worked on (initial state)
     submitted // User has submitted for review
-    reviewing // Reviewer has started the review process
+    inReview // Reviewer has started the review process
     rejected // Final state: Reviewer rejected the submission permanently
     completed // Final state: Reviewer approved the submission
 }
