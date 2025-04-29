@@ -19,26 +19,25 @@ export const FormSubmission = async ({
     return notFound();
   }
 
+  // Create a mapping of all possible notes
+  const notesMapping = {
+    reviewNotes: submission.reviewNotes,
+    rejectedNotes: submission.rejectedNotes,
+    completedNotes: submission.completedNotes,
+  };
+
   return (
     <Stack gap="sm">
       <FormSubmissionStatusBadge status={submission.status} />
-      {submission.reviewNotes && (
-        <FormSubmissionStatusAlert
-          status={submission.status}
-          message={submission.reviewNotes}
-        />
-      )}
-      {submission.rejectedNotes && (
-        <FormSubmissionStatusAlert
-          status={submission.status}
-          message={submission.rejectedNotes}
-        />
-      )}
-      {submission.completedNotes && (
-        <FormSubmissionStatusAlert
-          status={submission.status}
-          message={submission.completedNotes}
-        />
+      {Object.entries(notesMapping).map(
+        ([_, notes]) =>
+          notes && (
+            <FormSubmissionStatusAlert
+              key={notes}
+              status={submission.status}
+              message={notes}
+            />
+          )
       )}
       <FormSubmissionForm submission={submission} />
     </Stack>
