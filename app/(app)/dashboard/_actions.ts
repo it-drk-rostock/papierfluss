@@ -26,3 +26,37 @@ export const getTeams = async () => {
 };
 
 export type TeamProps = Awaited<ReturnType<typeof getTeams>>;
+
+/**
+ * Retrieves form submissions from the database for the current user
+ * @returns {Promise<Array<{
+ *   id: string;
+ *   status: string;
+ *   form: {
+ *     title: string;
+ *   };
+ * }>>} Returns an array of form submissions with their associated form titles
+ * @throws {Error} If the query fails or if the user is not authorized
+ */
+export const getFormSubmissions = async () => {
+  const { user } = await authQuery();
+
+  return prisma.formSubmission.findMany({
+    where: {
+      submittedById: user.id,
+    },
+    select: {
+      id: true,
+      status: true,
+      form: {
+        select: {
+          title: true,
+        },
+      },
+    },
+  });
+};
+
+export type FormSubmissionProps = Awaited<
+  ReturnType<typeof getFormSubmissions>
+>;

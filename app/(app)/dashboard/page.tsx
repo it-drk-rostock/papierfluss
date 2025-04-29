@@ -1,6 +1,7 @@
 import { Divider, Loader, Title } from "@mantine/core";
 import { Suspense } from "react";
 import { Teams } from "./_components/teams";
+import { FormSubmissions } from "./_components/form-submissions";
 
 export default function Page() {
   return (
@@ -10,6 +11,10 @@ export default function Page() {
       <Title order={2}>Teams</Title>
       <Suspense fallback={<Loader />}>
         <Teams />
+      </Suspense>
+      <Title order={2}>Formular Einreichungen</Title>
+      <Suspense fallback={<Loader />}>
+        <FormSubmissions />
       </Suspense>
     </>
   );
