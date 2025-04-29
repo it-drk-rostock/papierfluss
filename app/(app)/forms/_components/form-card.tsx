@@ -31,21 +31,6 @@ import { MenuItemAction } from "@/components/menu-item-action";
 export const FormCard = ({ form }: { form: FormProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
 
-  /* const form = useForm({
-    validate: zodResolver(updateUserSchema),
-    mode: "uncontrolled",
-    initialValues: {
-      role: user.role,
-      name: user.name,
-      userId: user.id,
-    },
-  }); */
-
-  /* const { execute, status } = useEnhancedAction({
-    action: updateUser,
-    hideModals: true,
-  }); */
-
   return (
     <Card key={form.id} padding="lg" withBorder w={300}>
       <Avatar color="red" radius="sm" size="xl">

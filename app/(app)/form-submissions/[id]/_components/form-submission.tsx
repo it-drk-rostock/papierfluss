@@ -4,7 +4,7 @@ import { FormSubmissionForm } from "./form-submission-form";
 import { notFound } from "next/navigation";
 import { FormSubmissionStatusBadge } from "@/components/form-submission-status-badge";
 import { Stack } from "@mantine/core";
-import { FormSubmissionStatusAlert } from "@/components/form-submission-status-badge copy";
+import { FormSubmissionStatusAlert } from "@/components/form-submission-status-alert";
 
 export const FormSubmission = async ({
   params,
