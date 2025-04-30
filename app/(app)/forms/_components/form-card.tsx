@@ -12,21 +12,29 @@ import {
   Button,
   Stack,
   Badge,
+  Group,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
+  IconBrandTeams,
   IconEye,
   IconPencil,
   IconTrash,
+  IconUsersGroup,
   IconWriting,
 } from "@tabler/icons-react";
-import { deleteForm, fillOutForm, FormProps } from "../_actions";
+import { deleteForm, fillOutForm, FormProps, removeTeam } from "../_actions";
 import { ButtonAction } from "@/components/button-action";
 import { ModalMenuItem } from "@/components/modal-menu-item";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { FormForm } from "./form-form";
 import { SurveyPreview } from "@/components/survey-preview";
 import { MenuItemAction } from "@/components/menu-item-action";
+import { ModalActionIcon } from "@/components/modal-action-icon";
+import { baseIconStyles } from "@/constants/base-icon-styles";
+import { ModalButton } from "@/components/modal-button";
+import { TeamList } from "@/components/team-list";
+import { AssignTeamsForm } from "./assign-teams-form";
 
 export const FormCard = ({ form }: { form: FormProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
@@ -101,6 +109,52 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
             initialDrawerId="preview-form"
           >
             Formular Vorschau
+          </DrawerMenuItem>
+          <DrawerMenuItem
+            leftSection={<IconBrandTeams size={14} />}
+            drawers={[
+              {
+                id: "update-teams",
+                title: "Teams bearbeiten",
+                children: (stack) => (
+                  <Stack gap="sm">
+                    <Group justify="space-between">
+                      <Title order={2}>Teams</Title>
+                      <ModalButton
+                        title="Team hinzufügen"
+                        content={<AssignTeamsForm formId={form.id} />}
+                      >
+                        Team hinzufügen
+                      </ModalButton>
+                    </Group>
+
+                    <TeamList
+                      teams={form.teams}
+                      actions={(team) => (
+                        <ModalActionIcon
+                          title="Mitglied entfernen"
+                          variant="light"
+                          content={
+                            <ButtonAction
+                              fullWidth
+                              action={removeTeam}
+                              values={{ id: form.id, teamId: team.id }}
+                            >
+                              Entfernen
+                            </ButtonAction>
+                          }
+                        >
+                          <IconTrash style={baseIconStyles} />
+                        </ModalActionIcon>
+                      )}
+                    />
+                  </Stack>
+                ),
+              },
+            ]}
+            initialDrawerId="update-teams"
+          >
+            Teams bearbeiten
           </DrawerMenuItem>
           <ModalMenuItem
             leftSection={<IconTrash size={14} />}

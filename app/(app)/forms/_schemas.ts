@@ -15,3 +15,19 @@ export const formSchema = z.object({
 });
 
 export const updateFormSchema = formSchema.extend(idSchema.shape);
+
+export const removeTeamSchema = z
+  .object({
+    teamId: z.string().min(1),
+  })
+  .extend(idSchema.shape);
+
+export const assignTeamsSchema = z
+  .object({
+    teams: z.array(
+      z.object({
+        id: z.string().min(1),
+      })
+    ),
+  })
+  .extend(idSchema.shape);

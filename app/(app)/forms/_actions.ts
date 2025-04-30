@@ -2,12 +2,18 @@
 
 import { authActionClient } from "@/server/utils/action-clients";
 import { revalidatePath } from "next/cache";
-import { formSchema, updateFormSchema } from "./_schemas";
+import {
+  assignTeamsSchema,
+  formSchema,
+  removeTeamSchema,
+  updateFormSchema,
+} from "./_schemas";
 import prisma from "@/lib/prisma";
 import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
 import { redirect } from "next/navigation";
+import { adminQuery } from "@/server/utils/admin-query";
 
 /**
  * Creates a new form in the database.
@@ -184,6 +190,13 @@ export const getForms = async () => {
         schema: true,
         isActive: true,
         isPublic: true,
+        teams: {
+          select: {
+            id: true,
+            name: true,
+            contactEmail: true,
+          },
+        },
       },
     });
   }
@@ -211,6 +224,13 @@ export const getForms = async () => {
       schema: true,
       isActive: true,
       isPublic: true,
+      teams: {
+        select: {
+          id: true,
+          name: true,
+          contactEmail: true,
+        },
+      },
     },
   });
 
@@ -218,3 +238,86 @@ export const getForms = async () => {
 };
 
 export type FormProps = Awaited<ReturnType<typeof getForms>>;
+
+export const removeTeam = authActionClient
+  .schema(removeTeamSchema)
+  .metadata({
+    event: "removeTeamAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { id, teamId } = parsedInput;
+    try {
+      await prisma.form.update({
+        where: {
+          id,
+        },
+        data: {
+          teams: {
+            disconnect: {
+              id: teamId,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath("/forms");
+
+    return {
+      message: "Team entfernt",
+    };
+  });
+
+export const assignTeams = authActionClient
+  .schema(assignTeamsSchema)
+  .metadata({
+    event: "assignTeamsAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { teams, id } = parsedInput;
+    try {
+      await prisma.form.update({
+        where: {
+          id,
+        },
+        data: {
+          teams: {
+            connect: teams.map((team) => ({ id: team.id })),
+          },
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath("/forms");
+
+    return {
+      message: "Teams hinzugefügt",
+    };
+  });
+
+export type AvailableTeamsParams = {
+  formId: string;
+};
+
+export const getAvailableTeams = async ({ formId }: AvailableTeamsParams) => {
+  await adminQuery();
+  const teams = await prisma.team.findMany({
+    where: {
+      forms: {
+        none: {
+          id: formId,
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return teams;
+};
