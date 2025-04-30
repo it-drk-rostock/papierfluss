@@ -42,11 +42,12 @@ export const createTeam = adminActionClient
     event: "createTeamAction",
   })
   .stateAction(async ({ parsedInput }) => {
-    const { name } = parsedInput;
+    const { name, contactEmail } = parsedInput;
     try {
       await prisma.team.create({
         data: {
           name,
+          contactEmail,
         },
       });
     } catch (error) {
@@ -65,7 +66,7 @@ export const updateTeam = adminActionClient
     event: "updateTeamAction",
   })
   .stateAction(async ({ parsedInput }) => {
-    const { id, name } = parsedInput;
+    const { id, name, contactEmail } = parsedInput;
     try {
       await prisma.team.update({
         where: {
@@ -73,6 +74,7 @@ export const updateTeam = adminActionClient
         },
         data: {
           name,
+          contactEmail,
         },
       });
     } catch (error) {
@@ -183,6 +185,7 @@ export const getTeams = async (name?: string) => {
     select: {
       id: true,
       name: true,
+      contactEmail: true,
       users: {
         select: {
           id: true,

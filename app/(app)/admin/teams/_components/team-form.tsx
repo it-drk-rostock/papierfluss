@@ -13,6 +13,7 @@ export const TeamForm = () => {
     mode: "uncontrolled",
     initialValues: {
       name: "",
+      contactEmail: "",
     },
   });
 
@@ -32,7 +33,11 @@ export const TeamForm = () => {
           key={form.key("name")}
           {...form.getInputProps("name")}
         />
-
+        <TextInput
+          label="E-Mail"
+          key={form.key("contactEmail")}
+          {...form.getInputProps("contactEmail")}
+        />
         <Group mt="lg" justify="flex-end">
           <Button loading={status === "executing"} type="submit">
             Hinzufügen
