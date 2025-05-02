@@ -11,6 +11,7 @@ import {
   Textarea,
   TextInput,
   Checkbox,
+  JsonInput,
 } from "@mantine/core";
 import { IconPicker } from "@/components/icon-picker";
 
@@ -27,6 +28,8 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           icon: form.icon,
           isPublic: form.isPublic,
           isActive: form.isActive,
+          editFormPermissions: form.editFormPermissions || "",
+          reviewFormPermissions: form.reviewFormPermissions || "",
         }
       : {
           title: "",
@@ -34,6 +37,8 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           icon: "",
           isPublic: false,
           isActive: true,
+          editFormPermissions: {},
+          reviewFormPermissions: {},
         },
   });
 
@@ -67,6 +72,24 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
         <Checkbox
           label="Aktiv"
           {...formForm.getInputProps("isActive", { type: "checkbox" })}
+        />
+
+        <JsonInput
+          label="Bearbeitungs Berechtigungen"
+          validationError="Invalid JSON"
+          formatOnBlur
+          autosize
+          minRows={4}
+          {...formForm.getInputProps("editFormPermissions")}
+        />
+
+        <JsonInput
+          label="Überprüfungs Berechtigungen"
+          validationError="Invalid JSON"
+          formatOnBlur
+          autosize
+          minRows={4}
+          {...formForm.getInputProps("reviewFormPermissions")}
         />
 
         <Group mt="lg" justify="flex-end">

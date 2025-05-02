@@ -1,19 +1,20 @@
 model Form {
-    id          String   @id @default(uuid())
-    title       String
-    description String?
-    icon        String?
-    schema      Json?
-    isPublic    Boolean  @default(false)
-    isActive    Boolean  @default(true)
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-
+    id                    String           @id @default(uuid())
+    title                 String
+    description           String?
+    icon                  String?
+    schema                Json?
+    isPublic              Boolean          @default(false)
+    isActive              Boolean          @default(true)
+    createdAt             DateTime         @default(now())
+    updatedAt             DateTime         @updatedAt
+    editFormPermissions   Json?
+    reviewFormPermissions Json?
     // Relations
-    createdBy   User?            @relation("FormCreator", fields: [createdById], references: [id], onDelete: SetNull)
-    createdById String?
-    teams       Team[]
-    submissions FormSubmission[]
+    createdBy             User?            @relation("FormCreator", fields: [createdById], references: [id], onDelete: SetNull)
+    createdById           String?
+    teams                 Team[]
+    submissions           FormSubmission[]
 
     @@index([createdById])
 }

@@ -190,6 +190,8 @@ export const getForms = async () => {
         schema: true,
         isActive: true,
         isPublic: true,
+        editFormPermissions: true,
+        reviewFormPermissions: true,
         teams: {
           select: {
             id: true,
@@ -224,6 +226,8 @@ export const getForms = async () => {
       schema: true,
       isActive: true,
       isPublic: true,
+      editFormPermissions: true,
+      reviewFormPermissions: true,
       teams: {
         select: {
           id: true,
