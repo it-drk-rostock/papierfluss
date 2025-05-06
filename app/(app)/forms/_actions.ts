@@ -14,6 +14,7 @@ import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
 import { redirect } from "next/navigation";
 import { adminQuery } from "@/server/utils/admin-query";
+import { evaluate } from "cel-js";
 
 /**
  * Creates a new form in the database.
@@ -69,13 +70,57 @@ export const updateForm = authActionClient
   .metadata({
     event: "updateFormAction",
   })
-  .stateAction(async ({ parsedInput }) => {
-    const { id, title, description, icon, isPublic, isActive } = parsedInput;
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const {
+      id,
+      title,
+      description,
+      icon,
+      isPublic,
+      isActive,
+      editFormPermissions,
+      reviewFormPermissions,
+    } = parsedInput;
 
     try {
+      // First fetch the existing form to check permissions
+      const form = await prisma.form.findUnique({
+        where: { id },
+        select: { editFormPermissions: true },
+      });
+
+      if (!form) {
+        throw new Error("Formular nicht gefunden");
+      }
+
+      const context = {
+        user: {
+          email: ctx.session.user.email,
+          name: ctx.session.user.name,
+          role: ctx.session.user.role,
+          id: ctx.session.user.id,
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+        },
+      };
+
+      // Evaluate the CEL expression directly from the string
+      const hasPermission = evaluate(form.editFormPermissions || "", context);
+
+      if (!hasPermission) {
+        throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
+      }
+
       await prisma.form.update({
         where: { id },
-        data: { title, description, icon, isPublic, isActive },
+        data: {
+          title,
+          description,
+          icon,
+          isPublic,
+          isActive,
+          editFormPermissions,
+          reviewFormPermissions,
+        },
       });
     } catch (error) {
       throw formatError(error);

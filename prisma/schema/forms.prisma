@@ -8,8 +8,8 @@ model Form {
     isActive              Boolean          @default(true)
     createdAt             DateTime         @default(now())
     updatedAt             DateTime         @updatedAt
-    editFormPermissions   Json?
-    reviewFormPermissions Json?
+    editFormPermissions   String?
+    reviewFormPermissions String?
     // Relations
     createdBy             User?            @relation("FormCreator", fields: [createdById], references: [id], onDelete: SetNull)
     createdById           String?

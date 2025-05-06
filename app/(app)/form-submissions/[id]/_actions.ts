@@ -10,6 +10,8 @@ import {
 import { formatError } from "@/utils/format-error";
 import { revalidatePath } from "next/cache";
 import { idSchema } from "@/schemas/id-schema";
+import jsonata from "jsonata";
+import { forbidden } from "next/navigation";
 
 /**
  * Retrieves forms from the database based on user's role and access permissions.
@@ -41,6 +43,7 @@ export const getFormSubmission = async (id: string) => {
             id: true,
             title: true,
             schema: true,
+            reviewFormPermissions: true,
           },
         },
         reviewNotes: true,
@@ -53,26 +56,7 @@ export const getFormSubmission = async (id: string) => {
   }
 
   const form = await prisma.formSubmission.findFirst({
-    where: {
-      OR: [
-        {
-          form: {
-            isPublic: true,
-          },
-        },
-        {
-          form: {
-            teams: {
-              some: {
-                users: {
-                  some: { id: user.id },
-                },
-              },
-            },
-          },
-        },
-      ],
-    },
+    where: { id },
     select: {
       id: true,
       form: {
@@ -80,6 +64,12 @@ export const getFormSubmission = async (id: string) => {
           id: true,
           title: true,
           schema: true,
+          reviewFormPermissions: true,
+          teams: {
+            select: {
+              name: true,
+            },
+          },
         },
       },
       reviewNotes: true,
@@ -89,6 +79,27 @@ export const getFormSubmission = async (id: string) => {
       data: true,
     },
   });
+
+  if (!form) return null;
+
+  const submissionContext = {
+    user: {
+      ...user,
+      teams: user.teams?.map((t) => t.name) ?? [],
+    },
+    teams: user.teams?.map((t) => t.name) ?? [],
+    formTeams: form.form.teams?.map((t) => t.name) ?? [],
+    data: form.data,
+  };
+
+  const expressionString =
+    form.form.reviewFormPermissions || 'user.email = "m.pohl@drk-rostock.de"';
+  const expression = jsonata(expressionString);
+  const hasPermission = await expression.evaluate(submissionContext);
+
+  if (!hasPermission) {
+    forbidden();
+  }
 
   return form;
 };

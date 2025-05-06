@@ -12,8 +12,8 @@ export const formSchema = z.object({
   icon: z.string().optional(),
   isPublic: z.boolean().default(false),
   isActive: z.boolean().default(true),
-  editFormPermissions: z.any().optional(),
-  reviewFormPermissions: z.any().optional(),
+  editFormPermissions: z.string().optional(),
+  reviewFormPermissions: z.string().optional(),
 });
 
 export const updateFormSchema = formSchema.extend(idSchema.shape);

@@ -11,11 +11,14 @@ import {
   Textarea,
   TextInput,
   Checkbox,
-  JsonInput,
 } from "@mantine/core";
 import { IconPicker } from "@/components/icon-picker";
+import { authClient } from "@/lib/auth-client";
 
 export const FormForm = ({ form }: { form?: FormProps[0] }) => {
+  const { data: session } = authClient.useSession();
+  const initialEditPermissions = `user.role == "admin" || user.email == "${session?.user?.email}"`;
+  const initialReviewPermissions = `user.email == "${session?.user?.email}"`;
   const formForm = useForm({
     validate: zodResolver(form ? updateFormSchema : formSchema),
     mode: "uncontrolled",
@@ -28,8 +31,10 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           icon: form.icon,
           isPublic: form.isPublic,
           isActive: form.isActive,
-          editFormPermissions: form.editFormPermissions || "",
-          reviewFormPermissions: form.reviewFormPermissions || "",
+          editFormPermissions:
+            form.editFormPermissions || initialEditPermissions,
+          reviewFormPermissions:
+            form.reviewFormPermissions || initialReviewPermissions,
         }
       : {
           title: "",
@@ -37,8 +42,8 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           icon: "",
           isPublic: false,
           isActive: true,
-          editFormPermissions: {},
-          reviewFormPermissions: {},
+          editFormPermissions: initialEditPermissions,
+          reviewFormPermissions: initialReviewPermissions,
         },
   });
 
@@ -74,23 +79,23 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           {...formForm.getInputProps("isActive", { type: "checkbox" })}
         />
 
-        <JsonInput
-          label="Bearbeitungs Berechtigungen"
-          validationError="Invalid JSON"
-          formatOnBlur
-          autosize
-          minRows={4}
-          {...formForm.getInputProps("editFormPermissions")}
-        />
+        {form && (
+          <>
+            <Textarea
+              label="Bearbeitungs Berechtigungen"
+              description="CEL Expression (z.B. user.role == 'admin' || user.email == user.email)"
+              autosize
+              {...formForm.getInputProps("editFormPermissions")}
+            />
 
-        <JsonInput
-          label="Überprüfungs Berechtigungen"
-          validationError="Invalid JSON"
-          formatOnBlur
-          autosize
-          minRows={4}
-          {...formForm.getInputProps("reviewFormPermissions")}
-        />
+            <Textarea
+              label="Überprüfungs Berechtigungen"
+              description="CEL Expression (z.B. user.role == 'admin')"
+              autosize
+              {...formForm.getInputProps("reviewFormPermissions")}
+            />
+          </>
+        )}
 
         <Group mt="lg" justify="flex-end">
           <Button loading={status === "executing"} type="submit">

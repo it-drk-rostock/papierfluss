@@ -2,6 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { authQuery } from "@/server/utils/auth-query";
+import jsonata from "jsonata";
+import { notFound } from "next/navigation";
 
 /**
  * Retrieves a form from the database based on user's role and access permissions.
@@ -44,9 +46,15 @@ export const getForm = async (id: string) => {
       select: {
         id: true,
         title: true,
+        teams: {
+          select: {
+            name: true,
+          },
+        },
         submissions: {
           select: {
             id: true,
+            data: true,
             status: true,
             submittedBy: {
               select: {
@@ -63,21 +71,21 @@ export const getForm = async (id: string) => {
   const form = await prisma.form.findUnique({
     where: {
       id,
-      teams: {
-        some: {
-          users: {
-            some: { id: user.id },
-          },
-        },
-      },
     },
     select: {
       title: true,
       id: true,
+      reviewFormPermissions: true,
+      teams: {
+        select: {
+          name: true,
+        },
+      },
       submissions: {
         select: {
           id: true,
           status: true,
+          data: true,
           submittedBy: {
             select: {
               id: true,
@@ -89,7 +97,33 @@ export const getForm = async (id: string) => {
     },
   });
 
-  return form;
+  if (!form) return notFound();
+
+  const filteredSubmissions = form.submissions
+    ? await Promise.all(
+        form.submissions.map(async (submission) => {
+          const submissionContext = {
+            user: {
+              ...user,
+              teams: user.teams?.map((t) => t.name) ?? [],
+            },
+            teams: user.teams?.map((t) => t.name) ?? [],
+            formTeams: form.teams?.map((t) => t.name) ?? [],
+            data: submission.data,
+          };
+
+          const expressionString =
+            form.reviewFormPermissions ||
+            'user.email = "m.pohl@drk-rostock.de"';
+          const expression = jsonata(expressionString);
+          const result = await expression.evaluate(submissionContext);
+
+          return result === true ? submission : null;
+        })
+      ).then((results) => results.filter(Boolean))
+    : [];
+
+  return { ...form, submissions: filteredSubmissions };
 };
 
 export type FormProps = Awaited<ReturnType<typeof getForm>>;
