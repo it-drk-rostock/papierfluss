@@ -13,12 +13,10 @@ import {
   Checkbox,
 } from "@mantine/core";
 import { IconPicker } from "@/components/icon-picker";
-import { authClient } from "@/lib/auth-client";
+import { PermissionBuilder } from "@/components/permission-builder";
 
 export const FormForm = ({ form }: { form?: FormProps[0] }) => {
-  const { data: session } = authClient.useSession();
-  const initialEditPermissions = `user.role == "admin" || user.email == "${session?.user?.email}"`;
-  const initialReviewPermissions = `user.email == "${session?.user?.email}"`;
+  
   const formForm = useForm({
     validate: zodResolver(form ? updateFormSchema : formSchema),
     mode: "uncontrolled",
@@ -31,10 +29,8 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           icon: form.icon,
           isPublic: form.isPublic,
           isActive: form.isActive,
-          editFormPermissions:
-            form.editFormPermissions || initialEditPermissions,
-          reviewFormPermissions:
-            form.reviewFormPermissions || initialReviewPermissions,
+          editFormPermissions: form.editFormPermissions,
+          reviewFormPermissions: form.reviewFormPermissions,
         }
       : {
           title: "",
@@ -42,8 +38,8 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           icon: "",
           isPublic: false,
           isActive: true,
-          editFormPermissions: initialEditPermissions,
-          reviewFormPermissions: initialReviewPermissions,
+          editFormPermissions: "",
+          reviewFormPermissions: "",
         },
   });
 
@@ -69,7 +65,6 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           label="Beschreibung"
           {...formForm.getInputProps("description")}
         />
-
         <Checkbox
           label="Öffentlich"
           {...formForm.getInputProps("isPublic", { type: "checkbox" })}
@@ -78,21 +73,19 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           label="Aktiv"
           {...formForm.getInputProps("isActive", { type: "checkbox" })}
         />
-
         {form && (
           <>
-            <Textarea
+            <PermissionBuilder
               label="Bearbeitungs Berechtigungen"
-              description="CEL Expression (z.B. user.role == 'admin' || user.email == user.email)"
-              autosize
-              {...formForm.getInputProps("editFormPermissions")}
+              initialData={form.editFormPermissions ?? ""}
+              formActionName="create-form"
+              fieldValue="editFormPermissions"
             />
-
-            <Textarea
+            <PermissionBuilder
               label="Überprüfungs Berechtigungen"
-              description="CEL Expression (z.B. user.role == 'admin')"
-              autosize
-              {...formForm.getInputProps("reviewFormPermissions")}
+              initialData={form.reviewFormPermissions ?? ""}
+              formActionName="create-form"
+              fieldValue="reviewFormPermissions"
             />
           </>
         )}

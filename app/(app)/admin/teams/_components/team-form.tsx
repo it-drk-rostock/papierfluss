@@ -34,7 +34,7 @@ export const TeamForm = () => {
           {...form.getInputProps("name")}
         />
         <TextInput
-          label="E-Mail"
+          label="Kontakt E-Mail"
           key={form.key("contactEmail")}
           {...form.getInputProps("contactEmail")}
         />
