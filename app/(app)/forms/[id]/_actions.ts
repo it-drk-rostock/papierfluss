@@ -112,11 +112,11 @@ export const getForm = async (id: string) => {
             data: submission.data,
           };
 
-          const expressionString =
-            form.reviewFormPermissions ||
-            'user.email = "m.pohl@drk-rostock.de"';
-          const expression = jsonata(expressionString);
-          const result = await expression.evaluate(submissionContext);
+          const expressionString = form.reviewFormPermissions || "";
+
+          const result = await jsonata(expressionString).evaluate(
+            submissionContext
+          );
 
           return result === true ? submission : null;
         })

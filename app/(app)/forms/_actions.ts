@@ -1,6 +1,9 @@
 "use server";
 
-import { authActionClient } from "@/server/utils/action-clients";
+import {
+  adminActionClient,
+  authActionClient,
+} from "@/server/utils/action-clients";
 import { revalidatePath } from "next/cache";
 import {
   assignTeamsSchema,
@@ -13,8 +16,7 @@ import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
 import { redirect } from "next/navigation";
-import { adminQuery } from "@/server/utils/admin-query";
-import { evaluate } from "cel-js";
+import jsonata from "jsonata";
 
 /**
  * Creates a new form in the database.
@@ -35,6 +37,13 @@ export const createForm = authActionClient
     const { title, description, icon, isPublic, isActive } = parsedInput;
 
     try {
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "moderator"
+      ) {
+        throw new Error("Keine Berechtigung zum Erstellen von Formularen");
+      }
+
       await prisma.form.create({
         data: {
           title,
@@ -83,31 +92,34 @@ export const updateForm = authActionClient
     } = parsedInput;
 
     try {
-      // First fetch the existing form to check permissions
       const form = await prisma.form.findUnique({
         where: { id },
-        select: { editFormPermissions: true },
+        select: { editFormPermissions: true, teams: true },
       });
 
       if (!form) {
         throw new Error("Formular nicht gefunden");
       }
 
-      const context = {
-        user: {
-          email: ctx.session.user.email,
-          name: ctx.session.user.name,
-          role: ctx.session.user.role,
-          id: ctx.session.user.id,
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
           teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-        },
-      };
+          formTeams: form.teams?.map((t) => t.name) ?? [],
+        };
 
-      // Evaluate the CEL expression directly from the string
-      const hasPermission = evaluate(form.editFormPermissions || "", context);
-
-      if (!hasPermission) {
-        throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
+        const expressionString = form.editFormPermissions || "";
+        const hasPermission = await jsonata(expressionString).evaluate(context);
+        console.log(hasPermission, `expressionString: ${expressionString}`);
+        if (!hasPermission) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
+        }
       }
 
       await prisma.form.update({
@@ -139,7 +151,7 @@ export const updateForm = authActionClient
  * @returns {Promise<void>}
  * @throws {Error} If the delete operation fails
  */
-export const deleteForm = authActionClient
+export const deleteForm = adminActionClient
   .schema(idSchema)
   .metadata({
     event: "deleteFormAction",
@@ -293,9 +305,36 @@ export const removeTeam = authActionClient
   .metadata({
     event: "removeTeamAction",
   })
-  .stateAction(async ({ parsedInput }) => {
+  .stateAction(async ({ parsedInput, ctx }) => {
     const { id, teamId } = parsedInput;
     try {
+      const form = await prisma.form.findUnique({
+        where: { id },
+        select: { editFormPermissions: true },
+      });
+
+      if (!form) {
+        throw new Error("Formular nicht gefunden");
+      }
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const expressionString = form.editFormPermissions || "";
+        const hasPermission = await jsonata(expressionString).evaluate(context);
+
+        if (hasPermission !== true) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
+        }
+      }
       await prisma.form.update({
         where: {
           id,
@@ -324,9 +363,36 @@ export const assignTeams = authActionClient
   .metadata({
     event: "assignTeamsAction",
   })
-  .stateAction(async ({ parsedInput }) => {
+  .stateAction(async ({ parsedInput, ctx }) => {
     const { teams, id } = parsedInput;
     try {
+      const form = await prisma.form.findUnique({
+        where: { id },
+        select: { editFormPermissions: true },
+      });
+
+      if (!form) {
+        throw new Error("Formular nicht gefunden");
+      }
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const expressionString = form.editFormPermissions || "";
+        const hasPermission = await jsonata(expressionString).evaluate(context);
+
+        if (hasPermission !== true) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
+        }
+      }
       await prisma.form.update({
         where: {
           id,
@@ -353,7 +419,7 @@ export type AvailableTeamsParams = {
 };
 
 export const getAvailableTeams = async ({ formId }: AvailableTeamsParams) => {
-  await adminQuery();
+  await authQuery();
   const teams = await prisma.team.findMany({
     where: {
       forms: {

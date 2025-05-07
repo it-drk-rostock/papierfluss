@@ -6,6 +6,7 @@ import { authActionClient } from "@/server/utils/action-clients";
 import { formatError } from "@/utils/format-error";
 import { revalidatePath } from "next/cache";
 import { authQuery } from "@/server/utils/auth-query";
+import jsonata from "jsonata";
 
 /**
  * Updates a form in the database.
@@ -22,10 +23,37 @@ export const updateForm = authActionClient
   .metadata({
     event: "updateFormSchema",
   })
-  .stateAction(async ({ parsedInput }) => {
+  .stateAction(async ({ parsedInput, ctx }) => {
     const { schema, id } = parsedInput;
 
     try {
+      const form = await prisma.form.findUnique({
+        where: { id },
+        select: { editFormPermissions: true },
+      });
+
+      if (!form) {
+        throw new Error("Formular nicht gefunden");
+      }
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const expressionString = form.editFormPermissions || "";
+        const hasPermission = await jsonata(expressionString).evaluate(context);
+
+        if (hasPermission !== true) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
+        }
+      }
       await prisma.form.update({
         where: { id },
         data: {

@@ -92,10 +92,10 @@ export const getFormSubmission = async (id: string) => {
     data: form.data,
   };
 
-  const expressionString =
-    form.form.reviewFormPermissions || 'user.email = "m.pohl@drk-rostock.de"';
-  const expression = jsonata(expressionString);
-  const hasPermission = await expression.evaluate(submissionContext);
+  const expressionString = form.form.reviewFormPermissions || "";
+  const hasPermission = await jsonata(expressionString).evaluate(
+    submissionContext
+  );
 
   if (!hasPermission) {
     forbidden();
@@ -118,7 +118,9 @@ export const updateFormSubmission = authActionClient
       await prisma.formSubmission.update({
         where: {
           id,
-          submittedById: ctx.session.user.id,
+          ...(ctx.session.user.role !== "admin" && {
+            submittedById: ctx.session.user.id,
+          }),
           status: "ongoing",
         },
         data: {
@@ -145,11 +147,53 @@ export const updateFormSubmissionStatus = authActionClient
     const { id, status, message } = parsedInput;
 
     try {
+      const form = await prisma.formSubmission.findFirst({
+        where: { id },
+        select: {
+          data: true,
+          form: {
+            select: {
+              id: true,
+              title: true,
+              schema: true,
+              reviewFormPermissions: true,
+              teams: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!form) throw new Error("Formular nicht gefunden");
+
+      if (ctx.session.user.role !== "admin") {
+        const submissionContext = {
+          user: {
+            ...ctx.session.user,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          formTeams: form.form.teams?.map((t) => t.name) ?? [],
+          data: form.data,
+        };
+
+        const expressionString = form.form.reviewFormPermissions || "";
+        const hasPermission = await jsonata(expressionString).evaluate(
+          submissionContext
+        );
+
+        if (!hasPermission) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
+        }
+      }
+
       if (status === "ongoing") {
         await prisma.formSubmission.update({
           where: {
             id,
-            submittedById: ctx.session.user.id,
             status: "inReview",
           },
           data: {
@@ -207,7 +251,9 @@ export const submitFormSubmission = authActionClient
       await prisma.formSubmission.update({
         where: {
           id,
-          submittedById: ctx.session.user.id,
+          ...(ctx.session.user.role !== "admin" && {
+            submittedById: ctx.session.user.id,
+          }),
           status: "ongoing",
         },
         data: {
@@ -232,10 +278,52 @@ export const reviewFormSubmission = authActionClient
   .metadata({
     event: "reviewFormSubmissionAction",
   })
-  .stateAction(async ({ parsedInput }) => {
+  .stateAction(async ({ parsedInput, ctx }) => {
     const { id } = parsedInput;
 
     try {
+      const form = await prisma.formSubmission.findFirst({
+        where: { id },
+        select: {
+          data: true,
+          form: {
+            select: {
+              id: true,
+              title: true,
+              schema: true,
+              reviewFormPermissions: true,
+              teams: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!form) throw new Error("Formular nicht gefunden");
+
+      if (ctx.session.user.role !== "admin") {
+        const submissionContext = {
+          user: {
+            ...ctx.session.user,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          formTeams: form.form.teams?.map((t) => t.name) ?? [],
+          data: form.data,
+        };
+
+        const expressionString = form.form.reviewFormPermissions || "";
+        const hasPermission = await jsonata(expressionString).evaluate(
+          submissionContext
+        );
+
+        if (!hasPermission) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
+        }
+      }
       await prisma.formSubmission.update({
         where: {
           id,
@@ -246,7 +334,6 @@ export const reviewFormSubmission = authActionClient
         },
       });
     } catch (error) {
-      console.log(error);
       throw formatError(error);
     }
 
