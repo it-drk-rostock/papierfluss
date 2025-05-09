@@ -6,18 +6,21 @@ type ButtonActionProps = ButtonProps & {
   action: any;
   values?: { [key: string]: any };
   hideNotification?: boolean;
+  onSuccess?: () => void;
 };
 
 export const ButtonAction = ({
   action,
   values,
   hideNotification,
+  onSuccess,
   ...props
 }: ButtonActionProps) => {
   const { execute, status } = useEnhancedAction({
     action: action,
     hideModals: true,
     hideNotification: hideNotification,
+    onSuccess: onSuccess,
   });
 
   return (
