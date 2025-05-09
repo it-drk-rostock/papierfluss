@@ -17,13 +17,13 @@ import { modals } from "@mantine/modals";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { ButtonAction } from "@/components/button-action";
 import { FormSubmissionStatusForm } from "./form-submission-status-form";
+import { handleFileUpload, deleteFile } from "@/server/utils/file-operations";
 
 export const FormSubmissionForm = ({
   submission,
 }: {
   submission: FormSubmissionProps;
 }) => {
-
   const { execute: executeUpdate, status: statusUpdate } = useEnhancedAction({
     action: updateFormSubmission,
     hideModals: true,
@@ -40,6 +40,51 @@ export const FormSubmissionForm = ({
   // Disable default complete button
   model.showCompleteButton = false;
   model.readOnly = submission.status === "submitted";
+
+  // Add file upload handler using the file-operations utility
+  model.onUploadFiles.add(async (_, options) => {
+    try {
+      const results = await handleFileUpload(options.files);
+      options.callback(results);
+    } catch (error) {
+      console.error("Upload error:", error);
+      options.callback(
+        [],
+        [`An error occurred during file upload. ${error.message}`]
+      );
+    }
+  });
+
+  // Add file deletion handler using the file-operations utility
+  model.onClearFiles.add(async (_, options) => {
+    if (!options.value || options.value.length === 0) {
+      return options.callback("success");
+    }
+
+    const filesToDelete = options.fileName
+      ? options.value.filter((item: any) => item.name === options.fileName)
+      : options.value;
+
+    if (filesToDelete.length === 0) {
+      console.error(`File with name ${options.fileName} is not found`);
+      return options.callback("error");
+    }
+
+    try {
+      const results = await Promise.all(
+        filesToDelete.map((file: any) => deleteFile(file.content))
+      );
+
+      if (results.every((res) => res === "success")) {
+        options.callback("success");
+      } else {
+        options.callback("error");
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+      options.callback("error");
+    }
+  });
 
   // Only add navigation items if submission status is "ongoing"
   if (submission.status === "ongoing") {
