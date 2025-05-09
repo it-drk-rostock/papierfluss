@@ -114,9 +114,10 @@ export const updateForm = authActionClient
           formTeams: form.teams?.map((t) => t.name) ?? [],
         };
 
+        console.log(context, form.editFormPermissions);
         const expressionString = form.editFormPermissions || "";
         const hasPermission = await jsonata(expressionString).evaluate(context);
-        console.log(hasPermission, `expressionString: ${expressionString}`);
+
         if (!hasPermission) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
         }
@@ -135,6 +136,7 @@ export const updateForm = authActionClient
         },
       });
     } catch (error) {
+      console.log(error);
       throw formatError(error);
     }
 

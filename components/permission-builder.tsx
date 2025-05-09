@@ -26,19 +26,13 @@ export const PermissionBuilder = ({
   label: string;
 }) => {
   const formAction = createFormActions(formActionName);
+
   const [query, setQuery] = useState<RuleGroupType>(
     parseJSONata(initialData) ?? {
       combinator: "and",
       rules: [],
     }
   );
-
-  useEffect(() => {
-    formAction.setFieldValue(
-      fieldValue,
-      formatQuery(query, { format: "jsonata", parseNumbers: true })
-    );
-  }, [query]);
 
   const {
     data: userNames,
@@ -71,10 +65,18 @@ export const PermissionBuilder = ({
     },
     { name: "user.email", label: "E-Mail" },
     { name: "user.role", label: "Rolle" },
-    { name: "user.teams", label: "Teams" },
     { name: "user.id", label: "Benutzer ID" },
-    { name: "formTeams", label: "Formular Teams" },
   ];
+
+  useEffect(() => {
+    formAction.setFieldValue(
+      fieldValue,
+      formatQuery(query, {
+        format: "jsonata",
+        parseNumbers: true,
+      })
+    );
+  }, [query, formAction, fieldValue]);
 
   if (isPending) {
     return <Loader />;
