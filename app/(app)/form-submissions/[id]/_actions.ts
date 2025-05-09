@@ -11,7 +11,7 @@ import { formatError } from "@/utils/format-error";
 import { revalidatePath } from "next/cache";
 import { idSchema } from "@/schemas/id-schema";
 import jsonata from "jsonata";
-import { forbidden } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 
 /**
  * Retrieves forms from the database based on user's role and access permissions.
@@ -136,6 +136,31 @@ export const updateFormSubmission = authActionClient
     return {
       message: "Formular wurde gespeichert",
     };
+  });
+
+export const withdrawFormSubmission = authActionClient
+  .schema(idSchema)
+  .metadata({
+    event: "withdrawFormSubmissionAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id } = parsedInput;
+
+    try {
+      await prisma.formSubmission.delete({
+        where: {
+          id,
+          ...(ctx.session.user.role !== "admin" && {
+            submittedById: ctx.session.user.id,
+          }),
+          status: "ongoing",
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    redirect("/dashboard");
   });
 
 export const updateFormSubmissionStatus = authActionClient

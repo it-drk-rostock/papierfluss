@@ -11,6 +11,7 @@ import {
   reviewFormSubmission,
   submitFormSubmission,
   updateFormSubmission,
+  withdrawFormSubmission,
 } from "../_actions";
 import { modals } from "@mantine/modals";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
@@ -22,6 +23,7 @@ export const FormSubmissionForm = ({
 }: {
   submission: FormSubmissionProps;
 }) => {
+
   const { execute: executeUpdate, status: statusUpdate } = useEnhancedAction({
     action: updateFormSubmission,
     hideModals: true,
@@ -30,6 +32,7 @@ export const FormSubmissionForm = ({
     action: reviewFormSubmission,
     hideModals: true,
   });
+
   const model = new Model(submission.form.schema);
   model.locale = "de";
   model.data = submission.data;
@@ -40,6 +43,26 @@ export const FormSubmissionForm = ({
 
   // Only add navigation items if submission status is "ongoing"
   if (submission.status === "ongoing") {
+    model.addNavigationItem({
+      id: "withdraw-form",
+      title: "Formular zurückziehen",
+      innerCss: "sd-btn withdraw-form",
+      action: () => {
+        modals.open({
+          closeOnClickOutside: false,
+          title: "Formular zurückziehen",
+          children: (
+            <ButtonAction
+              fullWidth
+              action={withdrawFormSubmission}
+              values={{ id: submission.id }}
+            >
+              Formular zurückziehen
+            </ButtonAction>
+          ),
+        });
+      },
+    });
     model.addNavigationItem({
       id: "save-form",
       title: "Speichern",
