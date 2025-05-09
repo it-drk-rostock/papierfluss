@@ -9,6 +9,7 @@ import "survey-creator-core/i18n/german";
 import { useParams } from "next/navigation";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { updateForm } from "../_actions";
+import { createSignedUploadUrl } from "@/server/utils/create-signed-upload-url";
 import {
   Box,
   LoadingOverlay,
@@ -19,6 +20,7 @@ import {
 } from "@mantine/core";
 import { useCompletion } from "@ai-sdk/react";
 import { useForm } from "@mantine/form";
+import { useMutation } from "@tanstack/react-query";
 
 const defaultCreatorOptions: ICreatorOptions = {
   showTranslationTab: true,
@@ -28,6 +30,22 @@ export const SurveyDesignerForm = (props: {
   json?: object;
   options?: ICreatorOptions;
 }) => {
+  // Create the upload mutation
+  const uploadMutation = useMutation({
+    mutationFn: async ({
+      fileName,
+      contentType,
+    }: {
+      fileName: string;
+      contentType: string;
+    }) => {
+      const response = await createSignedUploadUrl(fileName, contentType);
+      if (!response.url || !response.fileUrl)
+        throw new Error("Failed to get upload URL");
+      return response;
+    },
+  });
+
   const [creator] = useState(() => {
     // Initialize creator only once
     const newCreator = new SurveyCreator(
@@ -65,6 +83,39 @@ export const SurveyDesignerForm = (props: {
     // Set initial properties
     newCreator.isAutoSave = false;
     newCreator.locale = "de";
+
+    // Add file upload handler
+    newCreator.onUploadFile.add(async (_, options) => {
+      try {
+        const file = options.files[0];
+
+        // Get signed URL using mutation
+        const uploadData = await uploadMutation.mutateAsync({
+          fileName: file.name,
+          contentType: file.type,
+        });
+
+        if (!uploadData.url || !uploadData.fileUrl) {
+          options.callback("error");
+          return;
+        }
+
+        // Upload file using signed URL
+        await fetch(uploadData.url, {
+          method: "PUT",
+          body: file,
+          headers: {
+            "Content-Type": file.type,
+          },
+        });
+
+        // Return the permanent file URL
+        options.callback("success", uploadData.fileUrl);
+      } catch (error) {
+        console.error("File upload failed:", error);
+        options.callback("error");
+      }
+    });
 
     return newCreator;
   });
