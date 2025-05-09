@@ -75,3 +75,12 @@ a {
 .complete-form:hover {
   background-color: var(--mantine-color-green-filled-hover) !important;
 }
+
+.withdraw-form {
+  background-color: transparent !important;
+  color: var(--mantine-color-red-filled) !important;
+}
+
+.withdraw-form:hover {
+  background-color: var(--mantine-color-red-outline-hover) !important;
+}
