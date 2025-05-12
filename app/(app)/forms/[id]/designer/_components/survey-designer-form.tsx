@@ -21,6 +21,7 @@ import {
 import { useCompletion } from "@ai-sdk/react";
 import { useForm } from "@mantine/form";
 import { useMutation } from "@tanstack/react-query";
+import { showNotification } from "@/utils/notification";
 
 const defaultCreatorOptions: ICreatorOptions = {
   showTranslationTab: true,
@@ -109,10 +110,10 @@ export const SurveyDesignerForm = (props: {
           },
         });
 
-        // Return the permanent file URL
+        showNotification("Datei hochgeladen", "success");
         options.callback("success", uploadData.fileUrl);
-      } catch (error) {
-        console.error("File upload failed:", error);
+      } catch {
+        showNotification("Datei hochladen fehlgeschlagen", "error");
         options.callback("error");
       }
     });

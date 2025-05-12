@@ -86,6 +86,96 @@ export const FormSubmissionForm = ({
     }
   });
 
+  // Add custom CSS and click handlers for file previews
+  React.useEffect(() => {
+    // Add custom CSS to indicate clickable previews
+    const style = document.createElement("style");
+    style.innerHTML = `
+      .sd-file__image-wrapper, .sd-file__preview-item {
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .sd-file__image-wrapper:hover, .sd-file__preview-item:hover {
+        transform: scale(1.05);
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Function to handle image clicks
+    const handleImageClick = (event) => {
+      const imageWrapper = event.target.closest(".sd-file__image-wrapper");
+      const previewItem = event.target.closest(".sd-file__preview-item");
+
+      if (!(imageWrapper || previewItem)) return;
+
+      // Find the file URL
+      let fileUrl = null;
+
+      // Try to find an image element and get its src
+      const imgElement = (imageWrapper || previewItem)?.querySelector("img");
+      if (imgElement?.src) {
+        fileUrl = imgElement.src;
+      } else {
+        // Try to find the file data in the survey model
+        const questionRoot = event.target.closest("[data-name]");
+        if (questionRoot) {
+          const questionName = questionRoot.getAttribute("data-name");
+          const questionValue = model.getQuestionByName(questionName)?.value;
+
+          if (Array.isArray(questionValue) && questionValue.length > 0) {
+            const items = Array.from(
+              document.querySelectorAll(".sd-file__preview-item")
+            );
+            const clickedItemIndex = items.findIndex(
+              (item) => item === previewItem || item.contains(imageWrapper)
+            );
+
+            if (clickedItemIndex >= 0 && questionValue[clickedItemIndex]) {
+              fileUrl = questionValue[clickedItemIndex].content;
+            }
+          }
+        }
+      }
+
+      // Download the file if URL was found
+      if (fileUrl) {
+        const link = document.createElement("a");
+        link.href = fileUrl;
+        link.target = "_blank";
+        link.download = "";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    };
+
+    // Add a global click event listener
+    document.addEventListener("click", handleImageClick, true);
+
+    return () => {
+      document.head.removeChild(style);
+      document.removeEventListener("click", handleImageClick, true);
+    };
+  }, [model]);
+
+  // Add file download handler (keep this for the SurveyJS built-in download button)
+  model.onDownloadFile.add(async (_, options) => {
+    try {
+      const fileUrl = options.content;
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.target = "_blank";
+      link.download = "";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      options.callback("success");
+    } catch (error) {
+      console.error("Download error:", error);
+      options.callback("error", `Failed to download file: ${error.message}`);
+    }
+  });
+
   // Only add navigation items if submission status is "ongoing"
   if (submission.status === "ongoing") {
     model.addNavigationItem({
