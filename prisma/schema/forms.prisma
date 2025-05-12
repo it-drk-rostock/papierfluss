@@ -10,11 +10,18 @@ model Form {
     updatedAt             DateTime         @updatedAt
     editFormPermissions   String?
     reviewFormPermissions String?
-    // Relations
     createdBy             User?            @relation("FormCreator", fields: [createdById], references: [id], onDelete: SetNull)
     createdById           String?
     teams                 Team[]
     submissions           FormSubmission[]
+    fillOutWorkflows      N8nWorkflow[]    @relation("FillOutWorkflows")
+    saveWorkflows         N8nWorkflow[]    @relation("SaveWorkflows")
+    revokeWorkflows       N8nWorkflow[]    @relation("RevokeWorkflows")
+    submitWorkflows       N8nWorkflow[]    @relation("SubmitWorkflows")
+    reviewWorkflows       N8nWorkflow[]    @relation("ReviewWorkflows")
+    reUpdateWorkflows     N8nWorkflow[]    @relation("ReUpdateWorkflows")
+    rejectWorkflows       N8nWorkflow[]    @relation("RejectWorkflows")
+    completeWorkflows     N8nWorkflow[]    @relation("CompleteWorkflows")
 
     @@index([createdById])
 }
