@@ -29,6 +29,10 @@ export const AdminLinks = async () => {
         <Title order={2}>Teams</Title>
         <Text c="dimmed">Manage teams, members, and team settings.</Text>
       </Card>
+      <Card padding="lg" withBorder component={Link} href="/admin/n8n" w={300}>
+        <Title order={2}>n8n Workflows</Title>
+        <Text c="dimmed">Manage n8n workflows.</Text>
+      </Card>
     </Group>
   );
 };
