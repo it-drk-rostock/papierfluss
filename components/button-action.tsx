@@ -1,3 +1,4 @@
+"use client";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { Button, ButtonProps } from "@mantine/core";
 import React from "react";

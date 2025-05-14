@@ -69,6 +69,9 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
           <MenuItemLink href={`/forms/${form.id}/designer`}>
             Zum Designer
           </MenuItemLink>
+          <MenuItemLink href={`/forms/${form.id}/n8n`}>
+            N8n Workflows
+          </MenuItemLink>
           <MenuItemLink href={`/forms/${form.id}`}>
             Formular Dashboard
           </MenuItemLink>

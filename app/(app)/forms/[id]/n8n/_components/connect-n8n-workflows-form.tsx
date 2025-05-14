@@ -1,52 +1,59 @@
 "use client";
-import { useForm } from "@mantine/form";
-import React from "react";
-import { createWorkflowSchema } from "../_schemas";
-import { zodResolver } from "mantine-form-zod-resolver";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
-import { createWorkflow, getN8nWorkflows } from "../_actions";
 import {
   ActionIcon,
   Button,
   Group,
-  Stack,
-  Title,
-  Text,
   Loader,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { zodResolver } from "mantine-form-zod-resolver";
+import React from "react";
+import { connectN8nWorkflow } from "../_actions";
+import { connectN8nWorkflowSchema } from "../_schemas";
 import { IconPlus, IconX } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
 import { EmptyState } from "@/components/empty-state";
+import { useQuery } from "@tanstack/react-query";
+import { getFormN8nWorkflows } from "../_actions";
 
-type WorkflowFormProps = {
-  existingWorkflows: {
+export const ConnectN8nWorkflowsForm = ({
+  workflows,
+  workflowType,
+  formId,
+}: {
+  workflows: {
+    name: string;
     id: string;
     workflowId: string;
-    name: string;
   }[];
-};
-
-export const WorkflowForm = ({ existingWorkflows }: WorkflowFormProps) => {
+  workflowType: string;
+  formId: string;
+}) => {
   const form = useForm({
-    validate: zodResolver(createWorkflowSchema),
+    validate: zodResolver(connectN8nWorkflowSchema),
     mode: "uncontrolled",
     initialValues: {
+      formId,
       workflows: [],
+      workflowType: workflowType,
     },
   });
 
   const { execute, status } = useEnhancedAction({
-    action: createWorkflow,
+    action: connectN8nWorkflow,
     hideModals: true,
   });
 
   const {
-    data: availableWorkflows,
+    data: formData,
     isPending,
     isError,
   } = useQuery({
-    queryKey: ["n8nWorkflows"],
-    queryFn: getN8nWorkflows,
+    queryKey: ["formN8nWorkflows", formId],
+    queryFn: () => getFormN8nWorkflows(formId),
   });
 
   if (isPending) {
@@ -56,6 +63,9 @@ export const WorkflowForm = ({ existingWorkflows }: WorkflowFormProps) => {
   if (isError) {
     return <Text c="red">Fehler beim Laden der Workflows</Text>;
   }
+
+  const availableWorkflows =
+    formData?.[workflowType as keyof typeof formData] || [];
 
   return (
     <form
@@ -67,10 +77,12 @@ export const WorkflowForm = ({ existingWorkflows }: WorkflowFormProps) => {
         <Stack gap="sm">
           <Title order={3}>Verfügbare Workflows</Title>
           {(() => {
-            const filteredWorkflows = (availableWorkflows || []).filter(
+            const filteredWorkflows = availableWorkflows.filter(
               (workflow) =>
-                !form.values.workflows.some((w) => w.id === workflow.id) &&
-                !existingWorkflows.some((w) => w.workflowId === workflow.id)
+                !form.values.workflows.some(
+                  (w) => w.workflowId === workflow.workflowId
+                ) &&
+                !workflows.some((w) => w.workflowId === workflow.workflowId)
             );
 
             if (filteredWorkflows.length === 0) {
@@ -96,6 +108,7 @@ export const WorkflowForm = ({ existingWorkflows }: WorkflowFormProps) => {
                   onClick={() =>
                     form.insertListItem("workflows", {
                       id: workflow.id,
+                      workflowId: workflow.workflowId,
                       name: workflow.name,
                     })
                   }
