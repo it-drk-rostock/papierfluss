@@ -17,7 +17,7 @@ import { connectN8nWorkflowSchema } from "../_schemas";
 import { IconPlus, IconX } from "@tabler/icons-react";
 import { EmptyState } from "@/components/empty-state";
 import { useQuery } from "@tanstack/react-query";
-import { getFormN8nWorkflows } from "../_actions";
+import { getN8nWorkflows } from "@/server/utils/get-n8n-workflows";
 
 export const ConnectN8nWorkflowsForm = ({
   workflows,
@@ -48,12 +48,12 @@ export const ConnectN8nWorkflowsForm = ({
   });
 
   const {
-    data: formData,
+    data: availableWorkflows = [],
     isPending,
     isError,
   } = useQuery({
-    queryKey: ["formN8nWorkflows", formId],
-    queryFn: () => getFormN8nWorkflows(formId),
+    queryKey: ["n8nWorkflows"],
+    queryFn: getN8nWorkflows,
   });
 
   if (isPending) {
@@ -64,8 +64,13 @@ export const ConnectN8nWorkflowsForm = ({
     return <Text c="red">Fehler beim Laden der Workflows</Text>;
   }
 
-  const availableWorkflows =
-    formData?.[workflowType as keyof typeof formData] || [];
+  // Filter out workflows that are already connected
+  const filteredWorkflows = availableWorkflows.filter(
+    (workflow) =>
+      !form.values.workflows.some(
+        (w) => w.workflowId === workflow.workflowId
+      ) && !workflows.some((w) => w.workflowId === workflow.workflowId)
+  );
 
   return (
     <form
@@ -77,14 +82,6 @@ export const ConnectN8nWorkflowsForm = ({
         <Stack gap="sm">
           <Title order={3}>Verfügbare Workflows</Title>
           {(() => {
-            const filteredWorkflows = availableWorkflows.filter(
-              (workflow) =>
-                !form.values.workflows.some(
-                  (w) => w.workflowId === workflow.workflowId
-                ) &&
-                !workflows.some((w) => w.workflowId === workflow.workflowId)
-            );
-
             if (filteredWorkflows.length === 0) {
               return (
                 <EmptyState text="Keine Workflows verfügbar">

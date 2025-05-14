@@ -1,3 +1,4 @@
+"use client";
 import { baseIconStyles } from "@/constants/base-icon-styles";
 import { ActionIcon } from "@mantine/core";
 import { IconEye } from "@tabler/icons-react";
