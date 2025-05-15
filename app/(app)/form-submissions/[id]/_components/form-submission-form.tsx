@@ -45,7 +45,8 @@ export const FormSubmissionForm = ({
   model.onUploadFiles.add(async (_, options) => {
     try {
       const results = await handleFileUpload(options.files);
-      options.callback(results);
+      // Prevent automatic download by not triggering click events
+      options.callback(results, undefined, { suppressPreviewClick: true });
     } catch (error) {
       console.error("Upload error:", error);
       options.callback(
@@ -103,6 +104,10 @@ export const FormSubmissionForm = ({
 
     // Function to handle image clicks
     const handleImageClick = (event) => {
+      // Ignore clicks during file upload
+      if (event.target.closest(".sd-file__remove-file")) return;
+      if (event.target.closest('input[type="file"]')) return;
+
       const imageWrapper = event.target.closest(".sd-file__image-wrapper");
       const previewItem = event.target.closest(".sd-file__preview-item");
 
