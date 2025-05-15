@@ -9,7 +9,10 @@ import "survey-creator-core/i18n/german";
 import { useParams } from "next/navigation";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { updateForm } from "../_actions";
-import { createSignedUploadUrl } from "@/server/utils/create-signed-upload-url";
+import {
+  createSignedUploadUrls,
+  deleteFiles,
+} from "@/server/utils/create-signed-upload-url";
 import {
   Box,
   LoadingOverlay,
@@ -34,15 +37,14 @@ export const SurveyDesignerForm = (props: {
   // Create the upload mutation
   const uploadMutation = useMutation({
     mutationFn: async ({
-      fileName,
-      contentType,
+      files,
+      formId,
     }: {
-      fileName: string;
-      contentType: string;
+      files: { fileName: string; contentType: string }[];
+      formId: string;
     }) => {
-      const response = await createSignedUploadUrl(fileName, contentType);
-      if (!response.url || !response.fileUrl)
-        throw new Error("Failed to get upload URL");
+      const response = await createSignedUploadUrls(files, formId);
+      if (!response.files?.length) throw new Error("Failed to get upload URLs");
       return response;
     },
   });
@@ -85,24 +87,25 @@ export const SurveyDesignerForm = (props: {
     newCreator.isAutoSave = false;
     newCreator.locale = "de";
 
-    // Add file upload handler
+    // Update file upload handler to use mutation
     newCreator.onUploadFile.add(async (_, options) => {
       try {
         const file = options.files[0];
 
         // Get signed URL using mutation
         const uploadData = await uploadMutation.mutateAsync({
-          fileName: file.name,
-          contentType: file.type,
+          files: [{ fileName: file.name, contentType: file.type }],
+          formId: id,
         });
 
-        if (!uploadData.url || !uploadData.fileUrl) {
+        if (!uploadData.files?.[0]?.url || !uploadData.files?.[0]?.fileUrl) {
+          showNotification("Datei hochladen fehlgeschlagen", "error");
           options.callback("error");
           return;
         }
 
         // Upload file using signed URL
-        await fetch(uploadData.url, {
+        await fetch(uploadData.files[0].url, {
           method: "PUT",
           body: file,
           headers: {
@@ -111,8 +114,8 @@ export const SurveyDesignerForm = (props: {
         });
 
         showNotification("Datei hochgeladen", "success");
-        options.callback("success", uploadData.fileUrl);
-      } catch {
+        options.callback("success", uploadData.files[0].fileUrl);
+      } catch (error) {
         showNotification("Datei hochladen fehlgeschlagen", "error");
         options.callback("error");
       }

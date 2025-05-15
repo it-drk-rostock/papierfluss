@@ -17,7 +17,12 @@ import { modals } from "@mantine/modals";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { ButtonAction } from "@/components/button-action";
 import { FormSubmissionStatusForm } from "./form-submission-status-form";
-import { handleFileUpload, deleteFile } from "@/server/utils/file-operations";
+import {
+  createSignedUploadUrls,
+  deleteFiles,
+} from "@/server/utils/create-signed-upload-url";
+import { useMutation } from "@tanstack/react-query";
+import { showNotification } from "@/utils/notification";
 
 export const FormSubmissionForm = ({
   submission,
@@ -33,151 +38,103 @@ export const FormSubmissionForm = ({
     hideModals: true,
   });
 
+  // Create upload and delete mutations
+  const uploadMutation = useMutation({
+    mutationFn: async ({
+      files,
+      formId,
+    }: {
+      files: { fileName: string; contentType: string }[];
+      formId: string;
+    }) => {
+      const response = await createSignedUploadUrls(files, formId);
+      if (!response.files?.length) throw new Error("Failed to get upload URLs");
+      return response;
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (fileUrls: string[]) => {
+      const response = await deleteFiles(fileUrls);
+      if (!response.success) throw new Error("Failed to delete files");
+      return response;
+    },
+  });
+
   const model = new Model(submission.form.schema);
   model.locale = "de";
+
   model.data = submission.data;
-
-  // Disable default complete button
   model.showCompleteButton = false;
-  model.readOnly = submission.status === "submitted";
+  model.readOnly = submission.status !== "ongoing";
 
-  // Add file upload handler using the file-operations utility
+  // Handle file uploads
   model.onUploadFiles.add(async (_, options) => {
     try {
-      const results = await handleFileUpload(options.files);
-      // Prevent automatic download by not triggering click events
-      options.callback(results, undefined, { suppressPreviewClick: true });
+      // 1. Get signed URLs for upload
+      const uploadData = await createSignedUploadUrls(
+        options.files.map((file) => ({
+          fileName: file.name,
+          contentType: file.type,
+        })),
+        submission.form.id
+      );
+
+      if (!uploadData.files?.length) {
+        options.callback([], ["Failed to get upload URLs"]);
+        return;
+      }
+
+      // 2. Upload files using signed URLs
+      const uploadPromises = options.files.map(async (file, index) => {
+        const fileData = uploadData.files[index];
+
+        await fetch(fileData.url, {
+          method: "PUT",
+          body: file,
+          headers: { "Content-Type": file.type },
+        });
+
+        // Return in the format SurveyJS expects
+        return {
+          file: file,
+          content: fileData.fileUrl,
+        };
+      });
+
+      const results = await Promise.all(uploadPromises);
+      showNotification("Dateien hochgeladen", "success");
+      options.callback(results);
     } catch (error) {
+      showNotification("Fehler beim Hochladen der Dateien", "error");
       console.error("Upload error:", error);
-      options.callback(
-        [],
-        [`An error occurred during file upload. ${error.message}`]
-      );
+      options.callback([], ["An error occurred during file upload"]);
     }
   });
 
-  // Add file deletion handler using the file-operations utility
+  // Handle file deletion
   model.onClearFiles.add(async (_, options) => {
-    if (!options.value || options.value.length === 0) {
-      return options.callback("success");
-    }
-
-    const filesToDelete = options.fileName
-      ? options.value.filter((item: any) => item.name === options.fileName)
-      : options.value;
-
-    if (filesToDelete.length === 0) {
-      console.error(`File with name ${options.fileName} is not found`);
-      return options.callback("error");
-    }
-
     try {
-      const results = await Promise.all(
-        filesToDelete.map((file: any) => deleteFile(file.content))
-      );
-
-      if (results.every((res) => res === "success")) {
-        options.callback("success");
-      } else {
-        options.callback("error");
-      }
-    } catch (error) {
-      console.error("Delete error:", error);
-      options.callback("error");
-    }
-  });
-
-  // Add custom CSS and click handlers for file previews
-  React.useEffect(() => {
-    // Add custom CSS to indicate clickable previews
-    const style = document.createElement("style");
-    style.innerHTML = `
-      .sd-file__image-wrapper, .sd-file__preview-item {
-        cursor: pointer;
-        transition: transform 0.2s;
-      }
-      .sd-file__image-wrapper:hover, .sd-file__preview-item:hover {
-        transform: scale(1.05);
-      }
-    `;
-    document.head.appendChild(style);
-
-    // Function to handle image clicks
-    const handleImageClick = (event) => {
-      // Ignore clicks during file upload
-      if (event.target.closest(".sd-file__remove-file")) return;
-      if (event.target.closest('input[type="file"]')) return;
-
-      const imageWrapper = event.target.closest(".sd-file__image-wrapper");
-      const previewItem = event.target.closest(".sd-file__preview-item");
-
-      if (!(imageWrapper || previewItem)) return;
-
-      // Find the file URL
-      let fileUrl = null;
-
-      // Try to find an image element and get its src
-      const imgElement = (imageWrapper || previewItem)?.querySelector("img");
-      if (imgElement?.src) {
-        fileUrl = imgElement.src;
-      } else {
-        // Try to find the file data in the survey model
-        const questionRoot = event.target.closest("[data-name]");
-        if (questionRoot) {
-          const questionName = questionRoot.getAttribute("data-name");
-          const questionValue = model.getQuestionByName(questionName)?.value;
-
-          if (Array.isArray(questionValue) && questionValue.length > 0) {
-            const items = Array.from(
-              document.querySelectorAll(".sd-file__preview-item")
-            );
-            const clickedItemIndex = items.findIndex(
-              (item) => item === previewItem || item.contains(imageWrapper)
-            );
-
-            if (clickedItemIndex >= 0 && questionValue[clickedItemIndex]) {
-              fileUrl = questionValue[clickedItemIndex].content;
-            }
-          }
-        }
+      if (!options.value || options.value.length === 0) {
+        return options.callback("success");
       }
 
-      // Download the file if URL was found
-      if (fileUrl) {
-        const link = document.createElement("a");
-        link.href = fileUrl;
-        link.target = "_blank";
-        link.download = "";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      const filesToDelete = options.fileName
+        ? options.value.filter((item) => item.name === options.fileName)
+        : options.value;
+
+      if (filesToDelete.length === 0) {
+        return options.callback("error");
       }
-    };
 
-    // Add a global click event listener
-    document.addEventListener("click", handleImageClick, true);
-
-    return () => {
-      document.head.removeChild(style);
-      document.removeEventListener("click", handleImageClick, true);
-    };
-  }, [model]);
-
-  // Add file download handler (keep this for the SurveyJS built-in download button)
-  model.onDownloadFile.add(async (_, options) => {
-    try {
-      const fileUrl = options.content;
-      const link = document.createElement("a");
-      link.href = fileUrl;
-      link.target = "_blank";
-      link.download = "";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const fileUrls = filesToDelete.map((file) => file.content);
+      await deleteFiles(fileUrls);
+      showNotification("Dateien gelöscht", "success");
       options.callback("success");
     } catch (error) {
-      console.error("Download error:", error);
-      options.callback("error", `Failed to download file: ${error.message}`);
+      showNotification("Fehler beim Löschen der Dateien", "error");
+      console.error("Delete error:", error);
+      options.callback("error");
     }
   });
 
@@ -209,7 +166,9 @@ export const FormSubmissionForm = ({
       title: "Speichern",
       innerCss: "sd-btn save-form",
       action: () => {
-        executeUpdate({ id: submission.id, data: model.data });
+        const dataToSave = { ...model.data };
+        console.log("Saving form data:", dataToSave);
+        executeUpdate({ id: submission.id, data: dataToSave });
       },
     });
     model.addNavigationItem({
@@ -293,7 +252,12 @@ export const FormSubmissionForm = ({
   return (
     <Box pos="relative">
       <LoadingOverlay
-        visible={statusUpdate === "executing" || statusReview === "executing"}
+        visible={
+          statusUpdate === "executing" ||
+          statusReview === "executing" ||
+          uploadMutation.isPending ||
+          deleteMutation.isPending
+        }
       />
       <Survey model={model} />
     </Box>

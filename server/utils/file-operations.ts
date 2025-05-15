@@ -3,13 +3,16 @@
 import { BUCKET_NAME, storage } from "@/lib/storage";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { createSignedUploadUrl } from "./create-signed-upload-url";
+import { createSignedUploadUrls } from "./create-signed-upload-url";
 
-export async function handleFileUpload(files: File[]) {
+export async function handleFileUpload(files: File[], formId: string) {
   try {
     const uploadPromises = files.map(async (file) => {
-      // Use the existing createSignedUploadUrl function that's already working
-      const uploadData = await createSignedUploadUrl(file.name, file.type);
+      // Pass formId to createSignedUploadUrl
+      const uploadData = await createSignedUploadUrls(
+        [{ fileName: file.name, contentType: file.type }],
+        formId
+      );
 
       if (!uploadData.url || !uploadData.fileUrl) {
         throw new Error("Failed to get upload URL");
@@ -40,9 +43,11 @@ export async function handleFileUpload(files: File[]) {
 
 export async function deleteFile(fileUrl: string) {
   try {
-    // Extract the key from the URL
-    const urlParts = fileUrl.split("/");
-    const key = urlParts[urlParts.length - 1];
+    // Extract the key from the URL, maintaining folder structure
+    const urlObject = new URL(fileUrl);
+    const key = urlObject.pathname.substring(
+      urlObject.pathname.indexOf(BUCKET_NAME) + BUCKET_NAME.length + 1
+    );
 
     const command = new DeleteObjectCommand({
       Bucket: BUCKET_NAME,
