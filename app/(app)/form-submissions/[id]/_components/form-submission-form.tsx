@@ -191,6 +191,7 @@ export const FormSubmissionForm = ({
               fullWidth
               action={withdrawFormSubmission}
               values={{ id: submission.id }}
+              hideNotification={true}
             >
               Formular zurückziehen
             </ButtonAction>
