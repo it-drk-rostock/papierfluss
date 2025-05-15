@@ -115,7 +115,7 @@ export const updateFormSubmission = authActionClient
     const { id, data } = parsedInput;
 
     try {
-      await prisma.formSubmission.update({
+      const submission = await prisma.formSubmission.update({
         where: {
           id,
           ...(ctx.session.user.role !== "admin" && {
@@ -126,7 +126,35 @@ export const updateFormSubmission = authActionClient
         data: {
           data,
         },
+        select: {
+          data: true,
+          form: {
+            select: {
+              saveWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+            },
+          },
+        },
       });
+
+      const webhookPromises = submission.form.saveWorkflows.map((workflow) =>
+        fetch(
+          `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
+            },
+            body: JSON.stringify(submission.data),
+          }
+        )
+      );
+
+      await Promise.all(webhookPromises);
     } catch (error) {
       throw formatError(error);
     }
@@ -147,7 +175,7 @@ export const withdrawFormSubmission = authActionClient
     const { id } = parsedInput;
 
     try {
-      await prisma.formSubmission.delete({
+      const submission = await prisma.formSubmission.delete({
         where: {
           id,
           ...(ctx.session.user.role !== "admin" && {
@@ -155,7 +183,35 @@ export const withdrawFormSubmission = authActionClient
           }),
           status: "ongoing",
         },
+        select: {
+          data: true,
+          form: {
+            select: {
+              revokeWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+            },
+          },
+        },
       });
+
+      const webhookPromises = submission.form.revokeWorkflows.map((workflow) =>
+        fetch(
+          `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
+            },
+            body: JSON.stringify(submission.data),
+          }
+        )
+      );
+
+      await Promise.all(webhookPromises);
     } catch (error) {
       throw formatError(error);
     }
@@ -216,7 +272,7 @@ export const updateFormSubmissionStatus = authActionClient
       }
 
       if (status === "ongoing") {
-        await prisma.formSubmission.update({
+        const submission = await prisma.formSubmission.update({
           where: {
             id,
             status: "inReview",
@@ -225,11 +281,40 @@ export const updateFormSubmissionStatus = authActionClient
             status,
             reviewNotes: message,
           },
+          select: {
+            data: true,
+            form: {
+              select: {
+                reUpdateWorkflows: {
+                  select: {
+                    workflowId: true,
+                  },
+                },
+              },
+            },
+          },
         });
+
+        const webhookPromises = submission.form.reUpdateWorkflows.map(
+          (workflow) =>
+            fetch(
+              `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
+                },
+                body: JSON.stringify(submission.data),
+              }
+            )
+        );
+
+        await Promise.all(webhookPromises);
       }
 
       if (status === "rejected") {
-        await prisma.formSubmission.update({
+        const submission = await prisma.formSubmission.update({
           where: {
             id,
             status: "inReview",
@@ -238,11 +323,40 @@ export const updateFormSubmissionStatus = authActionClient
             status,
             rejectedNotes: message,
           },
+          select: {
+            data: true,
+            form: {
+              select: {
+                rejectWorkflows: {
+                  select: {
+                    workflowId: true,
+                  },
+                },
+              },
+            },
+          },
         });
+
+        const webhookPromises = submission.form.rejectWorkflows.map(
+          (workflow) =>
+            fetch(
+              `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
+                },
+                body: JSON.stringify(submission.data),
+              }
+            )
+        );
+
+        await Promise.all(webhookPromises);
       }
 
       if (status === "completed") {
-        await prisma.formSubmission.update({
+        const submission = await prisma.formSubmission.update({
           where: {
             id,
             status: "inReview",
@@ -251,7 +365,36 @@ export const updateFormSubmissionStatus = authActionClient
             status,
             completedNotes: message,
           },
+          select: {
+            data: true,
+            form: {
+              select: {
+                completeWorkflows: {
+                  select: {
+                    workflowId: true,
+                  },
+                },
+              },
+            },
+          },
         });
+
+        const webhookPromises = submission.form.completeWorkflows.map(
+          (workflow) =>
+            fetch(
+              `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
+                },
+                body: JSON.stringify(submission.data),
+              }
+            )
+        );
+
+        await Promise.all(webhookPromises);
       }
     } catch (error) {
       throw formatError(error);
@@ -273,7 +416,7 @@ export const submitFormSubmission = authActionClient
     const { id, data } = parsedInput;
 
     try {
-      await prisma.formSubmission.update({
+      const submission = await prisma.formSubmission.update({
         where: {
           id,
           ...(ctx.session.user.role !== "admin" && {
@@ -286,7 +429,35 @@ export const submitFormSubmission = authActionClient
           data,
           reviewNotes: null,
         },
+        select: {
+          data: true,
+          form: {
+            select: {
+              submitWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+            },
+          },
+        },
       });
+
+      const webhookPromises = submission.form.submitWorkflows.map((workflow) =>
+        fetch(
+          `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
+            },
+            body: JSON.stringify(submission.data),
+          }
+        )
+      );
+
+      await Promise.all(webhookPromises);
     } catch (error) {
       throw formatError(error);
     }
@@ -349,7 +520,7 @@ export const reviewFormSubmission = authActionClient
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
         }
       }
-      await prisma.formSubmission.update({
+      const submission = await prisma.formSubmission.update({
         where: {
           id,
           status: "submitted",
@@ -357,7 +528,35 @@ export const reviewFormSubmission = authActionClient
         data: {
           status: "inReview",
         },
+        select: {
+          data: true,
+          form: {
+            select: {
+              reviewWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+            },
+          },
+        },
       });
+
+      const webhookPromises = submission.form.reviewWorkflows.map((workflow) =>
+        fetch(
+          `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
+            },
+            body: JSON.stringify(submission.data),
+          }
+        )
+      );
+
+      await Promise.all(webhookPromises);
     } catch (error) {
       throw formatError(error);
     }
