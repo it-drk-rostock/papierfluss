@@ -24,7 +24,6 @@ import {
   IconEye,
   IconPencil,
   IconTrash,
-  IconUsersGroup,
   IconWriting,
 } from "@tabler/icons-react";
 import { deleteForm, fillOutForm, FormProps, removeTeam } from "../_actions";

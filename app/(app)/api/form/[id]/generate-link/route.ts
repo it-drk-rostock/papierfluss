@@ -2,7 +2,7 @@ import { authQuery } from "@/server/utils/auth-query";
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { formatError } from "@/utils/format-error";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 export async function GET(
   request: NextRequest,
@@ -16,7 +16,21 @@ export async function GET(
 
     // Check if form exists and is active
     const form = await prisma.form.findUnique({
-      where: { id: formId },
+      where: {
+        id: formId,
+        OR: [
+          { isPublic: true },
+          {
+            teams: {
+              some: {
+                users: {
+                  some: { id: user.id },
+                },
+              },
+            },
+          },
+        ],
+      },
       select: { isActive: true },
     });
 
