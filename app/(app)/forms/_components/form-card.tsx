@@ -13,10 +13,14 @@ import {
   Stack,
   Badge,
   Group,
+  MenuItem,
+  MenuLabel,
+  MenuDivider,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useClipboard, useDisclosure } from "@mantine/hooks";
 import {
   IconBrandTeams,
+  IconExternalLink,
   IconEye,
   IconPencil,
   IconTrash,
@@ -38,6 +42,7 @@ import { AssignTeamsForm } from "./assign-teams-form";
 
 export const FormCard = ({ form }: { form: FormProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
+  const clipboard = useClipboard({ timeout: 500 });
 
   return (
     <Card key={form.id} padding="lg" withBorder w={300}>
@@ -66,36 +71,6 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          <MenuItemLink href={`/forms/${form.id}/designer`}>
-            Zum Designer
-          </MenuItemLink>
-          <MenuItemLink href={`/forms/${form.id}/n8n`}>
-            N8n Workflows
-          </MenuItemLink>
-          <MenuItemLink href={`/forms/${form.id}`}>
-            Formular Dashboard
-          </MenuItemLink>
-          <MenuItemAction
-            action={fillOutForm}
-            values={{ id: form.id }}
-            leftSection={<IconPencil size={14} />}
-            hideNotification={true}
-          >
-            Formular Ausfüllen
-          </MenuItemAction>
-          <DrawerMenuItem
-            leftSection={<IconWriting size={14} />}
-            drawers={[
-              {
-                id: "update-form",
-                title: "Formular bearbeiten",
-                children: (stack) => <FormForm form={form} />,
-              },
-            ]}
-            initialDrawerId="update-form"
-          >
-            Formular bearbeiten
-          </DrawerMenuItem>
           <DrawerMenuItem
             leftSection={<IconEye size={14} />}
             drawers={[
@@ -112,6 +87,29 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
             initialDrawerId="preview-form"
           >
             Formular Vorschau
+          </DrawerMenuItem>
+          <MenuItemLink href={`/forms/${form.id}`}>
+            Formular Dashboard
+          </MenuItemLink>
+          <MenuLabel>Bearbeiten</MenuLabel>
+          <MenuItemLink href={`/forms/${form.id}/designer`}>
+            Formular Designer
+          </MenuItemLink>
+          <MenuItemLink href={`/forms/${form.id}/n8n`}>
+            N8n Workflows
+          </MenuItemLink>
+          <DrawerMenuItem
+            leftSection={<IconWriting size={14} />}
+            drawers={[
+              {
+                id: "update-form",
+                title: "Formular bearbeiten",
+                children: (stack) => <FormForm form={form} />,
+              },
+            ]}
+            initialDrawerId="update-form"
+          >
+            Formular bearbeiten
           </DrawerMenuItem>
           <DrawerMenuItem
             leftSection={<IconBrandTeams size={14} />}
@@ -130,7 +128,6 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
                         Team hinzufügen
                       </ModalButton>
                     </Group>
-
                     <TeamList
                       teams={form.teams}
                       actions={(team) => (
@@ -159,6 +156,29 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
           >
             Teams bearbeiten
           </DrawerMenuItem>
+          <MenuLabel>Ausfüllen</MenuLabel>
+          <MenuItemAction
+            action={fillOutForm}
+            values={{ id: form.id }}
+            leftSection={<IconPencil size={14} />}
+            hideNotification={true}
+          >
+            Formular Ausfüllen
+          </MenuItemAction>
+          <MenuItem
+            disabled={!form.isActive}
+            leftSection={<IconExternalLink size={14} />}
+            onClick={() =>
+              clipboard.copy(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/form/${form.id}/generate-link`
+              )
+            }
+          >
+            {clipboard.copied
+              ? "Link kopiert"
+              : "Formular Ausfüll Link generieren"}
+          </MenuItem>
+          <MenuDivider />
           <ModalMenuItem
             leftSection={<IconTrash size={14} />}
             color="red"
