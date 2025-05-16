@@ -19,11 +19,13 @@ export const PermissionBuilder = ({
   formActionName,
   fieldValue,
   label,
+  submissions,
 }: {
   initialData: string;
   formActionName: string;
   fieldValue: string;
   label: string;
+  submissions?: { data: Record<string, string> }[];
 }) => {
   const formAction = createFormActions(formActionName);
 
@@ -45,6 +47,18 @@ export const PermissionBuilder = ({
     staleTime: 0,
   });
 
+  // Helper function to get unique values for a specific field
+  const getUniqueFieldValues = (fieldName: string) => {
+    return Array.from(
+      new Set(submissions?.map((s) => s.data[fieldName]).filter(Boolean) || [])
+    );
+  };
+
+  // Get all unique field names from submissions
+  const submissionFields = submissions?.length
+    ? Array.from(new Set(submissions.flatMap((s) => Object.keys(s.data))))
+    : [];
+
   const fields: Field[] = [
     {
       name: "user.name",
@@ -55,17 +69,16 @@ export const PermissionBuilder = ({
           name: name,
           label: name,
         })) || [],
-      operators: [
-        { name: "=", label: "equals" },
-        { name: "!=", label: "not equals" },
-        { name: "contains", label: "contains" },
-        { name: "beginsWith", label: "begins with" },
-        { name: "endsWith", label: "ends with" },
-      ],
     },
     { name: "user.email", label: "E-Mail" },
     { name: "user.role", label: "Rolle" },
     { name: "user.id", label: "Benutzer ID" },
+    // Dynamically add fields from submissions without the submission. prefix
+    ...submissionFields.map((fieldName) => ({
+      name: `data.${fieldName}`, // Removed submission. prefix to match the context structure
+      label: fieldName,
+      valueEditorType: "text",
+    })),
   ];
 
   useEffect(() => {

@@ -258,6 +258,15 @@ export const getForms = async () => {
             contactEmail: true,
           },
         },
+        submissions: {
+          select: {
+            data: true,
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+          take: 1,
+        },
       },
     });
   }
@@ -293,6 +302,15 @@ export const getForms = async () => {
           name: true,
           contactEmail: true,
         },
+      },
+      submissions: {
+        select: {
+          data: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+        take: 1,
       },
     },
   });

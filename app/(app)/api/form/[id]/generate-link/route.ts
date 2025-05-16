@@ -36,7 +36,7 @@ export async function GET(
 
     if (!form?.isActive) {
       return new Response(
-        "Das Formular ist zurzeit nicht aktiv oder existiert nichtmehr.",
+        "Das Formular ist zurzeit nicht aktiv, existiert nichtmehr oder sie haben keine Berechtigung.",
         { status: 404 }
       );
     }

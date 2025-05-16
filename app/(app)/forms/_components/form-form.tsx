@@ -16,7 +16,6 @@ import { IconPicker } from "@/components/icon-picker";
 import { PermissionBuilder } from "@/components/permission-builder";
 
 export const FormForm = ({ form }: { form?: FormProps[0] }) => {
-  
   const formForm = useForm({
     validate: zodResolver(form ? updateFormSchema : formSchema),
     mode: "uncontrolled",
@@ -47,6 +46,8 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
     action: form ? updateForm : createForm,
     hideModals: true,
   });
+
+  console.log(form?.submissions);
 
   return (
     <form
@@ -80,12 +81,14 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
               initialData={form.editFormPermissions ?? ""}
               formActionName="create-form"
               fieldValue="editFormPermissions"
+              submissions={form.submissions}
             />
             <PermissionBuilder
               label="Überprüfungs Berechtigungen"
               initialData={form.reviewFormPermissions ?? ""}
               formActionName="create-form"
               fieldValue="reviewFormPermissions"
+              submissions={form.submissions}
             />
           </>
         )}
