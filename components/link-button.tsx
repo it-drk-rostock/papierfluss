@@ -12,7 +12,7 @@ export const LinkButton = ({ href, ...props }: LinkButtonProps) => {
   const { pending } = useLinkStatus();
   return (
     <Button {...props} component={Link} loading={pending} href={href}>
-      TestLink
+      {props.title}
     </Button>
   );
 };
