@@ -42,7 +42,10 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           isActive: true,
           editFormPermissions: "",
           reviewFormPermissions: "",
-          responsibleTeam: null,
+          responsibleTeam: {
+            id: "",
+            name: "",
+          },
         },
   });
 

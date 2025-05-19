@@ -4,7 +4,6 @@ import React from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { Branding } from "./branding";
 import { UserButton } from "./user-button";
-import { LinkButton } from "./link-button";
 import {
   IconClipboard,
   IconHome,
@@ -58,7 +57,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <NavLink
             component={Link}
             href="/workflows"
-            label="Worfklows(bald verfügbar)"
+            label="Worfklows"
             disabled
             leftSection={<IconTopologyRing size={16} stroke={1.5} />}
           />
