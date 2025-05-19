@@ -23,6 +23,7 @@ import {
 } from "@/server/utils/create-signed-upload-url";
 import { useMutation } from "@tanstack/react-query";
 import { showNotification } from "@/utils/notification";
+import { IDocOptions, SurveyPDF } from "survey-pdf";
 
 export const FormSubmissionForm = ({
   submission,
@@ -37,6 +38,16 @@ export const FormSubmissionForm = ({
     action: reviewFormSubmission,
     hideModals: true,
   });
+
+  const pdfDocOptions: IDocOptions = {
+    fontSize: 12,
+  };
+
+  const savePdf = (surveyData: any) => {
+    const surveyPdf = new SurveyPDF(submission.form.schema, pdfDocOptions);
+    surveyPdf.data = surveyData;
+    surveyPdf.save();
+  };
 
   // Create upload and delete mutations
   const uploadMutation = useMutation({
@@ -192,6 +203,12 @@ export const FormSubmissionForm = ({
       },
     });
   }
+
+  model.addNavigationItem({
+    id: "pdf-export",
+    title: "PDF Export",
+    action: () => savePdf(model.data),
+  });
 
   if (submission.status === "submitted") {
     model.addNavigationItem({

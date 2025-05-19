@@ -47,6 +47,7 @@
     "react-querybuilder": "^8.6.0",
     "recharts": "^2.15.1",
     "survey-creator-react": "^2.0.5",
+    "survey-pdf": "^2.0.9",
     "uuid": "^11.1.0",
     "zod": "^3.24.2"
   },
