@@ -6,16 +6,13 @@ export const metadata = {
 };
 
 export default async function Layout({
-  params,
   children,
 }: {
-  params: { id: string };
   children: React.ReactNode;
 }) {
-  const { id } = await params;
   return (
     <>
-      <Title order={1}>Formular {id}</Title>
+      <Title order={1}>Formular</Title>
       {children}
     </>
   );

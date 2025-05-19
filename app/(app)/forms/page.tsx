@@ -8,10 +8,12 @@ export default function Page() {
   return (
     <>
       <Title order={1}>Formulare</Title>
-      <QuickSearchAdd
-        modalTitle="Formular hinzufügen"
-        modalContent={<FormForm />}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <QuickSearchAdd
+          modalTitle="Formular hinzufügen"
+          modalContent={<FormForm />}
+        />
+      </Suspense>
       <Suspense fallback={<div>Loading...</div>}>
         <Forms />
       </Suspense>

@@ -9,10 +9,7 @@ import "survey-creator-core/i18n/german";
 import { useParams } from "next/navigation";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { updateForm } from "../_actions";
-import {
-  createSignedUploadUrls,
-  deleteFiles,
-} from "@/server/utils/create-signed-upload-url";
+import { createSignedUploadUrls } from "@/server/utils/create-signed-upload-url";
 import {
   Box,
   LoadingOverlay,
