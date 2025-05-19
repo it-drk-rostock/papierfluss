@@ -51,6 +51,8 @@ export const createForm = authActionClient
           icon,
           isPublic,
           isActive,
+          editFormPermissions: "(1 = 1)",
+          reviewFormPermissions: "(1 = 1)",
           responsibleTeamId: responsibleTeam?.id,
           createdById: ctx.session.user.id,
         },
@@ -134,11 +136,7 @@ export const updateForm = authActionClient
           isActive,
           editFormPermissions,
           reviewFormPermissions,
-          responsibleTeam: {
-            connect: {
-              id: responsibleTeam.id,
-            },
-          },
+          responsibleTeamId: responsibleTeam?.id,
         },
       });
     } catch (error) {
@@ -158,14 +156,47 @@ export const updateForm = authActionClient
  * @returns {Promise<void>}
  * @throws {Error} If the delete operation fails
  */
-export const deleteForm = adminActionClient
+export const deleteForm = authActionClient
   .schema(idSchema)
   .metadata({
     event: "deleteFormAction",
   })
-  .stateAction(async ({ parsedInput }) => {
+  .stateAction(async ({ parsedInput, ctx }) => {
     const { id } = parsedInput;
     try {
+      const form = await prisma.form.findUnique({
+        where: { id },
+        select: { editFormPermissions: true, teams: true },
+      });
+
+      if (!form) {
+        throw new Error("Formular nicht gefunden");
+      }
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          formTeams: form.teams?.map((t) => t.name) ?? [],
+        };
+
+        const expressionString = form.editFormPermissions || "";
+        const hasPermission = await jsonata(expressionString).evaluate(context);
+
+        if (!hasPermission) {
+          throw new Error("Keine Berechtigung zum löschen dieses Formulars");
+        }
+      }
+
+      if (ctx.session.user.role !== "moderator") {
+        throw new Error("Keine Berechtigung zum löschen dieses Formulars");
+      }
+
       await prisma.form.delete({
         where: {
           id: id,
