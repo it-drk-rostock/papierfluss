@@ -130,6 +130,13 @@ export const updateFormSubmission = authActionClient
           data: true,
           form: {
             select: {
+              responsibleTeam: {
+                select: {
+                  name: true,
+                  id: true,
+                  contactEmail: true,
+                },
+              },
               saveWorkflows: {
                 select: {
                   workflowId: true,
@@ -140,6 +147,15 @@ export const updateFormSubmission = authActionClient
         },
       });
 
+      const submissionContext = {
+        user: {
+          ...ctx.session.user,
+        },
+        teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+        responsibleTeam: submission.form.responsibleTeam,
+        data: submission.data,
+      };
+
       const webhookPromises = submission.form.saveWorkflows.map((workflow) =>
         fetch(
           `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
@@ -149,7 +165,9 @@ export const updateFormSubmission = authActionClient
               "Content-Type": "application/json",
               "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
             },
-            body: JSON.stringify(submission.data),
+            body: JSON.stringify({
+              submissionContext,
+            }),
           }
         )
       );
@@ -187,6 +205,13 @@ export const withdrawFormSubmission = authActionClient
           data: true,
           form: {
             select: {
+              responsibleTeam: {
+                select: {
+                  name: true,
+                  id: true,
+                  contactEmail: true,
+                },
+              },
               revokeWorkflows: {
                 select: {
                   workflowId: true,
@@ -197,6 +222,15 @@ export const withdrawFormSubmission = authActionClient
         },
       });
 
+      const submissionContext = {
+        user: {
+          ...ctx.session.user,
+        },
+        teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+        responsibleTeam: submission.form.responsibleTeam,
+        data: submission.data,
+      };
+
       const webhookPromises = submission.form.revokeWorkflows.map((workflow) =>
         fetch(
           `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
@@ -206,7 +240,9 @@ export const withdrawFormSubmission = authActionClient
               "Content-Type": "application/json",
               "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
             },
-            body: JSON.stringify(submission.data),
+            body: JSON.stringify({
+              submissionContext,
+            }),
           }
         )
       );
@@ -238,6 +274,7 @@ export const updateFormSubmissionStatus = authActionClient
               title: true,
               schema: true,
               reviewFormPermissions: true,
+
               teams: {
                 select: {
                   name: true,
@@ -285,6 +322,13 @@ export const updateFormSubmissionStatus = authActionClient
             data: true,
             form: {
               select: {
+                responsibleTeam: {
+                  select: {
+                    name: true,
+                    id: true,
+                    contactEmail: true,
+                  },
+                },
                 reUpdateWorkflows: {
                   select: {
                     workflowId: true,
@@ -294,6 +338,16 @@ export const updateFormSubmissionStatus = authActionClient
             },
           },
         });
+
+        const submissionContext = {
+          user: {
+            ...ctx.session.user,
+          },
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          responsibleTeam: submission.form.responsibleTeam,
+          message,
+          data: submission.data,
+        };
 
         const webhookPromises = submission.form.reUpdateWorkflows.map(
           (workflow) =>
@@ -305,7 +359,9 @@ export const updateFormSubmissionStatus = authActionClient
                   "Content-Type": "application/json",
                   "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
                 },
-                body: JSON.stringify(submission.data),
+                body: JSON.stringify({
+                  submissionContext,
+                }),
               }
             )
         );
@@ -327,6 +383,13 @@ export const updateFormSubmissionStatus = authActionClient
             data: true,
             form: {
               select: {
+                responsibleTeam: {
+                  select: {
+                    name: true,
+                    id: true,
+                    contactEmail: true,
+                  },
+                },
                 rejectWorkflows: {
                   select: {
                     workflowId: true,
@@ -336,6 +399,16 @@ export const updateFormSubmissionStatus = authActionClient
             },
           },
         });
+
+        const submissionContext = {
+          user: {
+            ...ctx.session.user,
+          },
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          responsibleTeam: submission.form.responsibleTeam,
+          message,
+          data: submission.data,
+        };
 
         const webhookPromises = submission.form.rejectWorkflows.map(
           (workflow) =>
@@ -347,7 +420,9 @@ export const updateFormSubmissionStatus = authActionClient
                   "Content-Type": "application/json",
                   "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
                 },
-                body: JSON.stringify(submission.data),
+                body: JSON.stringify({
+                  submissionContext,
+                }),
               }
             )
         );
@@ -369,6 +444,13 @@ export const updateFormSubmissionStatus = authActionClient
             data: true,
             form: {
               select: {
+                responsibleTeam: {
+                  select: {
+                    name: true,
+                    id: true,
+                    contactEmail: true,
+                  },
+                },
                 completeWorkflows: {
                   select: {
                     workflowId: true,
@@ -378,6 +460,16 @@ export const updateFormSubmissionStatus = authActionClient
             },
           },
         });
+
+        const submissionContext = {
+          user: {
+            ...ctx.session.user,
+          },
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          responsibleTeam: submission.form.responsibleTeam,
+          message,
+          data: submission.data,
+        };
 
         const webhookPromises = submission.form.completeWorkflows.map(
           (workflow) =>
@@ -389,7 +481,9 @@ export const updateFormSubmissionStatus = authActionClient
                   "Content-Type": "application/json",
                   "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
                 },
-                body: JSON.stringify(submission.data),
+                body: JSON.stringify({
+                  submissionContext,
+                }),
               }
             )
         );
@@ -433,6 +527,13 @@ export const submitFormSubmission = authActionClient
           data: true,
           form: {
             select: {
+              responsibleTeam: {
+                select: {
+                  name: true,
+                  id: true,
+                  contactEmail: true,
+                },
+              },
               submitWorkflows: {
                 select: {
                   workflowId: true,
@@ -443,6 +544,16 @@ export const submitFormSubmission = authActionClient
         },
       });
 
+      const submissionContext = {
+        user: {
+          ...ctx.session.user,
+        },
+        teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+        responsibleTeam: submission.form.responsibleTeam,
+
+        data: submission.data,
+      };
+
       const webhookPromises = submission.form.submitWorkflows.map((workflow) =>
         fetch(
           `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
@@ -452,7 +563,9 @@ export const submitFormSubmission = authActionClient
               "Content-Type": "application/json",
               "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
             },
-            body: JSON.stringify(submission.data),
+            body: JSON.stringify({
+              submissionContext,
+            }),
           }
         )
       );
@@ -532,6 +645,13 @@ export const reviewFormSubmission = authActionClient
           data: true,
           form: {
             select: {
+              responsibleTeam: {
+                select: {
+                  name: true,
+                  id: true,
+                  contactEmail: true,
+                },
+              },
               reviewWorkflows: {
                 select: {
                   workflowId: true,
@@ -542,6 +662,16 @@ export const reviewFormSubmission = authActionClient
         },
       });
 
+      const submissionContext = {
+        user: {
+          ...ctx.session.user,
+        },
+        teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+        responsibleTeam: submission.form.responsibleTeam,
+
+        data: submission.data,
+      };
+
       const webhookPromises = submission.form.reviewWorkflows.map((workflow) =>
         fetch(
           `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
@@ -551,7 +681,9 @@ export const reviewFormSubmission = authActionClient
               "Content-Type": "application/json",
               "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
             },
-            body: JSON.stringify(submission.data),
+            body: JSON.stringify({
+              submissionContext,
+            }),
           }
         )
       );

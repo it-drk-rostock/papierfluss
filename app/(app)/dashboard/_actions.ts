@@ -12,6 +12,10 @@ import { authQuery } from "@/server/utils/auth-query";
 export const getTeams = async () => {
   const { user } = await authQuery();
 
+  if (user.role === "admin") {
+    return prisma.team.findMany();
+  }
+
   const teams = await prisma.team.findMany({
     where: {
       users: {

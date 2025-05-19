@@ -54,6 +54,9 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
       <Badge color={form.isActive ? "green" : "red"}>
         {form.isActive ? "Aktiv" : "Inaktiv"}
       </Badge>
+      {form.responsibleTeam && (
+        <Text>Verantwortlicher Bereich: {form.responsibleTeam?.name}</Text>
+      )}
       <Card.Section>
         <Divider my="lg" />
       </Card.Section>

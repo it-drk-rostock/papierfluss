@@ -34,7 +34,8 @@ export const createForm = authActionClient
     event: "createFormAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { title, description, icon, isPublic, isActive } = parsedInput;
+    const { title, description, icon, isPublic, isActive, responsibleTeam } =
+      parsedInput;
 
     try {
       if (
@@ -43,7 +44,6 @@ export const createForm = authActionClient
       ) {
         throw new Error("Keine Berechtigung zum Erstellen von Formularen");
       }
-
       await prisma.form.create({
         data: {
           title,
@@ -51,6 +51,7 @@ export const createForm = authActionClient
           icon,
           isPublic,
           isActive,
+          responsibleTeamId: responsibleTeam?.id,
           createdById: ctx.session.user.id,
         },
       });
@@ -89,6 +90,7 @@ export const updateForm = authActionClient
       isActive,
       editFormPermissions,
       reviewFormPermissions,
+      responsibleTeam,
     } = parsedInput;
 
     try {
@@ -114,7 +116,6 @@ export const updateForm = authActionClient
           formTeams: form.teams?.map((t) => t.name) ?? [],
         };
 
-        console.log(context, form.editFormPermissions);
         const expressionString = form.editFormPermissions || "";
         const hasPermission = await jsonata(expressionString).evaluate(context);
 
@@ -133,10 +134,14 @@ export const updateForm = authActionClient
           isActive,
           editFormPermissions,
           reviewFormPermissions,
+          responsibleTeam: {
+            connect: {
+              id: responsibleTeam.id,
+            },
+          },
         },
       });
     } catch (error) {
-      console.log(error);
       throw formatError(error);
     }
 
@@ -251,6 +256,12 @@ export const getForms = async () => {
         isPublic: true,
         editFormPermissions: true,
         reviewFormPermissions: true,
+        responsibleTeam: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         teams: {
           select: {
             id: true,
@@ -296,6 +307,12 @@ export const getForms = async () => {
       isPublic: true,
       editFormPermissions: true,
       reviewFormPermissions: true,
+      responsibleTeam: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
       teams: {
         select: {
           id: true,

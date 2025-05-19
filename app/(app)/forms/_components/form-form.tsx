@@ -14,6 +14,8 @@ import {
 } from "@mantine/core";
 import { IconPicker } from "@/components/icon-picker";
 import { PermissionBuilder } from "@/components/permission-builder";
+import { EntitySelect } from "@/components/entity-select";
+import { getTeams } from "../../dashboard/_actions";
 
 export const FormForm = ({ form }: { form?: FormProps[0] }) => {
   const formForm = useForm({
@@ -30,6 +32,7 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           isActive: form.isActive,
           editFormPermissions: form.editFormPermissions,
           reviewFormPermissions: form.reviewFormPermissions,
+          responsibleTeam: form.responsibleTeam,
         }
       : {
           title: "",
@@ -39,6 +42,7 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           isActive: true,
           editFormPermissions: "",
           reviewFormPermissions: "",
+          responsibleTeam: null,
         },
   });
 
@@ -64,6 +68,16 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           label="Beschreibung"
           {...formForm.getInputProps("description")}
         />
+        <EntitySelect
+          formActionName="create-form"
+          formField="responsibleTeam"
+          label="Verantwortlicher Bereich"
+          initialValue={formForm.values.responsibleTeam}
+          error={formForm.errors.responsibleTeam}
+          action={getTeams}
+          displayKeys={["name"]}
+          dataKey={{ id: "id", name: "name" }}
+        />
         <Checkbox
           label="Öffentlich"
           {...formForm.getInputProps("isPublic", { type: "checkbox" })}
@@ -72,6 +86,7 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           label="Aktiv"
           {...formForm.getInputProps("isActive", { type: "checkbox" })}
         />
+
         {form && (
           <>
             <PermissionBuilder

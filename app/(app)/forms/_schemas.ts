@@ -14,6 +14,13 @@ export const formSchema = z.object({
   isActive: z.boolean().default(true),
   editFormPermissions: z.string().optional(),
   reviewFormPermissions: z.string().optional(),
+  responsibleTeam: z
+    .object({
+      id: z.string().optional().nullable(),
+      name: z.string().optional().nullable(),
+    })
+    .optional()
+    .nullable(),
 });
 
 export const updateFormSchema = formSchema.extend(idSchema.shape);
