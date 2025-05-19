@@ -20,6 +20,10 @@ a {
   display: none !important;
 }
 
+.sa-commercial {
+  display: none !important;
+}
+
 .save-form {
   background-color: transparent !important;
   border-color: var(--mantine-color-red-filled) !important;

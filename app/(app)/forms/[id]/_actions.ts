@@ -51,6 +51,7 @@ export const getForm = async (id: string) => {
             name: true,
           },
         },
+        schema:true,
         submissions: {
           select: {
             id: true,
@@ -81,6 +82,7 @@ export const getForm = async (id: string) => {
           name: true,
         },
       },
+      schema: true,
       submissions: {
         select: {
           id: true,
