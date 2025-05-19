@@ -1,0 +1,55 @@
+model Form {
+    id                    String           @id @default(uuid())
+    title                 String
+    description           String?
+    icon                  String?
+    schema                Json?
+    isPublic              Boolean          @default(false)
+    isActive              Boolean          @default(true)
+    createdAt             DateTime         @default(now())
+    updatedAt             DateTime         @updatedAt
+    editFormPermissions   String?
+    reviewFormPermissions String?
+    createdBy             User?            @relation("FormCreator", fields: [createdById], references: [id], onDelete: SetNull)
+    createdById           String?
+    teams                 Team[]
+    submissions           FormSubmission[]
+    responsibleTeamId     String?
+    responsibleTeam       Team?            @relation(fields: [responsibleTeamId], references: [id], onDelete: SetNull, name: "ResponsibleTeam")
+    fillOutWorkflows      N8nWorkflow[]    @relation("FillOutWorkflows")
+    saveWorkflows         N8nWorkflow[]    @relation("SaveWorkflows")
+    revokeWorkflows       N8nWorkflow[]    @relation("RevokeWorkflows")
+    submitWorkflows       N8nWorkflow[]    @relation("SubmitWorkflows")
+    reviewWorkflows       N8nWorkflow[]    @relation("ReviewWorkflows")
+    reUpdateWorkflows     N8nWorkflow[]    @relation("ReUpdateWorkflows")
+    rejectWorkflows       N8nWorkflow[]    @relation("RejectWorkflows")
+    completeWorkflows     N8nWorkflow[]    @relation("CompleteWorkflows")
+
+    @@index([createdById])
+}
+
+model FormSubmission {
+    id             String           @id @default(uuid())
+    data           Json?
+    status         SubmissionStatus @default(ongoing)
+    reviewNotes    String? // Notes for when sending back for revision (shown in ongoing status)
+    rejectedNotes  String? // Final rejection reason (shown in rejected status)
+    completedNotes String? // Final approval notes (shown in completed status)
+    createdAt      DateTime         @default(now())
+    updatedAt      DateTime         @updatedAt
+    form           Form             @relation(fields: [formId], references: [id], onDelete: Cascade)
+    formId         String
+    submittedBy    User?            @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+    submittedById  String?
+
+    @@index([formId])
+    @@index([submittedById])
+}
+
+enum SubmissionStatus {
+    ongoing // Form is being worked on (initial state)
+    submitted // User has submitted for review
+    inReview // Reviewer has started the review process
+    rejected // Final state: Reviewer rejected the submission permanently
+    completed // Final state: Reviewer approved the submission
+}

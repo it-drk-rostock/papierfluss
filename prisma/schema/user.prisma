@@ -1,45 +1,45 @@
 model User {
-    id            String       @id
-    name          String
-    email         String
-    emailVerified Boolean
-    image         String?
-    createdAt     DateTime
-    updatedAt     DateTime
-    role          String?
-    banned        Boolean?
-    banReason     String?
-    banExpires    DateTime?
-    sessions      Session[]
-    accounts      Account[]
-    members       Member[]
-    invitations   Invitation[]
+    id              String           @id
+    name            String
+    email           String
+    emailVerified   Boolean
+    image           String?
+    role            UserRole         @default(user)
+    createdAt       DateTime         @default(now())
+    updatedAt       DateTime         @updatedAt
+    sessions        Session[]
+    accounts        Account[]
+    teams           Team[]
+    createdForms    Form[]           @relation("FormCreator")
+    formSubmissions FormSubmission[]
 
     @@unique([email])
     @@map("user")
 }
 
+enum UserRole {
+    admin
+    moderator
+    user
+}
+
 model Session {
-    id                   String   @id
-    expiresAt            DateTime
-    token                String
-    createdAt            DateTime
-    updatedAt            DateTime
-    ipAddress            String?
-    userAgent            String?
-    userId               String
-    user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    impersonatedBy       String?
-    activeOrganizationId String?
+    id        String   @id
+    expiresAt DateTime
+    token     String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    ipAddress String?
+    userAgent String?
+    userId    String
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([token])
     @@map("session")
 }
 
 model Account {
-    id                    String    @id @default(uuid())
-    createdAt             DateTime  @default(now())
-    updatedAt             DateTime  @updatedAt
+    id                    String    @id
     accountId             String
     providerId            String
     userId                String
@@ -51,17 +51,19 @@ model Account {
     refreshTokenExpiresAt DateTime?
     scope                 String?
     password              String?
+    createdAt             DateTime  @default(now())
+    updatedAt             DateTime  @updatedAt
 
     @@map("account")
 }
 
 model Verification {
-    id         String   @id @default(uuid())
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
+    id         String    @id
     identifier String
     value      String
     expiresAt  DateTime
+    createdAt  DateTime? @default(now())
+    updatedAt  DateTime? @updatedAt
 
     @@map("verification")
 }

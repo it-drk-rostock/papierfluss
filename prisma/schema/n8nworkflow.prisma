@@ -1,0 +1,16 @@
+model N8nWorkflow {
+    id         String   @id @default(uuid())
+    workflowId String   @unique
+    name       String
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+
+    fillOutForms  Form[] @relation("FillOutWorkflows")
+    saveForms     Form[] @relation("SaveWorkflows")
+    revokeForms   Form[] @relation("RevokeWorkflows")
+    submitForms   Form[] @relation("SubmitWorkflows")
+    reviewForms   Form[] @relation("ReviewWorkflows")
+    reUpdateForms Form[] @relation("ReUpdateWorkflows")
+    rejectForms   Form[] @relation("RejectWorkflows")
+    completeForms Form[] @relation("CompleteWorkflows")
+}

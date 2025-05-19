@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     dynamicIO: true,
     nodeMiddleware: true,
+    authInterrupts: true,
   },
   typescript: {
     ignoreBuildErrors: true,
