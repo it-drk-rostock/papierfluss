@@ -33,7 +33,7 @@ export const TeamList = ({ teams, actions }: TeamListProps) => {
           color="gray"
           variant="light"
           icon={IconBuildingSkyscraper}
-          text="keine Teams vorhanden"
+          text="keine Bereiche vorhanden"
         />
       </Center>
     );

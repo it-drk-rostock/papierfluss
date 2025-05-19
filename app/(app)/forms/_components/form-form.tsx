@@ -47,8 +47,6 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
     hideModals: true,
   });
 
-  console.log(form?.submissions);
-
   return (
     <form
       onSubmit={formForm.onSubmit(async (values) => {

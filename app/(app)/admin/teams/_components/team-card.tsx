@@ -67,13 +67,15 @@ export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          <MenuItemLink href={`/admin/teams/${team.id}`}>Zum Team</MenuItemLink>
+          <MenuItemLink href={`/admin/teams/${team.id}`}>
+            Zum Bereich
+          </MenuItemLink>
           <DrawerMenuItem
             leftSection={<IconEdit size={14} />}
             drawers={[
               {
                 id: "update-team",
-                title: "Team bearbeiten",
+                title: "Bereich bearbeiten",
                 children: (stack) => (
                   <Stack gap="sm">
                     <form
@@ -88,11 +90,10 @@ export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
                           {...form.getInputProps("name")}
                         />
                         <TextInput
-                          label="E-Mail"
+                          label="Kontakt E-Mail"
                           key={form.key("contactEmail")}
                           {...form.getInputProps("contactEmail")}
                         />
-
                         <Group mt="lg" justify="flex-end">
                           <Button onClick={stack.closeAll} variant="outline">
                             Abbrechen
@@ -132,7 +133,6 @@ export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
                         Mitglieder hinzufügen
                       </ModalButton>
                     </Group>
-
                     <MemberList
                       members={team.users}
                       actions={(member) => (
@@ -164,7 +164,7 @@ export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
           <ModalMenuItem
             leftSection={<IconTrash size={14} />}
             color="red"
-            title="Team löschen"
+            title="Bereich löschen"
             content={
               <ButtonAction
                 fullWidth

@@ -41,7 +41,7 @@ export const AssignTeamsForm = ({ formId }: { formId: string }) => {
   }
 
   if (isErrorAvailableTeams) {
-    return <Text c="red">Fehler beim Laden der Teams</Text>;
+    return <Text c="red">Fehler beim Laden der Bereiche</Text>;
   }
 
   return (

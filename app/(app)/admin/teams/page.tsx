@@ -13,7 +13,7 @@ export default function Page({
 
   return (
     <>
-      <Title order={1}>Teams</Title>
+      <Title order={1}>Bereiche</Title>
       <Suspense fallback={<div>Loading...</div>}>
         <Teams params={Promise.resolve(paramsPromise)} />
       </Suspense>

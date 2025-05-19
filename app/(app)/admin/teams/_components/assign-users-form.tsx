@@ -10,7 +10,6 @@ import { ActionIcon, Button, Loader, Stack, Title, Text } from "@mantine/core";
 import { IconPlus, IconX } from "@tabler/icons-react";
 import { MemberList } from "@/components/member-list";
 import { useQuery } from "@tanstack/react-query";
-import { getQueryClient } from "@/lib/tanstack-query";
 
 export const AssignUsersForm = ({ teamId }: { teamId: string }) => {
   const form = useForm({

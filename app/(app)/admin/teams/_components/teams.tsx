@@ -15,9 +15,8 @@ export const Teams = async ({
 
   return (
     <Stack align="center" gap="xl">
-      <Title order={2}>Teams</Title>
       <QuickSearchAdd
-        modalTitle="Team hinzufügen"
+        modalTitle="Bereich hinzufügen"
         modalContent={<TeamForm />}
       />
       <TeamList teams={teams} />

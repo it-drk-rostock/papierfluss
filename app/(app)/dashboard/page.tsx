@@ -8,7 +8,7 @@ export default function Page() {
     <>
       <Title order={1}>Dashboard</Title>
       <Divider />
-      <Title order={2}>Teams</Title>
+      <Title order={2}>Bereiche</Title>
       <Suspense fallback={<Loader />}>
         <Teams />
       </Suspense>

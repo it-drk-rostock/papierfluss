@@ -115,16 +115,16 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
             drawers={[
               {
                 id: "update-teams",
-                title: "Teams bearbeiten",
+                title: "Bereiche bearbeiten",
                 children: (stack) => (
                   <Stack gap="sm">
                     <Group justify="space-between">
-                      <Title order={2}>Teams</Title>
+                      <Title order={2}>Bereiche</Title>
                       <ModalButton
-                        title="Team hinzufügen"
+                        title="Bereich hinzufügen"
                         content={<AssignTeamsForm formId={form.id} />}
                       >
-                        Team hinzufügen
+                        Bereich hinzufügen
                       </ModalButton>
                     </Group>
                     <TeamList
@@ -153,7 +153,7 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
             ]}
             initialDrawerId="update-teams"
           >
-            Teams bearbeiten
+            Bereiche bearbeiten
           </DrawerMenuItem>
           <MenuLabel>Ausfüllen</MenuLabel>
           <MenuItemAction

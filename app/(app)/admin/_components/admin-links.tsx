@@ -15,8 +15,10 @@ export const AdminLinks = async () => {
         withBorder
         w={300}
       >
-        <Title order={2}>Users</Title>
-        <Text c="dimmed">Manage user accounts, permissions, and roles.</Text>
+        <Title order={2}>Benutzer</Title>
+        <Text c="dimmed">
+          Verwalten Sie Benutzerkonten, Berechtigungen und Rollen.
+        </Text>
       </Card>
 
       <Card
@@ -26,12 +28,12 @@ export const AdminLinks = async () => {
         href="/admin/teams"
         w={300}
       >
-        <Title order={2}>Teams</Title>
-        <Text c="dimmed">Manage teams, members, and team settings.</Text>
+        <Title order={2}>Bereiche</Title>
+        <Text c="dimmed">Verwalten Sie Bereiche und deren Einstellungen.</Text>
       </Card>
       <Card padding="lg" withBorder component={Link} href="/admin/n8n" w={300}>
         <Title order={2}>n8n Workflows</Title>
-        <Text c="dimmed">Manage n8n workflows.</Text>
+        <Text c="dimmed">Verwalten Sie n8n-Workflows.</Text>
       </Card>
     </Group>
   );
