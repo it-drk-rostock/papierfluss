@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Group, Stack, Title } from "@mantine/core";
+import { Card, Group, Title } from "@mantine/core";
 import { getTeams } from "../_actions";
 
 export const Teams = async () => {
