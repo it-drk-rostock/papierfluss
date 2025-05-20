@@ -172,7 +172,10 @@ export const deleteForm = authActionClient
       if (!form) {
         throw new Error("Formular nicht gefunden");
       }
+
+      // Skip permission check for admins
       if (ctx.session.user.role !== "admin") {
+        // Do permission check for moderators
         const context = {
           user: {
             email: ctx.session.user.email,
@@ -193,14 +196,16 @@ export const deleteForm = authActionClient
         }
       }
 
-      if (ctx.session.user.role !== "moderator") {
+      // Only allow moderators and admins to delete
+      if (
+        ctx.session.user.role !== "moderator" &&
+        ctx.session.user.role !== "admin"
+      ) {
         throw new Error("Keine Berechtigung zum löschen dieses Formulars");
       }
 
       await prisma.form.delete({
-        where: {
-          id: id,
-        },
+        where: { id },
       });
     } catch (error) {
       throw formatError(error);
