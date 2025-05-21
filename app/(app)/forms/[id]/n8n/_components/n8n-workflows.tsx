@@ -106,6 +106,7 @@ export const N8nWorkflows = async ({
             <TabsTab value="reUpdateWorkflows">Nachbearbeiten</TabsTab>
             <TabsTab value="rejectWorkflows">Ablehnen</TabsTab>
             <TabsTab value="completeWorkflows">Abschließen</TabsTab>
+            <TabsTab value="archiveWorkflows">Archivieren</TabsTab>
           </TabsList>
 
           <TabsPanel value="fillOutWorkflows">
@@ -169,6 +170,14 @@ export const N8nWorkflows = async ({
               form.completeWorkflows,
               "completeWorkflows",
               "Diese Workflows werden ausgeführt, wenn ein Benutzer das Formular abschließt."
+            )}
+          </TabsPanel>
+
+          <TabsPanel value="archiveWorkflows">
+            {renderWorkflowTab(
+              form.archiveWorkflows,
+              "archiveWorkflows",
+              "Diese Workflows werden ausgeführt, wenn ein Benutzer das Formular archiviert."
             )}
           </TabsPanel>
         </Tabs>

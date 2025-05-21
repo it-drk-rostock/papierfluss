@@ -49,6 +49,7 @@ export const getFormSubmission = async (id: string) => {
         reviewNotes: true,
         rejectedNotes: true,
         completedNotes: true,
+        archivedNotes: true,
         status: true,
         data: true,
         isExample: true,
@@ -76,6 +77,7 @@ export const getFormSubmission = async (id: string) => {
       reviewNotes: true,
       rejectedNotes: true,
       completedNotes: true,
+      archivedNotes: true,
       status: true,
       data: true,
       submittedById: true,
@@ -477,6 +479,67 @@ export const updateFormSubmissionStatus = authActionClient
         };
 
         const webhookPromises = submission.form.completeWorkflows.map(
+          (workflow) =>
+            fetch(
+              `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
+                },
+                body: JSON.stringify({
+                  submissionContext,
+                }),
+              }
+            )
+        );
+
+        await Promise.all(webhookPromises);
+      }
+
+      if (status === "archived") {
+        const submission = await prisma.formSubmission.update({
+          where: {
+            id,
+            status: "inReview",
+          },
+          data: {
+            status,
+            archivedNotes: message,
+          },
+          select: {
+            data: true,
+            form: {
+              select: {
+                responsibleTeam: {
+                  select: {
+                    name: true,
+                    id: true,
+                    contactEmail: true,
+                  },
+                },
+                archiveWorkflows: {
+                  select: {
+                    workflowId: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        const submissionContext = {
+          user: {
+            ...ctx.session.user,
+          },
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          responsibleTeam: submission.form.responsibleTeam,
+          message,
+          data: submission.data,
+        };
+
+        const webhookPromises = submission.form.archiveWorkflows.map(
           (workflow) =>
             fetch(
               `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,

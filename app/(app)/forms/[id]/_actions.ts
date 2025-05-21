@@ -53,6 +53,11 @@ export const getForm = async (id: string) => {
         },
         schema: true,
         submissions: {
+          where: {
+            status: {
+              not: "archived",
+            },
+          },
           select: {
             id: true,
             data: true,
@@ -85,6 +90,11 @@ export const getForm = async (id: string) => {
       },
       schema: true,
       submissions: {
+        where: {
+          status: {
+            not: "archived",
+          },
+        },
         select: {
           id: true,
           status: true,

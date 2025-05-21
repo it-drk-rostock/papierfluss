@@ -12,6 +12,7 @@ export const connectN8nWorkflowSchema = z.object({
     "reUpdateWorkflows",
     "rejectWorkflows",
     "completeWorkflows",
+    "archiveWorkflows",
   ]),
   workflows: z
     .array(
@@ -34,6 +35,7 @@ export const disconnectN8nWorkflowSchema = z.object({
     "reUpdateWorkflows",
     "rejectWorkflows",
     "completeWorkflows",
+    "archiveWorkflows",
   ]),
   workflowId: z.string().min(1),
 });

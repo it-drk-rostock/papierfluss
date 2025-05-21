@@ -31,6 +31,7 @@ import {
  *   reUpdateWorkflows: Array<{ id: string; name: string; workflowId: string; }>;
  *   rejectWorkflows: Array<{ id: string; name: string; workflowId: string; }>;
  *   completeWorkflows: Array<{ id: string; name: string; workflowId: string; }>;
+ *   archiveWorkflows: Array<{ id: string; name: string; workflowId: string; }>;
  * }>} Returns the form with its workflow configurations
  * @throws {Error} If the user doesn't have permission to edit the form
  * @throws {NotFoundError} If the form doesn't exist
@@ -94,6 +95,13 @@ export const getFormN8nWorkflows = async (id: string) => {
           },
         },
         completeWorkflows: {
+          select: {
+            id: true,
+            name: true,
+            workflowId: true,
+          },
+        },
+        archiveWorkflows: {
           select: {
             id: true,
             name: true,
@@ -168,6 +176,13 @@ export const getFormN8nWorkflows = async (id: string) => {
           workflowId: true,
         },
       },
+      archiveWorkflows: {
+        select: {
+          id: true,
+          name: true,
+          workflowId: true,
+        },
+      },
     },
   });
 
@@ -207,7 +222,8 @@ export type WorkflowType =
   | "reviewWorkflows"
   | "reUpdateWorkflows"
   | "rejectWorkflows"
-  | "completeWorkflows";
+  | "completeWorkflows"
+  | "archiveWorkflows";
 
 /**
  * Connects an N8n workflow to/from a form

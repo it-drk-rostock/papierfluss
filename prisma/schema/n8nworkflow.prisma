@@ -13,4 +13,5 @@ model N8nWorkflow {
     reUpdateForms Form[] @relation("ReUpdateWorkflows")
     rejectForms   Form[] @relation("RejectWorkflows")
     completeForms Form[] @relation("CompleteWorkflows")
+    archiveForms  Form[] @relation("ArchiveWorkflows")
 }
