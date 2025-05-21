@@ -51,6 +51,7 @@ export const getFormSubmission = async (id: string) => {
         completedNotes: true,
         status: true,
         data: true,
+        isExample: true,
       },
     });
   }
@@ -78,6 +79,7 @@ export const getFormSubmission = async (id: string) => {
       status: true,
       data: true,
       submittedById: true,
+      isExample: true,
     },
   });
 

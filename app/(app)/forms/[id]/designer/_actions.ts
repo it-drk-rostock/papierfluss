@@ -60,6 +60,11 @@ export const updateForm = authActionClient
         data: {
           schema,
           theme,
+          submissions: {
+            deleteMany: {
+              isExample: true,
+            },
+          },
         },
       });
     } catch (error) {

@@ -228,8 +228,17 @@ export const fillOutForm = authActionClient
       const submission = await prisma.$transaction(async (tx) => {
         const form = await tx.form.findUnique({
           where: { id: parsedInput.id },
-          select: { isActive: true },
+          select: {
+            isActive: true,
+            submissions: {
+              where: {
+                isExample: true,
+              },
+            },
+          },
         });
+
+        const exampleSubmissionExists = form?.submissions.length > 0;
 
         if (!form?.isActive) {
           throw new Error("Formular ist nicht aktiviert");
@@ -239,6 +248,7 @@ export const fillOutForm = authActionClient
           data: {
             formId: parsedInput.id,
             submittedById: ctx.session.user.id,
+            isExample: exampleSubmissionExists ? false : true,
           },
         });
       });
@@ -309,9 +319,7 @@ export const getForms = async () => {
           select: {
             data: true,
           },
-          orderBy: {
-            createdAt: "asc",
-          },
+          where: { isExample: true },
           take: 1,
         },
       },
@@ -360,9 +368,7 @@ export const getForms = async () => {
         select: {
           data: true,
         },
-        orderBy: {
-          createdAt: "asc",
-        },
+        where: { isExample: true },
         take: 1,
       },
     },

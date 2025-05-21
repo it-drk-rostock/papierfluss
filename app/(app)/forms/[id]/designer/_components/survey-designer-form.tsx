@@ -177,7 +177,7 @@ export const SurveyDesignerForm = (props: {
         creator.theme = props.theme;
       }
     }
-  }, [creator, props.json, props.theme]);
+  }, [creator, props.json, props.theme /* , creator?.JSON */]);
 
   return (
     <Box h="100vh" w="100%" pos="relative">
