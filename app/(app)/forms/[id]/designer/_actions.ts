@@ -7,6 +7,7 @@ import { formatError } from "@/utils/format-error";
 import { revalidatePath } from "next/cache";
 import { authQuery } from "@/server/utils/auth-query";
 import jsonata from "jsonata";
+import { z } from "zod";
 
 /**
  * Updates a form in the database.
@@ -24,7 +25,7 @@ export const updateForm = authActionClient
     event: "updateFormSchema",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { schema, id } = parsedInput;
+    const { schema, theme, id } = parsedInput;
 
     try {
       const form = await prisma.form.findUnique({
@@ -58,6 +59,7 @@ export const updateForm = authActionClient
         where: { id },
         data: {
           schema,
+          theme,
         },
       });
     } catch (error) {
@@ -96,6 +98,7 @@ export const getDesigner = async (id: string) => {
       select: {
         id: true,
         schema: true,
+        theme: true,
       },
     });
   }
@@ -118,6 +121,7 @@ export const getDesigner = async (id: string) => {
     select: {
       id: true,
       schema: true,
+      theme: true,
     },
   });
 

@@ -14,6 +14,7 @@ import React, { ReactNode, useEffect, useState, useTransition } from "react";
 import { modals } from "@mantine/modals";
 import { useQueryState, parseAsString } from "nuqs";
 import { baseIconStyles } from "@/constants/base-icon-styles";
+import { useAuthSession } from "@/hooks/use-auth-session";
 
 export type QuickSearchAddProps = {
   modalTitle: string;
@@ -30,6 +31,7 @@ export const QuickSearchAdd = ({
   searchParam = "search",
   searchPlaceholder = "Suche",
 }: QuickSearchAddProps) => {
+  const { hasAccess } = useAuthSession();
   const [isLoading, startTransition] = useTransition();
   const [search, setSearch] = useQueryState(
     searchParam,
@@ -60,48 +62,53 @@ export const QuickSearchAdd = ({
           w="100%"
           leftSection={isLoading ? <Loader size="xs" /> : null}
         />
-        <Button
-          visibleFrom="sm"
-          style={{ flexShrink: 0 }}
-          leftSection={<IconPlus size={14} />}
-          onClick={() => {
-            modals.open({
-              closeOnClickOutside: false,
-              title: modalTitle,
-              children: (
-                <>
-                  <Text c="dimmed" size="sm" mb="sm">
-                    {modalDescription}
-                  </Text>
-                  {modalContent}
-                </>
-              ),
-            });
-          }}
-        >
-          Hinzufügen
-        </Button>
-        <ActionIcon
-          hiddenFrom="sm"
-          size="lg"
-          onClick={() => {
-            modals.open({
-              closeOnClickOutside: false,
-              title: modalTitle,
-              children: (
-                <>
-                  <Text c="dimmed" size="sm" mb="sm">
-                    {modalDescription}
-                  </Text>
-                  {modalContent}
-                </>
-              ),
-            });
-          }}
-          aria-label="Add"
-        >
-          <IconPlus style={baseIconStyles} />
-        </ActionIcon>
+        {hasAccess("moderator") && (
+          <>
+            <Button
+              visibleFrom="sm"
+              style={{ flexShrink: 0 }}
+              leftSection={<IconPlus size={14} />}
+              onClick={() => {
+                modals.open({
+                  closeOnClickOutside: false,
+                  title: modalTitle,
+                  children: (
+                    <>
+                      <Text c="dimmed" size="sm" mb="sm">
+                        {modalDescription}
+                      </Text>
+                      {modalContent}
+                    </>
+                  ),
+                });
+              }}
+            >
+              Hinzufügen
+            </Button>
+
+            <ActionIcon
+              hiddenFrom="sm"
+              size="lg"
+              onClick={() => {
+                modals.open({
+                  closeOnClickOutside: false,
+                  title: modalTitle,
+                  children: (
+                    <>
+                      <Text c="dimmed" size="sm" mb="sm">
+                        {modalDescription}
+                      </Text>
+                      {modalContent}
+                    </>
+                  ),
+                });
+              }}
+              aria-label="Add"
+            >
+              <IconPlus style={baseIconStyles} />
+            </ActionIcon>
+          </>
+        )}
       </Group>
     </>
   );

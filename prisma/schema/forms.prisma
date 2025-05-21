@@ -4,6 +4,7 @@ model Form {
     description           String?
     icon                  String?
     schema                Json?
+    theme                 Json?
     isPublic              Boolean          @default(false)
     isActive              Boolean          @default(true)
     createdAt             DateTime         @default(now())

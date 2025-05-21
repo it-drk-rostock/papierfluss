@@ -11,7 +11,7 @@ import { formatError } from "@/utils/format-error";
 import { revalidatePath } from "next/cache";
 import { idSchema } from "@/schemas/id-schema";
 import jsonata from "jsonata";
-import { forbidden, redirect } from "next/navigation";
+import { forbidden, notFound, redirect } from "next/navigation";
 
 /**
  * Retrieves forms from the database based on user's role and access permissions.
@@ -77,28 +77,31 @@ export const getFormSubmission = async (id: string) => {
       completedNotes: true,
       status: true,
       data: true,
+      submittedById: true,
     },
   });
 
-  if (!form) return null;
+  if (!form) return notFound();
 
-  const submissionContext = {
-    user: {
-      ...user,
+  if (form.submittedById !== user.id) {
+    const submissionContext = {
+      user: {
+        ...user,
+        teams: user.teams?.map((t) => t.name) ?? [],
+      },
       teams: user.teams?.map((t) => t.name) ?? [],
-    },
-    teams: user.teams?.map((t) => t.name) ?? [],
-    formTeams: form.form.teams?.map((t) => t.name) ?? [],
-    data: form.data,
-  };
+      formTeams: form.form.teams?.map((t) => t.name) ?? [],
+      data: form.data,
+    };
 
-  const expressionString = form.form.reviewFormPermissions || "";
-  const hasPermission = await jsonata(expressionString).evaluate(
-    submissionContext
-  );
+    const expressionString = form.form.reviewFormPermissions || "";
+    const hasPermission = await jsonata(expressionString).evaluate(
+      submissionContext
+    );
 
-  if (!hasPermission) {
-    forbidden();
+    if (!hasPermission) {
+      forbidden();
+    }
   }
 
   return form;

@@ -25,11 +25,12 @@ import { showNotification } from "@/utils/notification";
 
 const defaultCreatorOptions: ICreatorOptions = {
   showTranslationTab: true,
+  showThemeTab: true,
 };
 
 export const SurveyDesignerForm = (props: {
   json?: object;
-  options?: ICreatorOptions;
+  theme?: object;
 }) => {
   // Create the upload mutation
   const uploadMutation = useMutation({
@@ -46,11 +47,15 @@ export const SurveyDesignerForm = (props: {
     },
   });
 
+  const { id } = useParams<{ id: string }>();
+  const { execute, status } = useEnhancedAction({
+    action: updateForm,
+    hideModals: true,
+  });
+
   const [creator] = useState(() => {
     // Initialize creator only once
-    const newCreator = new SurveyCreator(
-      props.options || defaultCreatorOptions
-    );
+    const newCreator = new SurveyCreator(defaultCreatorOptions);
 
     // Set up save functionality
     newCreator.saveSurveyFunc = async (
@@ -59,9 +64,11 @@ export const SurveyDesignerForm = (props: {
     ) => {
       try {
         const surveyJSON = newCreator.JSON;
+        const themeJSON = newCreator.theme;
         execute({
           id,
           schema: surveyJSON,
+          theme: themeJSON,
         });
         callback(no, true);
       } catch {
@@ -83,6 +90,7 @@ export const SurveyDesignerForm = (props: {
     // Set initial properties
     newCreator.isAutoSave = false;
     newCreator.locale = "de";
+    newCreator.applyCreatorTheme(props.theme);
 
     // Update file upload handler to use mutation
     newCreator.onUploadFile.add(async (_, options) => {
@@ -122,11 +130,6 @@ export const SurveyDesignerForm = (props: {
   });
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { id } = useParams<{ id: string }>();
-  const { execute, status } = useEnhancedAction({
-    action: updateForm,
-    hideModals: true,
-  });
 
   // Add Mantine form
   const form = useForm({
@@ -164,12 +167,17 @@ export const SurveyDesignerForm = (props: {
     form.reset();
   });
 
-  // Update JSON when props change
+  // Update JSON and theme when props change
   useEffect(() => {
-    if (creator && props.json) {
-      creator.JSON = props.json;
+    if (creator) {
+      if (props.json) {
+        creator.JSON = props.json;
+      }
+      if (props.theme) {
+        creator.theme = props.theme;
+      }
     }
-  }, [creator, props.json]);
+  }, [creator, props.json, props.theme]);
 
   return (
     <Box h="100vh" w="100%" pos="relative">

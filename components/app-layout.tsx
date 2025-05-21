@@ -11,12 +11,13 @@ import {
   IconUserShield,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
+
+import { useAuthSession } from "@/hooks/use-auth-session";
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
-  const { data: session, isPending, error } = authClient.useSession();
+  const { hasAccess } = useAuthSession();
 
   return (
     <AppShell
@@ -67,7 +68,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             label="Formulare"
             leftSection={<IconClipboard size={16} stroke={1.5} />}
           />
-          {session?.user?.role === "admin" && (
+          {hasAccess("admin") && (
             <NavLink
               href="/admin"
               label="Admin"
