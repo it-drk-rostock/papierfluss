@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  adminActionClient,
-  authActionClient,
-} from "@/server/utils/action-clients";
+import { authActionClient } from "@/server/utils/action-clients";
 import { revalidatePath } from "next/cache";
 import {
   assignTeamsSchema,
@@ -181,7 +178,15 @@ export const deleteForm = authActionClient
     try {
       const form = await prisma.form.findUnique({
         where: { id },
-        select: { editFormPermissions: true, teams: true },
+        select: {
+          editFormPermissions: true,
+          teams: true,
+          responsibleTeam: {
+            select: {
+              name: true,
+            },
+          },
+        },
       });
 
       if (!form) {
@@ -199,8 +204,11 @@ export const deleteForm = authActionClient
             id: ctx.session.user.id,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-          formTeams: form.teams?.map((t) => t.name) ?? [],
+
+          form: {
+            responsibleTeam: form.responsibleTeam?.name,
+            teams: form.teams?.map((t) => t.name) ?? [],
+          },
         };
 
         const rules = JSON.parse(form.editFormPermissions || "{}");
@@ -462,7 +470,19 @@ export const assignTeams = authActionClient
     try {
       const form = await prisma.form.findUnique({
         where: { id },
-        select: { editFormPermissions: true },
+        select: {
+          editFormPermissions: true,
+          responsibleTeam: {
+            select: {
+              name: true,
+            },
+          },
+          teams: {
+            select: {
+              name: true,
+            },
+          },
+        },
       });
 
       if (!form) {
@@ -477,6 +497,10 @@ export const assignTeams = authActionClient
             role: ctx.session.user.role,
             id: ctx.session.user.id,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          form: {
+            responsibleTeam: form.responsibleTeam?.name,
+            teams: form.teams?.map((t) => t.name) ?? [],
           },
         };
 
