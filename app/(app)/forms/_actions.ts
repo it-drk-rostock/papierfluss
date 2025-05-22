@@ -98,7 +98,11 @@ export const updateForm = authActionClient
     try {
       const form = await prisma.form.findUnique({
         where: { id },
-        select: { editFormPermissions: true, teams: true },
+        select: {
+          editFormPermissions: true,
+          teams: true,
+          responsibleTeam: true,
+        },
       });
 
       if (!form) {
@@ -114,16 +118,26 @@ export const updateForm = authActionClient
             id: ctx.session.user.id,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-          formTeams: form.teams?.map((t) => t.name) ?? [],
+          form: {
+            responsibleTeam: form.responsibleTeam?.name,
+            teams: form.teams?.map((t) => t.name) ?? [],
+          },
         };
 
         const expressionString = form.editFormPermissions || "";
+
         const hasPermission = await jsonata(expressionString).evaluate(context);
 
         if (!hasPermission) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
         }
+      }
+
+      if (
+        ctx.session.user.role !== "moderator" &&
+        ctx.session.user.role !== "admin"
+      ) {
+        throw new Error("Keine Berechtigung zum bearbeiten dieses Formulars");
       }
 
       await prisma.form.update({
@@ -140,6 +154,7 @@ export const updateForm = authActionClient
         },
       });
     } catch (error) {
+      console.log(error);
       throw formatError(error);
     }
 
