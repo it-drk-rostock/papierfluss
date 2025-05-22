@@ -10,8 +10,8 @@ import {
 import { formatError } from "@/utils/format-error";
 import { revalidatePath } from "next/cache";
 import { idSchema } from "@/schemas/id-schema";
-import jsonata from "jsonata";
 import { forbidden, notFound, redirect } from "next/navigation";
+import jsonLogic from "json-logic-js";
 
 /**
  * Retrieves forms from the database based on user's role and access permissions.
@@ -44,6 +44,11 @@ export const getFormSubmission = async (id: string) => {
             title: true,
             schema: true,
             reviewFormPermissions: true,
+            responsibleTeam: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
         reviewNotes: true,
@@ -67,6 +72,11 @@ export const getFormSubmission = async (id: string) => {
           title: true,
           schema: true,
           reviewFormPermissions: true,
+          responsibleTeam: {
+            select: {
+              name: true,
+            },
+          },
           teams: {
             select: {
               name: true,
@@ -93,15 +103,15 @@ export const getFormSubmission = async (id: string) => {
         ...user,
         teams: user.teams?.map((t) => t.name) ?? [],
       },
-      teams: user.teams?.map((t) => t.name) ?? [],
-      formTeams: form.form.teams?.map((t) => t.name) ?? [],
+      form: {
+        responsibleTeam: form.form.responsibleTeam?.name,
+        teams: form.form.teams?.map((t) => t.name) ?? [],
+      },
       data: form.data,
     };
 
-    const expressionString = form.form.reviewFormPermissions || "";
-    const hasPermission = await jsonata(expressionString).evaluate(
-      submissionContext
-    );
+    const rules = JSON.parse(form.form.reviewFormPermissions || "{}");
+    const hasPermission = await jsonLogic.apply(rules, submissionContext);
 
     if (!hasPermission) {
       forbidden();
@@ -137,6 +147,15 @@ export const updateFormSubmission = authActionClient
           data: true,
           form: {
             select: {
+              id: true,
+              title: true,
+              schema: true,
+              teams: {
+                select: {
+                  name: true,
+                },
+              },
+              reviewFormPermissions: true,
               responsibleTeam: {
                 select: {
                   name: true,
@@ -158,8 +177,10 @@ export const updateFormSubmission = authActionClient
         user: {
           ...ctx.session.user,
         },
-        teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-        responsibleTeam: submission.form.responsibleTeam,
+        form: {
+          responsibleTeam: submission.form.responsibleTeam?.name,
+          teams: submission.form.teams?.map((t) => t.name) ?? [],
+        },
         data: submission.data,
       };
 
@@ -212,6 +233,11 @@ export const withdrawFormSubmission = authActionClient
           data: true,
           form: {
             select: {
+              teams: {
+                select: {
+                  name: true,
+                },
+              },
               responsibleTeam: {
                 select: {
                   name: true,
@@ -233,8 +259,10 @@ export const withdrawFormSubmission = authActionClient
         user: {
           ...ctx.session.user,
         },
-        teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-        responsibleTeam: submission.form.responsibleTeam,
+        form: {
+          responsibleTeam: submission.form.responsibleTeam?.name,
+          teams: submission.form.teams?.map((t) => t.name) ?? [],
+        },
         data: submission.data,
       };
 
@@ -281,7 +309,13 @@ export const updateFormSubmissionStatus = authActionClient
               title: true,
               schema: true,
               reviewFormPermissions: true,
-
+              responsibleTeam: {
+                select: {
+                  name: true,
+                  id: true,
+                  contactEmail: true,
+                },
+              },
               teams: {
                 select: {
                   name: true,
@@ -300,15 +334,15 @@ export const updateFormSubmissionStatus = authActionClient
             ...ctx.session.user,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-          formTeams: form.form.teams?.map((t) => t.name) ?? [],
+          form: {
+            responsibleTeam: form.form.responsibleTeam?.name,
+            teams: form.form.teams?.map((t) => t.name) ?? [],
+          },
           data: form.data,
         };
 
-        const expressionString = form.form.reviewFormPermissions || "";
-        const hasPermission = await jsonata(expressionString).evaluate(
-          submissionContext
-        );
+        const rules = JSON.parse(form.form.reviewFormPermissions || "{}");
+        const hasPermission = await jsonLogic.apply(rules, submissionContext);
 
         if (!hasPermission) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
@@ -669,6 +703,13 @@ export const reviewFormSubmission = authActionClient
               title: true,
               schema: true,
               reviewFormPermissions: true,
+              responsibleTeam: {
+                select: {
+                  name: true,
+                  id: true,
+                  contactEmail: true,
+                },
+              },
               teams: {
                 select: {
                   name: true,
@@ -687,15 +728,15 @@ export const reviewFormSubmission = authActionClient
             ...ctx.session.user,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-          formTeams: form.form.teams?.map((t) => t.name) ?? [],
+          form: {
+            responsibleTeam: form.form.responsibleTeam?.name,
+            teams: form.form.teams?.map((t) => t.name) ?? [],
+          },
           data: form.data,
         };
 
-        const expressionString = form.form.reviewFormPermissions || "";
-        const hasPermission = await jsonata(expressionString).evaluate(
-          submissionContext
-        );
+        const rules = JSON.parse(form.form.reviewFormPermissions || "{}");
+        const hasPermission = await jsonLogic.apply(rules, submissionContext);
 
         if (!hasPermission) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");

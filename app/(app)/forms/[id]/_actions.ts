@@ -2,8 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { authQuery } from "@/server/utils/auth-query";
-import jsonata from "jsonata";
 import { notFound } from "next/navigation";
+import jsonLogic from "json-logic-js";
 
 /**
  * Retrieves a form from the database based on user's role and access permissions.
@@ -51,6 +51,11 @@ export const getForm = async (id: string) => {
             name: true,
           },
         },
+        responsibleTeam: {
+          select: {
+            name: true,
+          },
+        },
         schema: true,
         submissions: {
           where: {
@@ -88,6 +93,11 @@ export const getForm = async (id: string) => {
           name: true,
         },
       },
+      responsibleTeam: {
+        select: {
+          name: true,
+        },
+      },
       schema: true,
       submissions: {
         where: {
@@ -121,14 +131,19 @@ export const getForm = async (id: string) => {
               ...user,
               teams: user.teams?.map((t) => t.name) ?? [],
             },
-            teams: user.teams?.map((t) => t.name) ?? [],
-            formTeams: form.teams?.map((t) => t.name) ?? [],
+            form: {
+              responsibleTeam: form.responsibleTeam?.name,
+              teams: form.teams?.map((t) => t.name) ?? [],
+            },
             data: submission.data,
           };
 
-          const expressionString = form.reviewFormPermissions || "";
+          const expressionString = JSON.parse(
+            form.reviewFormPermissions || "{}"
+          );
 
-          const result = await jsonata(expressionString).evaluate(
+          const result = await jsonLogic.apply(
+            expressionString,
             submissionContext
           );
 

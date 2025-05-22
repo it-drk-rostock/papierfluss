@@ -6,8 +6,7 @@ import { authActionClient } from "@/server/utils/action-clients";
 import { formatError } from "@/utils/format-error";
 import { revalidatePath } from "next/cache";
 import { authQuery } from "@/server/utils/auth-query";
-import jsonata from "jsonata";
-import { z } from "zod";
+import jsonLogic from "json-logic-js";
 
 /**
  * Updates a form in the database.
@@ -30,7 +29,11 @@ export const updateForm = authActionClient
     try {
       const form = await prisma.form.findUnique({
         where: { id },
-        select: { editFormPermissions: true },
+        select: {
+          editFormPermissions: true,
+          responsibleTeam: true,
+          teams: true,
+        },
       });
 
       if (!form) {
@@ -40,18 +43,19 @@ export const updateForm = authActionClient
       if (ctx.session.user.role !== "admin") {
         const context = {
           user: {
-            email: ctx.session.user.email,
-            name: ctx.session.user.name,
-            role: ctx.session.user.role,
-            id: ctx.session.user.id,
+            ...ctx.session.user,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          form: {
+            responsibleTeam: form.responsibleTeam?.name,
+            teams: form.teams?.map((t) => t.name) ?? [],
           },
         };
 
-        const expressionString = form.editFormPermissions || "";
-        const hasPermission = await jsonata(expressionString).evaluate(context);
+        const rules = JSON.parse(form.editFormPermissions || "{}");
+        const hasPermission = await jsonLogic.apply(rules, context);
 
-        if (hasPermission !== true) {
+        if (!hasPermission) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
         }
       }

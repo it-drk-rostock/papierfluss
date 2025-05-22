@@ -109,10 +109,7 @@ export const updateForm = authActionClient
       if (ctx.session.user.role !== "admin") {
         const context = {
           user: {
-            email: ctx.session.user.email,
-            name: ctx.session.user.name,
-            role: ctx.session.user.role,
-            id: ctx.session.user.id,
+            ...ctx.session.user,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
           form: {
