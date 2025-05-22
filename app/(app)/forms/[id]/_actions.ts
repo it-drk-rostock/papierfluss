@@ -138,14 +138,9 @@ export const getForm = async (id: string) => {
             data: submission.data,
           };
 
-          const expressionString = JSON.parse(
-            form.reviewFormPermissions || "{}"
-          );
+          const rules = await JSON.parse(form.reviewFormPermissions || "{}");
 
-          const result = await jsonLogic.apply(
-            expressionString,
-            submissionContext
-          );
+          const result = await jsonLogic.apply(rules, submissionContext);
 
           return result === true ? submission : null;
         })

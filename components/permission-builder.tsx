@@ -120,6 +120,7 @@ export const PermissionBuilder = ({
           fields={fields}
           defaultQuery={query}
           onQueryChange={setQuery}
+          getValueSources={() => ["value", "field"]}
         />
       </QueryBuilderMantine>
     </Stack>

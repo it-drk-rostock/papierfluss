@@ -110,7 +110,8 @@ export const getFormSubmission = async (id: string) => {
       data: form.data,
     };
 
-    const rules = JSON.parse(form.form.reviewFormPermissions || "{}");
+    const rules = await JSON.parse(form.form.reviewFormPermissions || "{}");
+    
     const hasPermission = await jsonLogic.apply(rules, submissionContext);
 
     if (!hasPermission) {
