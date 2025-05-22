@@ -16,7 +16,7 @@ import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
 import { redirect } from "next/navigation";
-import jsonata from "jsonata";
+import jsonLogic from "json-logic-js";
 
 /**
  * Creates a new form in the database.
@@ -124,9 +124,9 @@ export const updateForm = authActionClient
           },
         };
 
-        const expressionString = form.editFormPermissions || "";
+        const rules = JSON.parse(form.editFormPermissions || "{}");
 
-        const hasPermission = await jsonata(expressionString).evaluate(context);
+        const hasPermission = jsonLogic.apply(rules, context);
 
         if (!hasPermission) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
@@ -203,8 +203,8 @@ export const deleteForm = authActionClient
           formTeams: form.teams?.map((t) => t.name) ?? [],
         };
 
-        const expressionString = form.editFormPermissions || "";
-        const hasPermission = await jsonata(expressionString).evaluate(context);
+        const rules = JSON.parse(form.editFormPermissions || "{}");
+        const hasPermission = jsonLogic.apply(rules, context);
 
         if (!hasPermission) {
           throw new Error("Keine Berechtigung zum löschen dieses Formulars");
@@ -422,8 +422,8 @@ export const removeTeam = authActionClient
           },
         };
 
-        const expressionString = form.editFormPermissions || "";
-        const hasPermission = await jsonata(expressionString).evaluate(context);
+        const rules = JSON.parse(form.editFormPermissions || "{}");
+        const hasPermission = jsonLogic.apply(rules, context);
 
         if (hasPermission !== true) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
@@ -480,8 +480,8 @@ export const assignTeams = authActionClient
           },
         };
 
-        const expressionString = form.editFormPermissions || "";
-        const hasPermission = await jsonata(expressionString).evaluate(context);
+        const rules = JSON.parse(form.editFormPermissions || "{}");
+        const hasPermission = jsonLogic.apply(rules, context);
 
         if (hasPermission !== true) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
