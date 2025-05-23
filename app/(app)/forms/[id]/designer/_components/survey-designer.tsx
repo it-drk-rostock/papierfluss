@@ -10,5 +10,10 @@ export const SurveyDesigner = async ({
   const formId = (await params).id;
   const designer = await getDesigner(formId);
 
-  return <SurveyDesignerForm json={designer?.schema as object} />;
+  return (
+    <SurveyDesignerForm
+      json={designer?.schema as object}
+      theme={designer?.theme as object}
+    />
+  );
 };

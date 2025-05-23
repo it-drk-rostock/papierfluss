@@ -2,8 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { authQuery } from "@/server/utils/auth-query";
-import jsonata from "jsonata";
 import { notFound } from "next/navigation";
+import jsonLogic from "json-logic-js";
 
 /**
  * Retrieves a form from the database based on user's role and access permissions.
@@ -51,12 +51,23 @@ export const getForm = async (id: string) => {
             name: true,
           },
         },
-        schema:true,
+        responsibleTeam: {
+          select: {
+            name: true,
+          },
+        },
+        schema: true,
         submissions: {
+          where: {
+            status: {
+              not: "archived",
+            },
+          },
           select: {
             id: true,
             data: true,
             status: true,
+            isExample: true,
             submittedBy: {
               select: {
                 id: true,
@@ -82,12 +93,23 @@ export const getForm = async (id: string) => {
           name: true,
         },
       },
+      responsibleTeam: {
+        select: {
+          name: true,
+        },
+      },
       schema: true,
       submissions: {
+        where: {
+          status: {
+            not: "archived",
+          },
+        },
         select: {
           id: true,
           status: true,
           data: true,
+          isExample: true,
           submittedBy: {
             select: {
               id: true,
@@ -109,16 +131,16 @@ export const getForm = async (id: string) => {
               ...user,
               teams: user.teams?.map((t) => t.name) ?? [],
             },
-            teams: user.teams?.map((t) => t.name) ?? [],
-            formTeams: form.teams?.map((t) => t.name) ?? [],
+            form: {
+              responsibleTeam: form.responsibleTeam?.name,
+              teams: form.teams?.map((t) => t.name) ?? [],
+            },
             data: submission.data,
           };
 
-          const expressionString = form.reviewFormPermissions || "";
+          const rules = await JSON.parse(form.reviewFormPermissions || "{}");
 
-          const result = await jsonata(expressionString).evaluate(
-            submissionContext
-          );
+          const result = await jsonLogic.apply(rules, submissionContext);
 
           return result === true ? submission : null;
         })

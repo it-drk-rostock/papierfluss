@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  adminActionClient,
-  authActionClient,
-} from "@/server/utils/action-clients";
+import { authActionClient } from "@/server/utils/action-clients";
 import { revalidatePath } from "next/cache";
 import {
   assignTeamsSchema,
@@ -16,7 +13,7 @@ import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
 import { redirect } from "next/navigation";
-import jsonata from "jsonata";
+import jsonLogic from "json-logic-js";
 
 /**
  * Creates a new form in the database.
@@ -98,7 +95,11 @@ export const updateForm = authActionClient
     try {
       const form = await prisma.form.findUnique({
         where: { id },
-        select: { editFormPermissions: true, teams: true },
+        select: {
+          editFormPermissions: true,
+          teams: true,
+          responsibleTeam: true,
+        },
       });
 
       if (!form) {
@@ -108,22 +109,29 @@ export const updateForm = authActionClient
       if (ctx.session.user.role !== "admin") {
         const context = {
           user: {
-            email: ctx.session.user.email,
-            name: ctx.session.user.name,
-            role: ctx.session.user.role,
-            id: ctx.session.user.id,
+            ...ctx.session.user,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-          formTeams: form.teams?.map((t) => t.name) ?? [],
+          form: {
+            responsibleTeam: form.responsibleTeam?.name,
+            teams: form.teams?.map((t) => t.name) ?? [],
+          },
         };
 
-        const expressionString = form.editFormPermissions || "";
-        const hasPermission = await jsonata(expressionString).evaluate(context);
+        const rules = JSON.parse(form.editFormPermissions || "{}");
+
+        const hasPermission = jsonLogic.apply(rules, context);
 
         if (!hasPermission) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
         }
+      }
+
+      if (
+        ctx.session.user.role !== "moderator" &&
+        ctx.session.user.role !== "admin"
+      ) {
+        throw new Error("Keine Berechtigung zum bearbeiten dieses Formulars");
       }
 
       await prisma.form.update({
@@ -140,6 +148,7 @@ export const updateForm = authActionClient
         },
       });
     } catch (error) {
+      console.log(error);
       throw formatError(error);
     }
 
@@ -166,7 +175,15 @@ export const deleteForm = authActionClient
     try {
       const form = await prisma.form.findUnique({
         where: { id },
-        select: { editFormPermissions: true, teams: true },
+        select: {
+          editFormPermissions: true,
+          teams: true,
+          responsibleTeam: {
+            select: {
+              name: true,
+            },
+          },
+        },
       });
 
       if (!form) {
@@ -184,12 +201,15 @@ export const deleteForm = authActionClient
             id: ctx.session.user.id,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-          formTeams: form.teams?.map((t) => t.name) ?? [],
+
+          form: {
+            responsibleTeam: form.responsibleTeam?.name,
+            teams: form.teams?.map((t) => t.name) ?? [],
+          },
         };
 
-        const expressionString = form.editFormPermissions || "";
-        const hasPermission = await jsonata(expressionString).evaluate(context);
+        const rules = JSON.parse(form.editFormPermissions || "{}");
+        const hasPermission = jsonLogic.apply(rules, context);
 
         if (!hasPermission) {
           throw new Error("Keine Berechtigung zum löschen dieses Formulars");
@@ -228,8 +248,17 @@ export const fillOutForm = authActionClient
       const submission = await prisma.$transaction(async (tx) => {
         const form = await tx.form.findUnique({
           where: { id: parsedInput.id },
-          select: { isActive: true },
+          select: {
+            isActive: true,
+            submissions: {
+              where: {
+                isExample: true,
+              },
+            },
+          },
         });
+
+        const exampleSubmissionExists = form?.submissions.length > 0;
 
         if (!form?.isActive) {
           throw new Error("Formular ist nicht aktiviert");
@@ -239,6 +268,7 @@ export const fillOutForm = authActionClient
           data: {
             formId: parsedInput.id,
             submittedById: ctx.session.user.id,
+            isExample: exampleSubmissionExists ? false : true,
           },
         });
       });
@@ -309,9 +339,7 @@ export const getForms = async () => {
           select: {
             data: true,
           },
-          orderBy: {
-            createdAt: "asc",
-          },
+          where: { isExample: true },
           take: 1,
         },
       },
@@ -360,9 +388,7 @@ export const getForms = async () => {
         select: {
           data: true,
         },
-        orderBy: {
-          createdAt: "asc",
-        },
+        where: { isExample: true },
         take: 1,
       },
     },
@@ -401,8 +427,8 @@ export const removeTeam = authActionClient
           },
         };
 
-        const expressionString = form.editFormPermissions || "";
-        const hasPermission = await jsonata(expressionString).evaluate(context);
+        const rules = JSON.parse(form.editFormPermissions || "{}");
+        const hasPermission = jsonLogic.apply(rules, context);
 
         if (hasPermission !== true) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
@@ -441,7 +467,19 @@ export const assignTeams = authActionClient
     try {
       const form = await prisma.form.findUnique({
         where: { id },
-        select: { editFormPermissions: true },
+        select: {
+          editFormPermissions: true,
+          responsibleTeam: {
+            select: {
+              name: true,
+            },
+          },
+          teams: {
+            select: {
+              name: true,
+            },
+          },
+        },
       });
 
       if (!form) {
@@ -457,10 +495,14 @@ export const assignTeams = authActionClient
             id: ctx.session.user.id,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
+          form: {
+            responsibleTeam: form.responsibleTeam?.name,
+            teams: form.teams?.map((t) => t.name) ?? [],
+          },
         };
 
-        const expressionString = form.editFormPermissions || "";
-        const hasPermission = await jsonata(expressionString).evaluate(context);
+        const rules = JSON.parse(form.editFormPermissions || "{}");
+        const hasPermission = jsonLogic.apply(rules, context);
 
         if (hasPermission !== true) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");

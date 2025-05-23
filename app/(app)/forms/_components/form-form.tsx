@@ -11,6 +11,7 @@ import {
   Textarea,
   TextInput,
   Checkbox,
+  Alert,
 } from "@mantine/core";
 import { IconPicker } from "@/components/icon-picker";
 import { PermissionBuilder } from "@/components/permission-builder";
@@ -92,6 +93,13 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
 
         {form && (
           <>
+            {form.submissions.length === 0 && (
+              <Alert color="yellow" variant="light">
+                Es wurde noch kein Beispielformular erstellt. Das heißt, die
+                dynamischen Felder von den Formularen sind in den Berechtigungen
+                nicht auswählbar.
+              </Alert>
+            )}
             <PermissionBuilder
               label="Bearbeitungs Berechtigungen"
               initialData={form.editFormPermissions ?? ""}

@@ -8,11 +8,12 @@ import {
   type RuleGroupType,
   formatQuery,
 } from "react-querybuilder";
-import { parseJSONata } from "react-querybuilder/parseJSONata";
+import { parseJsonLogic } from "react-querybuilder/parseJsonLogic";
 import { useQuery } from "@tanstack/react-query";
 import { Loader, rem, Stack, Text } from "@mantine/core";
 import { getUserNames } from "@/server/utils/get-usernames";
 import { createFormActions } from "@mantine/form";
+import { getTeamNames } from "@/server/utils/get-teamnames";
 
 export const PermissionBuilder = ({
   initialData,
@@ -30,7 +31,7 @@ export const PermissionBuilder = ({
   const formAction = createFormActions(formActionName);
 
   const [query, setQuery] = useState<RuleGroupType>(
-    parseJSONata(initialData) ?? {
+    parseJsonLogic(initialData) ?? {
       combinator: "and",
       rules: [],
     }
@@ -47,12 +48,16 @@ export const PermissionBuilder = ({
     staleTime: 0,
   });
 
-  // Helper function to get unique values for a specific field
-  const getUniqueFieldValues = (fieldName: string) => {
-    return Array.from(
-      new Set(submissions?.map((s) => s.data[fieldName]).filter(Boolean) || [])
-    );
-  };
+  const {
+    data: teamNames,
+    isPending: teamNamesPending,
+    isError: isTeamNamesError,
+    error: teamNamesError,
+  } = useQuery({
+    queryKey: ["teamNames"],
+    queryFn: () => getTeamNames(),
+    staleTime: 0,
+  });
 
   // Get all unique field names from submissions
   const submissionFields = submissions?.length
@@ -66,16 +71,25 @@ export const PermissionBuilder = ({
       valueEditorType: "select",
       values:
         userNames?.map((name) => ({
-          name: name,
+          value: name, // Changed from name to value
           label: name,
         })) || [],
     },
     { name: "user.email", label: "E-Mail" },
     { name: "user.role", label: "Rolle" },
     { name: "user.id", label: "Benutzer ID" },
-    // Dynamically add fields from submissions without the submission. prefix
+    {
+      name: "user.teams",
+      label: "Benutzer Bereiche",
+      valueEditorType: "multiselect",
+      values: teamNames?.map((team) => ({
+        value: team,
+        label: team,
+      })),
+      defaultOperator: "contains",
+    },
     ...submissionFields.map((fieldName) => ({
-      name: `data.${fieldName}`, // Removed submission. prefix to match the context structure
+      name: `data.${fieldName}`,
       label: fieldName,
       valueEditorType: "text",
     })),
@@ -84,18 +98,15 @@ export const PermissionBuilder = ({
   useEffect(() => {
     formAction.setFieldValue(
       fieldValue,
-      formatQuery(query, {
-        format: "jsonata",
-        parseNumbers: true,
-      })
+      JSON.stringify(formatQuery(query, "jsonlogic"))
     );
   }, [query, formAction, fieldValue]);
 
-  if (isPending) {
+  if (isPending || teamNamesPending) {
     return <Loader />;
   }
 
-  if (isError) {
+  if (isError || isTeamNamesError) {
     return <Text c="red">Fehler beim Laden: {error?.message}</Text>;
   }
 
@@ -109,6 +120,7 @@ export const PermissionBuilder = ({
           fields={fields}
           defaultQuery={query}
           onQueryChange={setQuery}
+          getValueSources={() => ["value", "field"]}
         />
       </QueryBuilderMantine>
     </Stack>

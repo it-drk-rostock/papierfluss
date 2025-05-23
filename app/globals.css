@@ -2,7 +2,7 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  --sjs-primary-backcolor: var(--mantine-color-red-filled);
+  --sjs-primary-backcolor: var(--mantine-color-red-filled) !important;
 }
 
 * {
@@ -87,4 +87,13 @@ a {
 
 .withdraw-form:hover {
   background-color: var(--mantine-color-red-outline-hover) !important;
+}
+
+.archive-form {
+  background-color: var(--mantine-color-gray-filled) !important;
+  color: var(--mantine-color-white) !important;
+}
+
+.archive-form:hover {
+  background-color: var(--mantine-color-gray-filled-hover) !important;
 }

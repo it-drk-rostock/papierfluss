@@ -18,6 +18,11 @@ export const FormSubmissionCard = ({
     <Card key={submission.id} padding="lg" withBorder w={300}>
       <Title order={2}>{submission.submittedBy?.name ?? "Unbekannt"}</Title>
       <FormSubmissionStatusBadge status={submission.status} />
+      {submission.isExample && (
+        <Badge color="yellow" variant="light">
+          Beispielformular bitte nicht bearbeiten
+        </Badge>
+      )}
       <Card.Section>
         <Divider my="lg" />
       </Card.Section>

@@ -1,11 +1,13 @@
 model Form {
-    id                    String           @id @default(uuid())
-    title                 String
-    description           String?
-    icon                  String?
-    schema                Json?
-    isPublic              Boolean          @default(false)
-    isActive              Boolean          @default(true)
+    id          String  @id @default(uuid())
+    title       String
+    description String?
+    icon        String?
+    schema      Json?
+    theme       Json?
+    isPublic    Boolean @default(false)
+    isActive    Boolean @default(true)
+
     createdAt             DateTime         @default(now())
     updatedAt             DateTime         @updatedAt
     editFormPermissions   String?
@@ -24,6 +26,7 @@ model Form {
     reUpdateWorkflows     N8nWorkflow[]    @relation("ReUpdateWorkflows")
     rejectWorkflows       N8nWorkflow[]    @relation("RejectWorkflows")
     completeWorkflows     N8nWorkflow[]    @relation("CompleteWorkflows")
+    archiveWorkflows      N8nWorkflow[]    @relation("ArchiveWorkflows")
 
     @@index([createdById])
 }
@@ -32,9 +35,11 @@ model FormSubmission {
     id             String           @id @default(uuid())
     data           Json?
     status         SubmissionStatus @default(ongoing)
+    isExample      Boolean          @default(false)
     reviewNotes    String? // Notes for when sending back for revision (shown in ongoing status)
     rejectedNotes  String? // Final rejection reason (shown in rejected status)
     completedNotes String? // Final approval notes (shown in completed status)
+    archivedNotes  String? // Final archive reason (shown in archived status)
     createdAt      DateTime         @default(now())
     updatedAt      DateTime         @updatedAt
     form           Form             @relation(fields: [formId], references: [id], onDelete: Cascade)
@@ -52,4 +57,5 @@ enum SubmissionStatus {
     inReview // Reviewer has started the review process
     rejected // Final state: Reviewer rejected the submission permanently
     completed // Final state: Reviewer approved the submission
+    archived // Final state: Submission has been archived
 }

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const formSchema = z.object({
   schema: z.any(),
+  theme: z.any(),
 });
 
 export const updateFormSchema = formSchema.extend(idSchema.shape);

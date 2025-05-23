@@ -264,6 +264,21 @@ export const FormSubmissionForm = ({
         });
       },
     });
+
+    model.addNavigationItem({
+      id: "archive-form",
+      title: "Formular archivieren",
+      innerCss: "sd-btn archive-form",
+      action: () => {
+        modals.open({
+          closeOnClickOutside: false,
+          title: "Formular archivieren",
+          children: (
+            <FormSubmissionStatusForm id={submission.id} status="archived" />
+          ),
+        });
+      },
+    });
   }
 
   return (

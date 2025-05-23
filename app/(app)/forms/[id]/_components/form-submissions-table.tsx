@@ -24,8 +24,6 @@ export const FormSubmissionsTable = ({
   let [vizPanel, setVizPanel] = useState<Tabulator>();
 
   useEffect(() => {
-    console.log("Raw data entries:", data);
-
     // Clear existing content
     const container = document.getElementById("summaryContainer");
     if (container) {
