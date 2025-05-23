@@ -43,8 +43,8 @@ export const FormSubmission = async ({
       {submission.isExample && (
         <Alert color="yellow" variant="light">
           Dieses Formular ist ein Beispiel und dient nur zur generierung der
-          Felder für die Berechtigungen. Lassen Sie dieses Formular gerne offen
-          und speichern Sie es nur.
+          Felder für die Berechtigungen. Lassen Sie dieses Formular gerne in
+          Bearbeitung und speichern Sie es nur.
         </Alert>
       )}
       <FormSubmissionForm submission={submission} />
