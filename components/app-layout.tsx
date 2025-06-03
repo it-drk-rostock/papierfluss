@@ -59,7 +59,6 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             component={Link}
             href="/workflows"
             label="Worfklows"
-            disabled
             leftSection={<IconTopologyRing size={16} stroke={1.5} />}
           />
           <NavLink
