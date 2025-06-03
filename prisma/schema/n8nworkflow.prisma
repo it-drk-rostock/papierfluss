@@ -14,4 +14,14 @@ model N8nWorkflow {
     rejectForms   Form[] @relation("RejectWorkflows")
     completeForms Form[] @relation("CompleteWorkflows")
     archiveForms  Form[] @relation("ArchiveWorkflows")
+
+    initializeWorkflows Workflow[] @relation("InitializeWorkflows")
+    saveWorkflows       Workflow[] @relation("SaveWorkflows")
+    completeWorkflows   Workflow[] @relation("CompleteWorkflows")
+    archiveWorkflows    Workflow[] @relation("ArchiveWorkflows")
+    reactivateWorkflows Workflow[] @relation("ReactivateWorkflows")
+
+    saveProcesses       Process[] @relation("SaveProcesses")
+    completeProcesses   Process[] @relation("CompleteProcesses")
+    reactivateProcesses Process[] @relation("ReactivateProcesses")
 }
