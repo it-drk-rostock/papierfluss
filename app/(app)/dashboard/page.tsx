@@ -6,7 +6,7 @@ import { FormSubmissions } from "./_components/form-submissions";
 export default function Page() {
   return (
     <>
-      <Title order={1}>Dashboard</Title>
+      <Title order={1}>Übersicht</Title>
       <Divider />
       <Title order={2}>Bereiche</Title>
       <Suspense fallback={<Loader />}>
