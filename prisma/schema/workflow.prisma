@@ -25,6 +25,7 @@ model Process {
     name                     String
     description              String?
     order                    Int
+    isCategory               Boolean       @default(false)
     schema                   Json?
     theme                    Json?
     editProcessPermissions   String?
@@ -39,12 +40,15 @@ model Process {
     saveN8nWorkflows         N8nWorkflow[] @relation("SaveProcesses")
     completeN8nWorkflows     N8nWorkflow[] @relation("CompleteProcesses")
     reactivateN8nWorkflows   N8nWorkflow[] @relation("ReactivateProcesses")
-    parentId                 String?
-    parent                   Process?      @relation("ProcessHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-    children                 Process[]     @relation("ProcessHierarchy")
-    dependencies             Process[]     @relation("ProcessDependencies")
-    dependentOn              Process[]     @relation("ProcessDependencies")
-    position                 Json?
+
+    // Hierarchy relation (for both categories and processes)
+    parentId String?
+    parent   Process?  @relation("ProcessHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+    children Process[] @relation("ProcessHierarchy")
+
+    // Dependencies relation (only for actual processes, not categories)
+    dependencies       Process[] @relation("ProcessDependencies")
+    dependentProcesses Process[] @relation("ProcessDependencies")
 
     @@index([workflowId])
     @@index([parentId])

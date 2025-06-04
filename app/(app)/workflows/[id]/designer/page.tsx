@@ -1,6 +1,8 @@
-import { Title } from "@mantine/core";
+import { Stack, Title } from "@mantine/core";
 import { Suspense } from "react";
-import { SurveyDesigner } from "./_components/survey-designer";
+import { Workflow } from "./_components/workflow";
+import { QuickSearchAdd } from "@/components/quick-search-add";
+import { ProcessForm } from "./_components/process-form";
 
 export default async function Page({
   params,
@@ -8,9 +10,12 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   return (
-    <>
-      <Title order={1}>Designer</Title>
-      
-    </>
+    <Stack gap="lg">
+      <Title order={1}>Workflow Designer</Title>
+
+      <Suspense fallback={<div>Loading...</div>}>
+        <Workflow params={params} />
+      </Suspense>
+    </Stack>
   );
 }
