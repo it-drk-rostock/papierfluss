@@ -129,7 +129,13 @@ export function WorkflowTree({
         {getIcon()}
         <div style={{ flex: 1 }}>
           <Group wrap="nowrap">
-            <Text>{node.label}</Text>
+            <Stack gap="0">
+              <Text size="sm">{node.label}</Text>
+              <Text size="xs" c="dimmed">
+                {process.isCategory ? "Kategorie" : "Prozess"}
+                {` (${process.children.length})`}
+              </Text>
+            </Stack>
             <Group gap="xs">
               {siblings.length > 1 && (
                 <>
