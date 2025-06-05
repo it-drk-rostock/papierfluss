@@ -5,7 +5,11 @@ import { authActionClient } from "@/server/utils/action-clients";
 import { authQuery } from "@/server/utils/auth-query";
 import { formatError } from "@/utils/format-error";
 import { revalidatePath } from "next/cache";
-import { processSchema } from "./_schemas";
+import {
+  manageDependenciesSchema,
+  processSchema,
+  removeDependencySchema,
+} from "./_schemas";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { idSchema } from "@/schemas/id-schema";
@@ -207,5 +211,127 @@ export const deleteProcess = authActionClient
 
     return {
       message: "Prozess gelöscht",
+    };
+  });
+
+/**
+ * Gets all available processes that can be dependencies for a given process
+ */
+export const getAvailableDependencies = async (processId: string) => {
+  await authQuery();
+
+  const process = await prisma.process.findUnique({
+    where: { id: processId },
+    select: {
+      workflowId: true,
+      dependencies: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (!process) {
+    throw new Error("Process not found");
+  }
+
+  // Get all processes in the workflow except the current one and its existing dependencies
+  const availableProcesses = await prisma.process.findMany({
+    where: {
+      workflowId: process.workflowId,
+      id: {
+        not: processId,
+        notIn: process.dependencies.map((d) => d.id),
+      },
+      isCategory: false,
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return availableProcesses;
+};
+
+/**
+ * Updates the dependencies of a process
+ */
+export const manageDependencies = authActionClient
+  .schema(manageDependenciesSchema)
+  .metadata({
+    event: "manageDependenciesAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { processId, dependencies } = parsedInput;
+
+    try {
+      const process = await prisma.process.findUnique({
+        where: { id: processId },
+        select: { workflowId: true },
+      });
+
+      if (!process) {
+        throw new Error("Process not found");
+      }
+
+      await prisma.process.update({
+        where: { id: processId },
+        data: {
+          dependencies: {
+            set: dependencies.map((dep) => ({ id: dep.id })),
+          },
+        },
+      });
+
+      revalidatePath(`/workflows/${process.workflowId}/designer`);
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    return {
+      message: "Abhängigkeiten aktualisiert",
+    };
+  });
+
+/**
+ * Removes a single dependency from a process
+ */
+export const removeDependency = authActionClient
+  .schema(removeDependencySchema)
+  .metadata({
+    event: "removeDependencyAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { processId, dependencyId } = parsedInput;
+
+    try {
+      const process = await prisma.process.findUnique({
+        where: { id: processId },
+        select: { workflowId: true },
+      });
+
+      if (!process) {
+        throw new Error("Process not found");
+      }
+
+      await prisma.process.update({
+        where: { id: processId },
+        data: {
+          dependencies: {
+            disconnect: { id: dependencyId },
+          },
+        },
+      });
+
+      revalidatePath(`/workflows/${process.workflowId}/designer`);
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    return {
+      message: "Abhängigkeiten entfernt",
     };
   });

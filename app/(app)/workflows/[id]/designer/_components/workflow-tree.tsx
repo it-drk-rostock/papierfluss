@@ -14,20 +14,19 @@ import {
 import {
   Button,
   Group,
-  Modal,
   Stack,
   ActionIcon,
   Tooltip,
   Text,
-  Popover,
   type GroupProps,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { baseIconStyles } from "@/constants/base-icon-styles";
 import { ModalActionIcon } from "@/components/modal-action-icon";
 import { ButtonAction } from "@/components/button-action";
 import { deleteProcess } from "../_actions";
 import { ProcessForm } from "./process-form";
+import { ModalButton } from "@/components/modal-button";
+import { ManageDependenciesForm } from "./manage-dependencies-form";
 
 interface Process {
   id: string;
@@ -59,19 +58,9 @@ export function WorkflowTree({
   initialProcesses,
   treeData,
 }: WorkflowTreeProps) {
-  const [
-    dependencyModalOpened,
-    { open: openDependency, close: closeDependency },
-  ] = useDisclosure(false);
-
   const tree = useTree({
     initialExpandedState: {},
   });
-
-  // Open dependency modal
-  const openDependencyModal = () => {
-    openDependency();
-  };
 
   const renderNode = ({
     node,
@@ -176,47 +165,20 @@ export function WorkflowTree({
                 </>
               )}
               {!process.isCategory && (
-                <Popover width={200} position="bottom" withArrow shadow="md">
-                  <Popover.Target>
-                    <Button
-                      variant="subtle"
-                      size="compact-sm"
-                      color={hasDependencies ? "red" : "gray"}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                    >
-                      Abhängigkeiten
-                    </Button>
-                  </Popover.Target>
-                  <Popover.Dropdown onClick={(e) => e.stopPropagation()}>
-                    <Stack gap="xs">
-                      {hasDependencies ? (
-                        <>
-                          <Text size="sm" fw={500}>
-                            Abhängig von:
-                          </Text>
-                          {process.dependencies.map((dep) => (
-                            <Text key={dep.id} size="sm">
-                              {dep.name}
-                            </Text>
-                          ))}
-                        </>
-                      ) : (
-                        <Text size="sm" c="dimmed">
-                          Keine Abhängigkeiten
-                        </Text>
-                      )}
-                      <Button
-                        size="xs"
-                        variant="light"
-                        onClick={() => openDependencyModal()}
-                      >
-                        Bearbeiten
-                      </Button>
-                    </Stack>
-                  </Popover.Dropdown>
-                </Popover>
+                <ModalButton
+                  variant="subtle"
+                  size="compact-sm"
+                  color={hasDependencies ? "red" : "gray"}
+                  title="Abhängigkeiten verwalten"
+                  content={
+                    <ManageDependenciesForm
+                      processId={process.id}
+                      currentDependencies={process.dependencies}
+                    />
+                  }
+                >
+                  Abhängigkeiten
+                </ModalButton>
               )}
               <Tooltip
                 color="red"
@@ -270,35 +232,22 @@ export function WorkflowTree({
   };
 
   return (
-    <>
-      <Stack>
-        <Group justify="flex-end">
-          <Button onClick={() => tree.expandAllNodes()} variant="subtle">
-            Alle ausklappen
-          </Button>
-          <Button onClick={() => tree.collapseAllNodes()} variant="subtle">
-            Alle einklappen
-          </Button>
-        </Group>
+    <Stack>
+      <Group justify="flex-end">
+        <Button onClick={() => tree.expandAllNodes()} variant="subtle">
+          Alle ausklappen
+        </Button>
+        <Button onClick={() => tree.collapseAllNodes()} variant="subtle">
+          Alle einklappen
+        </Button>
+      </Group>
 
-        <Tree
-          data={treeData}
-          tree={tree}
-          renderNode={renderNode}
-          style={{ minHeight: "400px" }}
-        />
-      </Stack>
-
-      <Modal
-        opened={dependencyModalOpened}
-        onClose={closeDependency}
-        title="Abhängigkeiten verwalten"
-      >
-        <Stack>
-          <Text>TODO: Implement dependency management</Text>
-          <Button onClick={closeDependency}>Schließen</Button>
-        </Stack>
-      </Modal>
-    </>
+      <Tree
+        data={treeData}
+        tree={tree}
+        renderNode={renderNode}
+        style={{ minHeight: "400px" }}
+      />
+    </Stack>
   );
 }

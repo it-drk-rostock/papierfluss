@@ -10,3 +10,18 @@ export const processSchema = z.object({
   parentId: z.string().nullable(),
   workflowId: z.string().min(1),
 });
+
+export const manageDependenciesSchema = z.object({
+  processId: z.string().min(1),
+  dependencies: z.array(
+    z.object({
+      id: z.string().min(1),
+      name: z.string().min(1),
+    })
+  ),
+});
+
+export const removeDependencySchema = z.object({
+  processId: z.string().min(1),
+  dependencyId: z.string().min(1),
+});
