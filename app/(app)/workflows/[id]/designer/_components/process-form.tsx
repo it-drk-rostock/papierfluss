@@ -5,7 +5,14 @@ import { zodResolver } from "mantine-form-zod-resolver";
 import { processSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { createProcess } from "../_actions";
-import { Button, Group, Stack, TextInput, Switch } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Stack,
+  TextInput,
+  Switch,
+  Textarea,
+} from "@mantine/core";
 
 export const ProcessForm = ({
   workflowId,
@@ -19,6 +26,7 @@ export const ProcessForm = ({
     mode: "uncontrolled",
     initialValues: {
       name: "",
+      description: "",
       isCategory: false,
       parentId: parentId || null,
       workflowId: workflowId,
@@ -37,11 +45,8 @@ export const ProcessForm = ({
       })}
     >
       <Stack gap="sm">
-        <TextInput
-          label="Name"
-          placeholder="Name des Prozesses/der Kategorie"
-          {...form.getInputProps("name")}
-        />
+        <TextInput label="Name" {...form.getInputProps("name")} />
+        <Textarea label="Beschreibung" {...form.getInputProps("description")} />
         <Switch
           label="Als Kategorie anlegen"
           {...form.getInputProps("isCategory", { type: "checkbox" })}

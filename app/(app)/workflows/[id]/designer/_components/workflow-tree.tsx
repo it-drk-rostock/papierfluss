@@ -32,6 +32,7 @@ import { ProcessForm } from "./process-form";
 interface Process {
   id: string;
   name: string;
+  description: string | null;
   parentId: string | null;
   order: number;
   isCategory: boolean;
@@ -130,10 +131,15 @@ export function WorkflowTree({
         <div style={{ flex: 1 }}>
           <Group wrap="nowrap">
             <Stack gap="0">
-              <Text size="sm">{node.label}</Text>
+              <Text size="sm">
+                {node.label} -{" "}
+                <Text c="dimmed" display="inline-block" size="xs">
+                  {process.isCategory ? "Kategorie" : "Prozess"}
+                  {` (${process.children.length})`}
+                </Text>
+              </Text>
               <Text size="xs" c="dimmed">
-                {process.isCategory ? "Kategorie" : "Prozess"}
-                {` (${process.children.length})`}
+                {process.description}
               </Text>
             </Stack>
             <Group gap="xs">

@@ -52,6 +52,7 @@ export const getWorkflowProcesses = async (workflowId: string) => {
         select: {
           id: true,
           name: true,
+          description: true,
           parentId: true,
           order: true,
           isCategory: true,
@@ -94,7 +95,7 @@ export const createProcess = authActionClient
     event: "createProcessAction",
   })
   .stateAction(async ({ parsedInput }) => {
-    const { name, isCategory, parentId, workflowId } = parsedInput;
+    const { name, description, isCategory, parentId, workflowId } = parsedInput;
 
     try {
       // Get max order for the parent level
@@ -115,6 +116,7 @@ export const createProcess = authActionClient
 
       const data: Prisma.ProcessCreateInput = {
         name,
+        description,
         isCategory,
         ...(parentId && {
           parent: {
