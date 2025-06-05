@@ -30,6 +30,12 @@ const updateProcessLayoutSchema = z.object({
   ),
 });
 
+// Schema for moving a process up or down in its current level
+const moveProcessSchema = z.object({
+  processId: z.string(),
+  direction: z.enum(["up", "down"]),
+});
+
 export interface Process {
   id: string;
   name: string;
@@ -333,5 +339,92 @@ export const removeDependency = authActionClient
 
     return {
       message: "Abhängigkeiten entfernt",
+    };
+  });
+
+/**
+ * Moves a process up or down in its current level
+ */
+export const moveProcess = authActionClient
+  .schema(moveProcessSchema)
+  .metadata({
+    event: "moveProcessAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { processId, direction } = parsedInput;
+
+    try {
+      // Get the current process and its siblings
+      const process = await prisma.process.findUnique({
+        where: { id: processId },
+        select: {
+          workflowId: true,
+          parentId: true,
+          order: true,
+        },
+      });
+
+      if (!process) {
+        throw new Error("Process not found");
+      }
+
+      // Get all siblings (processes at the same level)
+      const siblings = await prisma.process.findMany({
+        where: {
+          workflowId: process.workflowId,
+          parentId: process.parentId,
+        },
+        orderBy: {
+          order: "asc",
+        },
+        select: {
+          id: true,
+          order: true,
+        },
+      });
+
+      // Find current process index
+      const currentIndex = siblings.findIndex((p) => p.id === processId);
+      if (currentIndex === -1) {
+        throw new Error("Prozess nicht gefunden");
+      }
+
+      // Calculate target index
+      const targetIndex =
+        direction === "up" ? currentIndex - 1 : currentIndex + 1;
+
+      // Check if move is possible
+      if (targetIndex < 0 || targetIndex >= siblings.length) {
+        throw new Error(
+          direction === "up"
+            ? "Prozess ist bereits am Anfang"
+            : "Prozess ist bereits am Ende"
+        );
+      }
+
+      // Swap orders with the target process
+      const currentOrder = siblings[currentIndex].order;
+      const targetOrder = siblings[targetIndex].order;
+      const targetId = siblings[targetIndex].id;
+
+      // Perform the swap
+      await prisma.$transaction([
+        prisma.process.update({
+          where: { id: processId },
+          data: { order: targetOrder },
+        }),
+        prisma.process.update({
+          where: { id: targetId },
+          data: { order: currentOrder },
+        }),
+      ]);
+
+      revalidatePath(`/workflows/${process.workflowId}/designer`);
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    return {
+      message: "Prozess verschoben",
     };
   });

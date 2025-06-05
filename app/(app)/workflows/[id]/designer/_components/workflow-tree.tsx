@@ -15,7 +15,6 @@ import {
   Button,
   Group,
   Stack,
-  ActionIcon,
   Tooltip,
   Text,
   type GroupProps,
@@ -23,10 +22,11 @@ import {
 import { baseIconStyles } from "@/constants/base-icon-styles";
 import { ModalActionIcon } from "@/components/modal-action-icon";
 import { ButtonAction } from "@/components/button-action";
-import { deleteProcess } from "../_actions";
+import { deleteProcess, moveProcess } from "../_actions";
 import { ProcessForm } from "./process-form";
 import { ModalButton } from "@/components/modal-button";
 import { ManageDependenciesForm } from "./manage-dependencies-form";
+import { ActionIconAction } from "@/components/action-icon-action";
 
 interface Process {
   id: string;
@@ -133,36 +133,36 @@ export function WorkflowTree({
             </Stack>
             <Group gap="xs">
               {siblings.length > 1 && (
-                <>
+                <Group gap="xs">
                   {!isFirst && (
-                    <Tooltip label="Nach oben">
-                      <ActionIcon
-                        variant="subtle"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // TODO: Implement moveProcess
-                        }}
-                      >
-                        <IconArrowUp style={baseIconStyles} />
-                      </ActionIcon>
-                    </Tooltip>
+                    <ActionIconAction
+                      variant="subtle"
+                      action={moveProcess}
+                      values={{
+                        processId: process.id,
+                        direction: "up",
+                      }}
+                      hideNotification
+                      aria-label="Nach oben"
+                    >
+                      <IconArrowUp style={baseIconStyles} />
+                    </ActionIconAction>
                   )}
                   {!isLast && (
-                    <Tooltip label="Nach unten">
-                      <ActionIcon
-                        variant="subtle"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // TODO: Implement moveProcess
-                        }}
-                      >
-                        <IconArrowDown style={baseIconStyles} />
-                      </ActionIcon>
-                    </Tooltip>
+                    <ActionIconAction
+                      variant="subtle"
+                      action={moveProcess}
+                      values={{
+                        processId: process.id,
+                        direction: "down",
+                      }}
+                      hideNotification
+                      aria-label="Nach unten"
+                    >
+                      <IconArrowDown style={baseIconStyles} />
+                    </ActionIconAction>
                   )}
-                </>
+                </Group>
               )}
               {!process.isCategory && (
                 <ModalButton

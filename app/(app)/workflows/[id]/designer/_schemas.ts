@@ -25,3 +25,8 @@ export const removeDependencySchema = z.object({
   processId: z.string().min(1),
   dependencyId: z.string().min(1),
 });
+
+export const moveProcessSchema = z.object({
+  processId: z.string().min(1),
+  direction: z.enum(["up", "down"]),
+});
