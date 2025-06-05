@@ -11,6 +11,8 @@ import {
   IconArrowDown,
   IconStairsDown,
   IconClipboard,
+  IconEdit,
+  IconPencil,
 } from "@tabler/icons-react";
 import {
   Button,
@@ -235,6 +237,27 @@ export function WorkflowTree({
                   }
                 >
                   <IconStairsDown style={baseIconStyles} />
+                </ModalActionIcon>
+              </Tooltip>
+              <Tooltip color="red" label="Bearbeiten">
+                <ModalActionIcon
+                  title={`${
+                    process.isCategory ? "Kategorie" : "Prozess"
+                  } bearbeiten`}
+                  variant="subtle"
+                  content={
+                    <ProcessForm
+                      workflowId={workflowId}
+                      process={{
+                        id: process.id,
+                        name: process.name,
+                        description: process.description,
+                        isCategory: process.isCategory,
+                      }}
+                    />
+                  }
+                >
+                  <IconPencil style={baseIconStyles} />
                 </ModalActionIcon>
               </Tooltip>
               <Tooltip color="red" label="Löschen">

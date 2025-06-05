@@ -2,9 +2,9 @@
 
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { processSchema } from "../_schemas";
+import { processSchema, updateProcessSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
-import { createProcess } from "../_actions";
+import { createProcess, updateProcess } from "../_actions";
 import {
   Button,
   Group,
@@ -14,27 +14,44 @@ import {
   Textarea,
 } from "@mantine/core";
 
+interface ProcessFormProps {
+  workflowId: string;
+  parentId?: string | null;
+  process?: {
+    id: string;
+    name: string;
+    description: string | null;
+    isCategory: boolean;
+  };
+}
+
 export const ProcessForm = ({
   workflowId,
   parentId,
-}: {
-  workflowId: string;
-  parentId?: string | null;
-}) => {
+  process,
+}: ProcessFormProps) => {
+  const isEditing = !!process;
+
   const form = useForm({
-    validate: zodResolver(processSchema),
+    validate: zodResolver(isEditing ? updateProcessSchema : processSchema),
     mode: "uncontrolled",
-    initialValues: {
-      name: "",
-      description: "",
-      isCategory: false,
-      parentId: parentId || null,
-      workflowId: workflowId,
-    },
+    initialValues: isEditing
+      ? {
+          id: process.id,
+          name: process.name,
+          description: process.description || "",
+        }
+      : {
+          name: "",
+          description: "",
+          isCategory: false,
+          parentId: parentId || null,
+          workflowId: workflowId,
+        },
   });
 
   const { execute, status } = useEnhancedAction({
-    action: createProcess,
+    action: isEditing ? updateProcess : createProcess,
     hideModals: true,
   });
 
@@ -47,13 +64,15 @@ export const ProcessForm = ({
       <Stack gap="sm">
         <TextInput label="Name" {...form.getInputProps("name")} />
         <Textarea label="Beschreibung" {...form.getInputProps("description")} />
-        <Switch
-          label="Als Kategorie anlegen"
-          {...form.getInputProps("isCategory", { type: "checkbox" })}
-        />
+        {!isEditing && (
+          <Switch
+            label="Als Kategorie anlegen"
+            {...form.getInputProps("isCategory", { type: "checkbox" })}
+          />
+        )}
         <Group mt="lg" justify="flex-end">
           <Button loading={status === "executing"} type="submit">
-            Hinzufügen
+            {isEditing ? "Speichern" : "Hinzufügen"}
           </Button>
         </Group>
       </Stack>

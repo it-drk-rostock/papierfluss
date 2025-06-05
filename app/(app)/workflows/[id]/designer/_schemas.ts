@@ -11,6 +11,14 @@ export const processSchema = z.object({
   workflowId: z.string().min(1),
 });
 
+export const updateProcessSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1, {
+    message: requiredFieldMessage,
+  }),
+  description: z.string().optional(),
+});
+
 export const manageDependenciesSchema = z.object({
   processId: z.string().min(1),
   dependencies: z.array(

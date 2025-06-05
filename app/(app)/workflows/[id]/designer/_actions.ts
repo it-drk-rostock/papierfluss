@@ -11,6 +11,7 @@ import {
   removeDependencySchema,
   updateProcessFormSchema,
   moveProcessSchema,
+  updateProcessSchema,
 } from "./_schemas";
 import { Prisma } from "@prisma/client";
 import jsonLogic from "json-logic-js";
@@ -441,5 +442,44 @@ export const updateProcessForm = authActionClient
     revalidatePath(`/workflows/${id}`);
     return {
       message: "Prozess Formular aktualisiert",
+    };
+  });
+
+/**
+ * Updates a process's basic information
+ */
+export const updateProcess = authActionClient
+  .schema(updateProcessSchema)
+  .metadata({
+    event: "updateProcessAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { id, name, description } = parsedInput;
+
+    try {
+      const process = await prisma.process.findUnique({
+        where: { id },
+        select: { workflowId: true },
+      });
+
+      if (!process) {
+        throw new Error("Process not found");
+      }
+
+      await prisma.process.update({
+        where: { id },
+        data: {
+          name,
+          description,
+        },
+      });
+
+      revalidatePath(`/workflows/${process.workflowId}/designer`);
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    return {
+      message: "Prozess aktualisiert",
     };
   });
