@@ -9,32 +9,12 @@ import {
   manageDependenciesSchema,
   processSchema,
   removeDependencySchema,
+  updateProcessFormSchema,
+  moveProcessSchema,
 } from "./_schemas";
 import { Prisma } from "@prisma/client";
-import { z } from "zod";
+import jsonLogic from "json-logic-js";
 import { idSchema } from "@/schemas/id-schema";
-
-// Schema for updating process positions and connections
-const updateProcessLayoutSchema = z.object({
-  workflowId: z.string(),
-  processes: z.array(
-    z.object({
-      id: z.string(),
-      position: z.object({
-        x: z.number(),
-        y: z.number(),
-      }),
-      parentId: z.string().nullable(),
-      dependencies: z.array(z.string()),
-    })
-  ),
-});
-
-// Schema for moving a process up or down in its current level
-const moveProcessSchema = z.object({
-  processId: z.string(),
-  direction: z.enum(["up", "down"]),
-});
 
 export interface Process {
   id: string;
@@ -66,6 +46,8 @@ export const getWorkflowProcesses = async (workflowId: string) => {
           parentId: true,
           order: true,
           isCategory: true,
+          schema: true,
+          theme: true,
           dependencies: {
             select: {
               id: true,
@@ -147,41 +129,6 @@ export const createProcess = authActionClient
     revalidatePath(`/workflows/${workflowId}/designer`);
     return {
       message: isCategory ? "Kategorie erstellt" : "Prozess erstellt",
-    };
-  });
-
-export const updateProcessLayout = authActionClient
-  .schema(updateProcessLayoutSchema)
-  .metadata({
-    event: "updateProcessLayoutAction",
-  })
-  .stateAction(async ({ parsedInput, ctx }) => {
-    const { workflowId, processes } = parsedInput;
-
-    try {
-      // Update each process
-      await Promise.all(
-        processes.map((process) =>
-          prisma.process.update({
-            where: { id: process.id },
-            data: {
-              position: process.position,
-              parentId: process.parentId,
-              dependencies: {
-                set: process.dependencies.map((id) => ({ id })),
-              },
-            },
-          })
-        )
-      );
-    } catch (error) {
-      throw formatError(error);
-    }
-
-    revalidatePath(`/workflows/${workflowId}/designer`);
-
-    return {
-      message: "Layout gespeichert",
     };
   });
 
@@ -426,5 +373,73 @@ export const moveProcess = authActionClient
 
     return {
       message: "Prozess verschoben",
+    };
+  });
+
+/**
+ * Updates a process form schema and theme
+ */
+export const updateProcessForm = authActionClient
+  .schema(updateProcessFormSchema)
+  .metadata({
+    event: "updateProcessFormAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, schema, theme } = parsedInput;
+
+    try {
+      const process = await prisma.process.findUnique({
+        where: { id },
+        select: {
+          workflow: {
+            select: {
+              editWorkflowPermissions: true,
+              responsibleTeam: true,
+              teams: true,
+            },
+          },
+        },
+      });
+
+      if (!process) {
+        throw new Error("Process not found");
+      }
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            ...ctx.session.user,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: process.workflow.responsibleTeam?.name,
+            teams: process.workflow.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          process.workflow.editWorkflowPermissions || "{}"
+        );
+        const hasPermission = await jsonLogic.apply(rules, context);
+
+        if (!hasPermission) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Prozesses");
+        }
+      }
+
+      await prisma.process.update({
+        where: { id },
+        data: {
+          schema,
+          theme,
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/workflows/${id}`);
+    return {
+      message: "Prozess Formular aktualisiert",
     };
   });

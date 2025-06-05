@@ -10,6 +10,7 @@ import {
   IconArrowUp,
   IconArrowDown,
   IconStairsDown,
+  IconClipboard,
 } from "@tabler/icons-react";
 import {
   Button,
@@ -27,6 +28,8 @@ import { ProcessForm } from "./process-form";
 import { ModalButton } from "@/components/modal-button";
 import { ManageDependenciesForm } from "./manage-dependencies-form";
 import { ActionIconAction } from "@/components/action-icon-action";
+import { DrawerActionIcon } from "@/components/drawer-action-icon";
+import { ProcessDesignerForm } from "./process-designer-form";
 
 interface Process {
   id: string;
@@ -38,6 +41,8 @@ interface Process {
   dependencies: Array<{ id: string; name: string }>;
   dependentProcesses: Array<{ id: string; name: string }>;
   children: Array<{ id: string; name: string }>;
+  schema: object | undefined;
+  theme: object | undefined;
 }
 
 interface TreeNode {
@@ -180,6 +185,33 @@ export function WorkflowTree({
                   Abhängigkeiten
                 </ModalButton>
               )}
+              {!process.isCategory && (
+                <Tooltip color="red" label="Prozess Formular Designer">
+                  <DrawerActionIcon
+                    variant="subtle"
+                    drawers={[
+                      {
+                        id: "process-designer",
+                        title: `Prozess Formular Designer: ${process.name}`,
+                        size: "100%",
+                        children: (
+                          <ProcessDesignerForm
+                            processId={process.id}
+                            json={process.schema}
+                            theme={process.theme}
+                            name={process.name}
+                            description={process.description}
+                          />
+                        ),
+                      },
+                    ]}
+                    initialDrawerId="process-designer"
+                  >
+                    <IconClipboard style={baseIconStyles} />
+                  </DrawerActionIcon>
+                </Tooltip>
+              )}
+
               <Tooltip
                 color="red"
                 label={
