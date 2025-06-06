@@ -6,12 +6,10 @@ import {
   IconFolderOpen,
   IconFile,
   IconTrash,
-  IconCategory,
   IconArrowUp,
   IconArrowDown,
   IconStairsDown,
   IconClipboard,
-  IconEdit,
   IconPencil,
 } from "@tabler/icons-react";
 import {
@@ -98,24 +96,17 @@ export function WorkflowTree({
           return (
             <IconFolderOpen
               size={16}
-              color={
-                process.isCategory ? "gray" : "var(--mantine-color-red-filled)"
-              }
+              color={"var(--mantine-color-red-filled)"}
             />
           );
         }
         return (
-          <IconFolder
-            size={16}
-            color={
-              process.isCategory ? "gray" : "var(--mantine-color-red-filled)"
-            }
-          />
+          <IconFolder size={16} color={"var(--mantine-color-red-filled)"} />
         );
       }
 
       if (process.isCategory) {
-        return <IconCategory size={16} color="gray" />;
+        return <IconFolder size={16} />;
       }
 
       return <IconFile size={16} />;
