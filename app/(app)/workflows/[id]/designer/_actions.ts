@@ -39,6 +39,7 @@ export const getWorkflowProcesses = async (workflowId: string) => {
     select: {
       id: true,
       name: true,
+      description: true,
       processes: {
         select: {
           id: true,

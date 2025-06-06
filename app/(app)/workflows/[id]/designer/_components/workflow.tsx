@@ -3,7 +3,14 @@ import { getWorkflowProcesses, type Process } from "../_actions";
 import { WorkflowTree } from "./workflow-tree";
 import { QuickSearchAdd } from "@/components/quick-search-add";
 import { ProcessForm } from "./process-form";
-import { TreeNodeData } from "@mantine/core";
+import {
+  Tabs,
+  TabsList,
+  TabsPanel,
+  TabsTab,
+  TreeNodeData,
+} from "@mantine/core";
+import { WorkflowPreview } from "./workflow-preview";
 
 export const Workflow = async ({
   params,
@@ -51,11 +58,24 @@ export const Workflow = async ({
         modalContent={<ProcessForm workflowId={workflowId} />}
         searchPlaceholder="Nach Prozessen suchen"
       />
-      <WorkflowTree
-        workflowId={workflow.id}
-        initialProcesses={workflow.processes}
-        treeData={treeData}
-      />
+      <Tabs defaultValue="designer">
+        <TabsList mb="md">
+          <TabsTab value="designer">Designer</TabsTab>
+          <TabsTab value="preview">Preview</TabsTab>
+        </TabsList>
+
+        <TabsPanel value="preview">
+          <WorkflowPreview workflow={workflow} />
+        </TabsPanel>
+
+        <TabsPanel value="designer">
+          <WorkflowTree
+            workflowId={workflow.id}
+            initialProcesses={workflow.processes}
+            treeData={treeData}
+          />
+        </TabsPanel>
+      </Tabs>
     </>
   );
 };
