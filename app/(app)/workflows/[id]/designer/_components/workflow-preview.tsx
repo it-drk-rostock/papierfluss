@@ -78,25 +78,6 @@ export const WorkflowPreview = ({
     );
   };
 
-  if (!workflow) {
-    return (
-      <Stack gap="md">
-        <Skeleton height={30} width="50%" radius="md" />
-        <Skeleton height={20} width="70%" radius="md" />
-        <Stack gap="sm">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Paper key={i} p="md" withBorder>
-              <Stack gap="sm">
-                <Skeleton height={20} width="40%" radius="md" />
-                <Skeleton height={15} width="60%" radius="md" />
-              </Stack>
-            </Paper>
-          ))}
-        </Stack>
-      </Stack>
-    );
-  }
-
   return (
     <Stack gap="md">
       <Stack gap="0">

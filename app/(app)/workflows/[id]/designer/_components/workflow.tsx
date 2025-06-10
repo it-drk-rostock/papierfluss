@@ -11,6 +11,7 @@ import {
   TreeNodeData,
 } from "@mantine/core";
 import { WorkflowPreview } from "./workflow-preview";
+import { notFound } from "next/navigation";
 
 export const Workflow = async ({
   params,
@@ -21,7 +22,7 @@ export const Workflow = async ({
   const workflow = await getWorkflowProcesses(workflowId);
 
   if (!workflow) {
-    return <div>Workflow nicht gefunden</div>;
+    return notFound();
   }
 
   // Build tree data
