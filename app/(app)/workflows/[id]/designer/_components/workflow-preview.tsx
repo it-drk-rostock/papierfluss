@@ -9,6 +9,8 @@ import {
   Tree,
   TreeNodeData,
   useTree,
+  Group,
+  Button,
 } from "@mantine/core";
 import React, { useMemo } from "react";
 import { WorkflowProcessesProps } from "../_actions";
@@ -41,21 +43,40 @@ export const WorkflowPreview = ({
         .sort((a, b) => a.order - b.order)
         .map((process) => ({
           value: process.id,
-          label: (
-            <ProcessPreviewItem
-              name={process.name}
-              description={process.description}
-              isCategory={process.isCategory}
-              status="open" // This will be dynamic when we have real runs
-            />
-          ),
+          label: process.name,
           children: buildTree(process.id),
         }));
       return children;
     };
 
     return buildTree(null);
-  }, [workflow]); // Rebuild tree when workflow changes
+  }, [workflow]);
+
+  const renderNode = ({
+    node,
+    expanded,
+    hasChildren,
+    elementProps,
+  }: {
+    node: TreeNodeData;
+    expanded: boolean;
+    hasChildren: boolean;
+    elementProps: React.HTMLProps<HTMLDivElement>;
+  }) => {
+    const process = workflow?.processes.find((p) => p.id === node.value);
+    if (!process) return null;
+
+    return (
+      <ProcessPreviewItem
+        name={process.name}
+        description={process.description}
+        isCategory={process.isCategory}
+        hasChildren={hasChildren}
+        expanded={expanded}
+        elementProps={elementProps}
+      />
+    );
+  };
 
   if (!workflow) {
     return (
@@ -83,7 +104,21 @@ export const WorkflowPreview = ({
         <Text c="dimmed">{workflow.description}</Text>
       </Stack>
 
-      <Tree data={treeData} tree={tree} style={{ minHeight: "400px" }} />
+      <Group justify="flex-end">
+        <Button onClick={() => tree.expandAllNodes()} variant="subtle">
+          Alle ausklappen
+        </Button>
+        <Button onClick={() => tree.collapseAllNodes()} variant="subtle">
+          Alle einklappen
+        </Button>
+      </Group>
+
+      <Tree
+        data={treeData}
+        tree={tree}
+        renderNode={renderNode}
+        style={{ minHeight: "400px" }}
+      />
     </Stack>
   );
 };

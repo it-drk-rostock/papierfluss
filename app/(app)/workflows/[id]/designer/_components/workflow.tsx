@@ -61,7 +61,7 @@ export const Workflow = async ({
       <Tabs defaultValue="designer">
         <TabsList mb="md">
           <TabsTab value="designer">Designer</TabsTab>
-          <TabsTab value="preview">Preview</TabsTab>
+          <TabsTab value="preview">Vorschau</TabsTab>
         </TabsList>
 
         <TabsPanel value="preview">
