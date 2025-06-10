@@ -11,6 +11,7 @@ import {
   IconStairsDown,
   IconClipboard,
   IconPencil,
+  IconTopologyBus,
 } from "@tabler/icons-react";
 import {
   Button,
@@ -30,6 +31,7 @@ import { ManageDependenciesForm } from "./manage-dependencies-form";
 import { ActionIconAction } from "@/components/action-icon-action";
 import { DrawerActionIcon } from "@/components/drawer-action-icon";
 import { ProcessDesignerForm } from "./process-designer-form";
+import { ProcessN8nWorkflows } from "./process-n8n-workflows";
 
 interface Process {
   id: string;
@@ -251,6 +253,17 @@ export function WorkflowTree({
                   <IconPencil style={baseIconStyles} />
                 </ModalActionIcon>
               </Tooltip>
+              {!process.isCategory && (
+                <Tooltip color="red" label="N8n Prozesse">
+                  <ModalActionIcon
+                    title="N8n Prozesse"
+                    variant="subtle"
+                    content={<ProcessN8nWorkflows processId={process.id} />}
+                  >
+                    <IconTopologyBus style={baseIconStyles} />
+                  </ModalActionIcon>
+                </Tooltip>
+              )}
               <Tooltip color="red" label="Löschen">
                 <ModalActionIcon
                   title="Prozess löschen"
