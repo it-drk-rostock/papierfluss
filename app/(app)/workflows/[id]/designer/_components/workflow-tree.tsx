@@ -1,6 +1,6 @@
 "use client";
 
-import { Tree, TreeNodeData, useTree } from "@mantine/core";
+import { Paper, Title, Tree, TreeNodeData, useTree } from "@mantine/core";
 import {
   IconFolder,
   IconFolderOpen,
@@ -287,13 +287,17 @@ export function WorkflowTree({
           Alle einklappen
         </Button>
       </Group>
-
-      <Tree
-        data={treeData}
-        tree={tree}
-        renderNode={renderNode}
-        style={{ minHeight: "400px" }}
-      />
+      <Paper withBorder p="md">
+        <Stack>
+          <Title order={3}>Prozesse</Title>
+          <Tree
+            data={treeData}
+            tree={tree}
+            renderNode={renderNode}
+            style={{ minHeight: "400px" }}
+          />
+        </Stack>
+      </Paper>
     </Stack>
   );
 }
