@@ -13,7 +13,11 @@ import {
   Grid,
   ActionIcon,
 } from "@mantine/core";
-import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconChevronRight,
+  IconChevronUp,
+} from "@tabler/icons-react";
 import React, { useMemo } from "react";
 import { WorkflowProcessesProps } from "../_actions";
 import { ProcessPreviewItem } from "./process-preview-item";
@@ -53,9 +57,9 @@ const FormNode = ({ node, expanded, elementProps }: FormNodeProps) => {
             !process.isCategory) && (
             <ActionIcon variant="subtle" size="lg">
               {expanded ? (
-                <IconChevronDown size={20} />
+                <IconChevronUp size={20} />
               ) : (
-                <IconChevronRight size={20} />
+                <IconChevronDown size={20} />
               )}
             </ActionIcon>
           )}
