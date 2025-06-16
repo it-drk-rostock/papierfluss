@@ -1,13 +1,26 @@
 import { Grid, Stack, Title, Text, Paper, GridCol } from "@mantine/core";
 
 import React from "react";
+import { getWorkflowRun } from "../_actions";
+import { notFound } from "next/navigation";
+import { WorkflowStatusBadge } from "@/components/workflow-status-badge";
 
-export const WorkflowRun = () => {
+export const WorkflowRun = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
+  const workflowRunId = (await params).id;
+  const workflowRun = await getWorkflowRun(workflowRunId);
+
+  if (!workflowRun) {
+    return notFound();
+  }
   return (
     <Stack gap="md">
       <Stack gap="0">
-        <Title order={2}>Mitarbeitereinstellung</Title>
-        <Text c="dimmed">Onboarding</Text>
+        <Title order={2}>{workflowRun.workflow.name}</Title>
+        <Text c="dimmed">{workflowRun.workflow.description}</Text>
       </Stack>
 
       <Grid gutter="lg">
@@ -33,7 +46,16 @@ export const WorkflowRun = () => {
           <Paper withBorder p="md">
             <Stack>
               <Title order={3}>Informationen</Title>
-              <Stack gap="md"></Stack>
+              <Stack gap="md">
+                <WorkflowStatusBadge status={workflowRun.status} />
+                <Text>
+                  Gestartet am: {workflowRun.startedAt.toLocaleDateString()}
+                </Text>
+                <Text>
+                  Abgeschlossen am:{" "}
+                  {workflowRun.completedAt?.toLocaleDateString()}
+                </Text>
+              </Stack>
             </Stack>
           </Paper>
         </GridCol>
