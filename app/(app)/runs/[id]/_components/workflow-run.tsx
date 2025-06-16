@@ -4,6 +4,7 @@ import React from "react";
 import { getWorkflowRun } from "../_actions";
 import { notFound } from "next/navigation";
 import { WorkflowStatusBadge } from "@/components/workflow-status-badge";
+import { ProcessRunTree } from "./process-run-tree";
 
 export const WorkflowRun = async ({
   params,
@@ -34,11 +35,7 @@ export const WorkflowRun = async ({
         </GridCol>
 
         <GridCol span={{ base: 12, md: 3 }}>
-          <Paper withBorder p="md">
-            <Stack>
-              <Title order={3}>Prozesse</Title>
-            </Stack>
-          </Paper>
+          <ProcessRunTree workflowRun={workflowRun} />
         </GridCol>
 
         {/* Information Section - 3 columns (quarter width) */}
