@@ -1,5 +1,4 @@
 import { Grid, Stack, Title, Text, Paper, GridCol } from "@mantine/core";
-
 import React from "react";
 import { getWorkflowRun } from "../_actions";
 import { notFound } from "next/navigation";
@@ -12,11 +11,13 @@ export const WorkflowRun = async ({
   params: Promise<{ id: string }>;
 }) => {
   const workflowRunId = (await params).id;
+
   const workflowRun = await getWorkflowRun(workflowRunId);
 
   if (!workflowRun) {
     return notFound();
   }
+
   return (
     <Stack gap="md">
       <Stack gap="0">
@@ -35,7 +36,12 @@ export const WorkflowRun = async ({
         </GridCol>
 
         <GridCol span={{ base: 12, md: 3 }}>
-          <ProcessRunTree workflowRun={workflowRun} />
+          <Paper withBorder p="md">
+            <Stack>
+              <Title order={3}>Prozesse</Title>
+              <ProcessRunTree workflowRun={workflowRun} />
+            </Stack>
+          </Paper>
         </GridCol>
 
         {/* Information Section - 3 columns (quarter width) */}

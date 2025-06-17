@@ -1,46 +1,66 @@
+"use client";
+
 import {
-  Button,
-  Paper,
-  Title,
+  getTreeExpandedState,
   Tree,
   TreeNodeData,
   useTree,
 } from "@mantine/core";
-import { Group, Stack } from "@mantine/core";
 import { ProcessRunItem } from "./process-run-item";
+import { useMemo } from "react";
+import { IconFolder, IconFile } from "@tabler/icons-react";
+import { baseIconStyles } from "@/constants/base-icon-styles";
+import { JsonValue } from "@prisma/client/runtime/library";
 
 interface ProcessRun {
   id: string;
   status: "open" | "ongoing" | "completed";
+  data: JsonValue;
+  startedAt: Date;
+  completedAt: Date | null;
+  submittedBy: { id: string; name: string } | null;
   process: {
     id: string;
     name: string;
     description: string | null;
     isCategory: boolean;
-    parentId: string | null;
     order: number;
+    schema: JsonValue;
+    theme: JsonValue;
+    parentId: string | null;
+    submitProcessPermissions: string | null;
+    responsibleTeam: { name: string } | null;
+    teams: { name: string }[];
+    dependencies: Array<{ id: string; name: string }>;
+    dependentProcesses: Array<{ id: string; name: string }>;
+    children: Array<{ id: string; name: string }>;
   };
 }
 
 interface WorkflowRun {
   id: string;
   status: "open" | "ongoing" | "completed" | "archived";
+  startedAt: Date;
+  completedAt: Date | null;
+  workflow: {
+    name: string;
+    description: string | null;
+    isActive: boolean;
+    isPublic: boolean;
+    submitProcessPermissions: string | null;
+    responsibleTeam: { name: string } | null;
+    teams: { name: string }[];
+  };
   processes: ProcessRun[];
 }
 
-interface ProcessRunTreeProps {
-  workflowRun: WorkflowRun;
-}
-
-export function ProcessRunTree({ workflowRun }: ProcessRunTreeProps) {
-  const tree = useTree({
-    initialExpandedState: {},
-  });
-
-  // Build tree data
-  const buildTreeData = (processes: ProcessRun[]): TreeNodeData[] => {
+export function ProcessRunTree({ workflowRun }: { workflowRun: WorkflowRun }) {
+  const treeData = useMemo(() => {
+    // Create a map of parent IDs to their children
     const childrenMap = new Map<string | null, ProcessRun[]>();
-    processes.forEach((process) => {
+
+    // First, add all processes to the map
+    workflowRun.processes.forEach((process) => {
       const parentId = process.process.parentId;
       if (!childrenMap.has(parentId)) {
         childrenMap.set(parentId, []);
@@ -48,70 +68,74 @@ export function ProcessRunTree({ workflowRun }: ProcessRunTreeProps) {
       childrenMap.get(parentId)!.push(process);
     });
 
+    // Sort children by order
+    childrenMap.forEach((children) => {
+      children.sort((a, b) => a.process.order - b.process.order);
+    });
+
+    // Build the tree recursively
     const buildTree = (parentId: string | null): TreeNodeData[] => {
-      const children = (childrenMap.get(parentId) || [])
-        .sort((a, b) => a.process.order - b.process.order)
-        .map((process) => ({
-          value: process.id,
-          label: process.process.name,
-          children: buildTree(process.id),
-        }));
-      return children;
+      const children = childrenMap.get(parentId) || [];
+      return children.map((process) => ({
+        value: process.id,
+        label: process.process.name,
+        children: buildTree(process.process.id),
+        icon: process.process.isCategory ? (
+          <IconFolder size={16} style={baseIconStyles} />
+        ) : (
+          <IconFile size={16} style={baseIconStyles} />
+        ),
+      }));
     };
 
     return buildTree(null);
-  };
+  }, [workflowRun.processes]);
 
-  const treeData = buildTreeData(workflowRun.processes);
+  const tree = useTree({
+    initialExpandedState: getTreeExpandedState(treeData, "*"),
+  });
 
-  const renderNode = ({
-    node,
-    expanded,
-    hasChildren,
-    elementProps,
-  }: {
-    node: TreeNodeData;
-    expanded: boolean;
-    hasChildren: boolean;
-    elementProps: React.HTMLProps<HTMLDivElement>;
-  }) => {
-    const processRun = workflowRun.processes.find((p) => p.id === node.value);
-    if (!processRun) return null;
-
-    return (
-      <ProcessRunItem
-        name={processRun.process.name}
-        description={processRun.process.description}
-        isCategory={processRun.process.isCategory}
-        status={processRun.status}
-        hasChildren={hasChildren}
-        expanded={expanded}
-        elementProps={elementProps}
-      />
+  // Calculate children status for each process
+  const getChildrenStatus = (processId: string) => {
+    const children = workflowRun.processes.filter(
+      (p) => p.process.parentId === processId
     );
+
+    return {
+      open: children.filter((c) => c.status === "open").length,
+      ongoing: children.filter((c) => c.status === "ongoing").length,
+      completed: children.filter((c) => c.status === "completed").length,
+    };
   };
 
   return (
-    <Stack>
-      <Group justify="flex-end">
-        <Button onClick={() => tree.expandAllNodes()} variant="subtle">
-          Alle ausklappen
-        </Button>
-        <Button onClick={() => tree.collapseAllNodes()} variant="subtle">
-          Alle einklappen
-        </Button>
-      </Group>
-      <Paper withBorder p="md">
-        <Stack>
-          <Title order={3}>Prozesse</Title>
-          <Tree
-            data={treeData}
-            tree={tree}
-            renderNode={renderNode}
-            style={{ minHeight: "400px" }}
+    <Tree
+      data={treeData}
+      tree={tree}
+      renderNode={({ node, expanded, elementProps }) => {
+        const processRun = workflowRun.processes.find(
+          (p) => p.id === node.value
+        );
+        if (!processRun) return null;
+
+        const childrenStatus = processRun.process.isCategory
+          ? getChildrenStatus(processRun.process.id)
+          : undefined;
+
+        return (
+          <ProcessRunItem
+            key={processRun.id}
+            name={processRun.process.name}
+            description={processRun.process.description}
+            isCategory={processRun.process.isCategory}
+            status={processRun.status}
+            hasChildren={(node.children?.length ?? 0) > 0}
+            expanded={expanded}
+            childrenStatus={childrenStatus}
+            elementProps={elementProps}
           />
-        </Stack>
-      </Paper>
-    </Stack>
+        );
+      }}
+    />
   );
 }

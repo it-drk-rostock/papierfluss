@@ -1,9 +1,10 @@
 import React from "react";
-import { QuickSearchAdd } from "@/components/quick-search-add";
 import { notFound } from "next/navigation";
-import { getWorkflowRuns } from "../_actions";
-import { Stack, Text } from "@mantine/core";
+import { getWorkflowRuns, initializeWorkflowRun } from "../_actions";
+import { Stack } from "@mantine/core";
 import { WorkflowRunsTable } from "./workflow-runs-table";
+import { ButtonAction } from "@/components/button-action";
+import { QuickSearchAdd } from "@/components/quick-search-add";
 
 export const WorkflowRuns = async ({
   params,
@@ -22,8 +23,17 @@ export const WorkflowRuns = async ({
       <QuickSearchAdd
         modalTitle="Workflow ausführen"
         searchPlaceholder="Workflow ausführungen suchen"
-        modalContent={<Text>Workflow ausführen Formular kommt noch...</Text>}
+        modalContent={
+          <ButtonAction
+            action={initializeWorkflowRun}
+            values={{ id: workflowId }}
+            hideNotification
+          >
+            Workflow ausführen
+          </ButtonAction>
+        }
       />
+
       <WorkflowRunsTable runs={workflow} />
     </Stack>
   );

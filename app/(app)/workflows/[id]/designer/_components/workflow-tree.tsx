@@ -1,6 +1,6 @@
 "use client";
 
-import { Paper, Title, Tree, TreeNodeData, useTree } from "@mantine/core";
+import { getTreeExpandedState, Paper, Title, Tree, TreeNodeData, useTree } from "@mantine/core";
 import {
   IconFolder,
   IconFolderOpen,
@@ -66,7 +66,7 @@ export function WorkflowTree({
   treeData,
 }: WorkflowTreeProps) {
   const tree = useTree({
-    initialExpandedState: {},
+    initialExpandedState: getTreeExpandedState(treeData, "*"),
   });
 
   const renderNode = ({
