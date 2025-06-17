@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { formatError } from "@/utils/format-error";
 import { idSchema } from "@/schemas/id-schema";
 import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
+import { saveProcessRunSchema } from "./_schemas";
 
 /**
  * Gets a workflow run
@@ -244,7 +245,7 @@ export const resetProcessRun = authActionClient
     let workflowRunId: string;
     try {
       const processRun = await prisma.processRun.update({
-        where: { id },
+        where: { id, status: "completed" },
         data: {
           status: "ongoing",
         },
@@ -296,5 +297,324 @@ export const resetProcessRun = authActionClient
     revalidatePath(`/runs/${workflowRunId}`);
     return {
       message: "Prozess zurückgesetzt",
+    };
+  });
+
+/**
+ * Completes a process run and checks if all dependencies are completed.
+ *
+ * This action:
+ * 1. Checks if all dependent processes are completed
+ * 2. Updates the process run status from 'ongoing' to 'completed'
+ * 3. Triggers any complete N8n workflows
+ * 4. Revalidates the workflow run page to reflect the changes
+ *
+ * @param {string} id - The ID of the process run to complete
+ * @returns {Promise<{ message: string }>} A success message
+ * @throws {Error} If:
+ *  - User is not authenticated
+ *  - Process run is not found
+ *  - Process run is not in 'ongoing' status
+ *  - Not all dependent processes are completed
+ *  - Database operation fails
+ */
+export const completeProcessRun = authActionClient
+  .schema(idSchema)
+  .metadata({
+    event: "completeProcessRunAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id } = parsedInput;
+
+    let workflowRunId: string;
+    try {
+      // First, get the current process run and its dependencies
+      const currentProcessRun = await prisma.processRun.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          status: true,
+          workflowRunId: true,
+          process: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              responsibleTeam: {
+                select: {
+                  name: true,
+                },
+              },
+              completeN8nWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+              dependencies: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!currentProcessRun) {
+        throw new Error("Prozess nicht gefunden");
+      }
+
+      if (currentProcessRun.status !== "ongoing") {
+        throw new Error("Prozess ist nicht in Bearbeitung");
+      }
+
+      // Check if all dependencies are completed
+      const dependentProcessIds = currentProcessRun.process.dependencies.map(
+        (p) => p.id
+      );
+      if (dependentProcessIds.length > 0) {
+        const dependentProcessRuns = await prisma.processRun.findMany({
+          where: {
+            workflowRunId: currentProcessRun.workflowRunId,
+            processId: { in: dependentProcessIds },
+          },
+          select: {
+            id: true,
+            status: true,
+            process: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        });
+
+        const incompleteDependencies = dependentProcessRuns.filter(
+          (run) => run.status !== "completed"
+        );
+
+        if (incompleteDependencies.length > 0) {
+          throw new Error(
+            `Prozess kann nicht abgeschlossen werden. Die folgenden Abhängigkeiten sind nicht abgeschlossen: ${incompleteDependencies
+              .map((run) => run.process.name)
+              .join(", ")}`
+          );
+        }
+      }
+
+      // Now update the process run status
+      const processRun = await prisma.processRun.update({
+        where: { id, status: "ongoing" },
+        data: {
+          status: "completed",
+        },
+        select: {
+          data: true,
+          process: {
+            select: {
+              name: true,
+              description: true,
+              responsibleTeam: {
+                select: {
+                  name: true,
+                },
+              },
+              completeN8nWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+            },
+          },
+          workflowRunId: true,
+        },
+      });
+      workflowRunId = processRun.workflowRunId;
+
+      const submissionContext = {
+        user: {
+          ...ctx.session.user,
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+        },
+        data: {
+          data: processRun.data,
+        },
+        process: {
+          ...processRun.process,
+        },
+      };
+
+      await triggerN8nWebhooks(
+        processRun.process.completeN8nWorkflows.map((w) => w.workflowId),
+        submissionContext
+      );
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/runs/${workflowRunId}`);
+    return {
+      message: "Prozess abgeschlossen",
+    };
+  });
+
+/**
+ * Saves the data for a process run and triggers any save N8n workflows.
+ *
+ * This action:
+ * 1. Validates that the process run exists and is not completed
+ * 2. Updates the process run data with the provided form data
+ * 3. Triggers any save N8n workflows with the updated data
+ * 4. Revalidates the workflow run page to reflect the changes
+ *
+ * @param {string} id - The ID of the process run to save
+ * @param {Record<string, unknown>} data - The form data to save for the process run
+ * @returns {Promise<{ message: string }>} A success message
+ * @throws {Error} If:
+ *  - User is not authenticated
+ *  - Process run is not found
+ *  - Process run is already completed
+ *  - Database operation fails
+ *  - N8n webhook calls fail
+ */
+export const saveProcessRun = authActionClient
+  .schema(saveProcessRunSchema)
+  .metadata({
+    event: "saveProcessRunAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, data } = parsedInput;
+
+    let workflowRunId: string;
+    try {
+      // First, get the current process run and its dependencies
+      const currentProcessRun = await prisma.processRun.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          status: true,
+          workflowRunId: true,
+          process: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              responsibleTeam: {
+                select: {
+                  name: true,
+                },
+              },
+              completeN8nWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+              dependencies: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!currentProcessRun) {
+        throw new Error("Prozess nicht gefunden");
+      }
+
+      if (currentProcessRun.status === "completed") {
+        throw new Error("Prozess ist bereits abgeschlossen");
+      }
+
+      // Check if all dependencies are completed
+      const dependentProcessIds = currentProcessRun.process.dependencies.map(
+        (p) => p.id
+      );
+      if (dependentProcessIds.length > 0) {
+        const dependentProcessRuns = await prisma.processRun.findMany({
+          where: {
+            workflowRunId: currentProcessRun.workflowRunId,
+            processId: { in: dependentProcessIds },
+          },
+          select: {
+            id: true,
+            status: true,
+            process: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        });
+
+        const incompleteDependencies = dependentProcessRuns.filter(
+          (run) => run.status !== "completed"
+        );
+
+        if (incompleteDependencies.length > 0) {
+          throw new Error(
+            `Prozess kann nicht abgeschlossen werden. Die folgenden Abhängigkeiten sind nicht abgeschlossen: ${incompleteDependencies
+              .map((run) => run.process.name)
+              .join(", ")}`
+          );
+        }
+      }
+
+      // Now update the process run status
+      const processRun = await prisma.processRun.update({
+        where: { id },
+        data: {
+          data,
+        },
+        select: {
+          data: true,
+          process: {
+            select: {
+              name: true,
+              description: true,
+              responsibleTeam: {
+                select: {
+                  name: true,
+                },
+              },
+              saveN8nWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+            },
+          },
+          workflowRunId: true,
+        },
+      });
+      workflowRunId = processRun.workflowRunId;
+
+      const submissionContext = {
+        user: {
+          ...ctx.session.user,
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+        },
+        data: {
+          data: processRun.data,
+        },
+        process: {
+          ...processRun.process,
+        },
+      };
+
+      await triggerN8nWebhooks(
+        processRun.process.saveN8nWorkflows.map((w) => w.workflowId),
+        submissionContext
+      );
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/runs/${workflowRunId}`);
+    return {
+      message: "Prozess aktualisiert",
     };
   });
