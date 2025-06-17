@@ -4,6 +4,7 @@ import { getWorkflowRun } from "../_actions";
 import { notFound } from "next/navigation";
 import { WorkflowStatusBadge } from "@/components/workflow-status-badge";
 import { ProcessRunTree } from "./process-run-tree";
+import { WorkflowRunForms } from "./workflow-run-forms";
 
 export const WorkflowRun = async ({
   params,
@@ -31,6 +32,7 @@ export const WorkflowRun = async ({
           <Paper withBorder p="md">
             <Stack>
               <Title order={3}>Formulare</Title>
+              <WorkflowRunForms processes={workflowRun.processes} />
             </Stack>
           </Paper>
         </GridCol>

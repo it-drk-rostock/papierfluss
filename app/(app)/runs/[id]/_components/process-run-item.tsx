@@ -1,8 +1,12 @@
 import { Box, Group, Stack, Text, ActionIcon, Divider } from "@mantine/core";
 import { IconFolder, IconFolderOpen, IconFile } from "@tabler/icons-react";
 import { workflowStatus } from "@/constants/workflow-status";
+import { ModalButton } from "@/components/modal-button";
+import { ButtonAction } from "@/components/button-action";
+import { resetProcessRun } from "../_actions";
 
 interface ProcessRunItemProps {
+  id: string;
   name: string;
   description: string | null;
   isCategory: boolean;
@@ -18,6 +22,7 @@ interface ProcessRunItemProps {
 }
 
 export const ProcessRunItem = ({
+  id,
   name,
   description,
   isCategory,
@@ -110,6 +115,26 @@ export const ProcessRunItem = ({
             <Text size="xs" c={getColor()}>
               {workflowStatus[status].label}
             </Text>
+          )}
+          {!isCategory && status === "completed" && (
+            <ModalButton
+              title="Prozess zurücksetzen"
+              variant="subtle"
+              color="yellow"
+              size="compact-xs"
+              content={
+                <ButtonAction
+                  fullWidth
+                  color="yellow"
+                  action={resetProcessRun}
+                  values={{ id }}
+                >
+                  Prozess zurücksetzen
+                </ButtonAction>
+              }
+            >
+              Prozess zurücksetzen
+            </ModalButton>
           )}
         </Stack>
       </Group>

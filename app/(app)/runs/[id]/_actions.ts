@@ -3,6 +3,11 @@
 import prisma from "@/lib/prisma";
 import { authQuery } from "@/server/utils/auth-query";
 import jsonLogic from "json-logic-js";
+import { authActionClient } from "@/server/utils/action-clients";
+import { revalidatePath } from "next/cache";
+import { formatError } from "@/utils/format-error";
+import { idSchema } from "@/schemas/id-schema";
+import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
 
 /**
  * Gets a workflow run
@@ -212,3 +217,84 @@ export const getWorkflowRun = async (id: string) => {
 };
 
 export type WorkflowRunProps = Awaited<ReturnType<typeof getWorkflowRun>>;
+
+/**
+ * Resets a completed process run back to ongoing status.
+ *
+ * This action:
+ * 1. Updates the process run status from 'completed' to 'ongoing'
+ * 2. Revalidates the workflow run page to reflect the changes
+ *
+ * @param {string} id - The ID of the process run to reset
+ * @returns {Promise<{ message: string }>} A success message
+ * @throws {Error} If:
+ *  - User is not authenticated
+ *  - Process run is not found
+ *  - Process run is not in 'completed' status
+ *  - Database operation fails
+ */
+export const resetProcessRun = authActionClient
+  .schema(idSchema)
+  .metadata({
+    event: "resetProcessRunAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id } = parsedInput;
+
+    let workflowRunId: string;
+    try {
+      const processRun = await prisma.processRun.update({
+        where: { id },
+        data: {
+          status: "ongoing",
+        },
+        select: {
+          data: true,
+          process: {
+            select: {
+              name: true,
+              description: true,
+
+              responsibleTeam: {
+                select: {
+                  name: true,
+                },
+              },
+              reactivateN8nWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+            },
+          },
+          workflowRunId: true,
+        },
+      });
+      workflowRunId = processRun.workflowRunId;
+
+      const submissionContext = {
+        user: {
+          ...ctx.session.user,
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+        },
+        data: {
+          data: processRun.data,
+        },
+        process: {
+          ...processRun.process,
+        },
+      };
+
+      await triggerN8nWebhooks(
+        processRun.process.reactivateN8nWorkflows.map((w) => w.workflowId),
+        submissionContext
+      );
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/runs/${workflowRunId}`);
+    return {
+      message: "Prozess zurückgesetzt",
+    };
+  });

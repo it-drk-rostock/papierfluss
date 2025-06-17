@@ -125,6 +125,7 @@ export function ProcessRunTree({ workflowRun }: { workflowRun: WorkflowRun }) {
         return (
           <ProcessRunItem
             key={processRun.id}
+            id={processRun.id}
             name={processRun.process.name}
             description={processRun.process.description}
             isCategory={processRun.process.isCategory}
