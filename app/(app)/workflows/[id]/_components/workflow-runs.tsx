@@ -25,6 +25,7 @@ export const WorkflowRuns = async ({
         searchPlaceholder="Workflow ausführungen suchen"
         modalContent={
           <ButtonAction
+            fullWidth
             action={initializeWorkflowRun}
             values={{ id: workflowId }}
             hideNotification
@@ -33,7 +34,6 @@ export const WorkflowRuns = async ({
           </ButtonAction>
         }
       />
-
       <WorkflowRunsTable runs={workflow} />
     </Stack>
   );
