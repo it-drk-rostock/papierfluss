@@ -450,6 +450,7 @@ export const completeProcessRun = authActionClient
         submissionContext
       );
     } catch (error) {
+      console.log(error);
       throw formatError(error);
     }
 
@@ -568,6 +569,7 @@ export const saveProcessRun = authActionClient
         where: { id },
         data: {
           data,
+          status: "ongoing",
         },
         select: {
           data: true,

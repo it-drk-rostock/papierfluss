@@ -11,15 +11,18 @@ import {
   ActionIcon,
 } from "@mantine/core";
 import { useMemo } from "react";
-import { SurveyPreview } from "@/components/survey-preview";
-import { IconChevronDown, IconChevronRight, IconChevronUp } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import { WorkflowRunForm } from "./workflow-run-form";
 
 interface FormTreeNodeData extends TreeNodeData {
   processData: {
+    id: string;
     name: string;
     description: string | null;
     schema: Record<string, unknown> | null;
     isCategory: boolean;
+    data: Record<string, unknown> | null;
+    status: "open" | "ongoing" | "completed";
   };
 }
 
@@ -66,7 +69,17 @@ const FormNode = ({
           {!process.isCategory && (
             <Paper withBorder p="md">
               {process.schema ? (
-                <SurveyPreview json={process.schema} />
+                <WorkflowRunForm
+                  submission={{
+                    id: process.id,
+                    form: {
+                      id: process.id,
+                      schema: process.schema,
+                    },
+                    data: process.data,
+                    status: process.status,
+                  }}
+                />
               ) : (
                 <Text c="dimmed" ta="center" py="xl">
                   Kein Formular verfügbar
@@ -83,6 +96,8 @@ const FormNode = ({
 interface WorkflowRunFormsProps {
   processes: Array<{
     id: string;
+    status: "open" | "ongoing" | "completed";
+    data: Record<string, unknown> | null;
     process: {
       id: string;
       name: string;
@@ -109,10 +124,13 @@ export function WorkflowRunForms({ processes }: WorkflowRunFormsProps) {
           label: process.process.name,
           children: buildFormTree(processes, process.process.id),
           processData: {
+            id: process.id,
             name: process.process.name,
             description: process.process.description,
             schema: process.process.schema,
             isCategory: process.process.isCategory,
+            data: process.data,
+            status: process.status,
           },
         })) as FormTreeNodeData[];
     };
