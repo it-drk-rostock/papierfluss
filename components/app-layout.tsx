@@ -52,14 +52,13 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <NavLink
             component={Link}
             href="/dashboard"
-            label="Dashboard"
+            label="Übersicht"
             leftSection={<IconHome size={16} stroke={1.5} />}
           />
           <NavLink
             component={Link}
             href="/workflows"
-            label="Worfklows"
-            disabled
+            label="Workflows"
             leftSection={<IconTopologyRing size={16} stroke={1.5} />}
           />
           <NavLink

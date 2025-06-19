@@ -1,0 +1,100 @@
+model Workflow {
+    id                       String        @id @default(uuid())
+    name                     String
+    description              String?
+    isActive                 Boolean       @default(true)
+    isPublic                 Boolean       @default(false)
+    createdAt                DateTime      @default(now())
+    updatedAt                DateTime      @updatedAt
+    editWorkflowPermissions  String?
+    submitProcessPermissions String?
+    teams                    Team[]
+    responsibleTeamId        String?
+    responsibleTeam          Team?         @relation(fields: [responsibleTeamId], references: [id], onDelete: SetNull, name: "ResponsibleTeam")
+    processes                Process[]
+    runs                     WorkflowRun[]
+    initializeN8nWorkflows   N8nWorkflow[] @relation("InitializeWorkflows")
+    saveN8nWorkflows         N8nWorkflow[] @relation("SaveWorkflows")
+    completeN8nWorkflows     N8nWorkflow[] @relation("CompleteWorkflows")
+    archiveN8nWorkflows      N8nWorkflow[] @relation("ArchiveWorkflows")
+    reactivateN8nWorkflows   N8nWorkflow[] @relation("ReactivateWorkflows")
+}
+
+model Process {
+    id                       String        @id @default(uuid())
+    name                     String
+    description              String?
+    order                    Int
+    isCategory               Boolean       @default(false)
+    schema                   Json?
+    theme                    Json?
+    editProcessPermissions   String?
+    submitProcessPermissions String?
+    reactivateNotes          String?
+    teams                    Team[]
+    responsibleTeamId        String?
+    responsibleTeam          Team?         @relation(fields: [responsibleTeamId], references: [id], onDelete: SetNull, name: "ResponsibleTeam")
+    workflow                 Workflow      @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+    workflowId               String
+    runs                     ProcessRun[]
+    saveN8nWorkflows         N8nWorkflow[] @relation("SaveProcesses")
+    completeN8nWorkflows     N8nWorkflow[] @relation("CompleteProcesses")
+    reactivateN8nWorkflows   N8nWorkflow[] @relation("ReactivateProcesses")
+
+    // Hierarchy relation (for both categories and processes)
+    parentId String?
+    parent   Process?  @relation("ProcessHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+    children Process[] @relation("ProcessHierarchy")
+
+    // Dependencies relation (only for actual processes, not categories)
+    dependencies       Process[] @relation("ProcessDependencies")
+    dependentProcesses Process[] @relation("ProcessDependencies")
+
+    @@index([workflowId])
+    @@index([parentId])
+}
+
+model WorkflowRun {
+    id          String         @id @default(uuid())
+    status      WorkflowStatus @default(open)
+    startedAt   DateTime       @default(now())
+    completedAt DateTime?
+
+    workflow   Workflow     @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+    workflowId String
+    processes  ProcessRun[]
+
+    @@index([workflowId])
+}
+
+model ProcessRun {
+    id               String        @id @default(uuid())
+    status           ProcessStatus @default(open)
+    data             Json?
+    resetProcessText String?
+    startedAt        DateTime      @default(now())
+    completedAt      DateTime?
+    workflowRun      WorkflowRun   @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+    workflowRunId    String
+    process          Process       @relation(fields: [processId], references: [id], onDelete: Cascade)
+    processId        String
+    submittedBy      User?         @relation(fields: [submittedById], references: [id], onDelete: SetNull)
+    submittedById    String?
+
+    @@index([workflowRunId])
+    @@index([processId])
+    @@index([submittedById])
+}
+
+enum WorkflowStatus {
+    open
+    ongoing
+    completed
+    archived
+}
+
+enum ProcessStatus {
+    open
+    ongoing
+    completed
+}

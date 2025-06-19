@@ -20,7 +20,8 @@ export const ModalActionIcon = ({
   return (
     <ActionIcon
       {...props}
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation();
         modals.open({
           closeOnClickOutside: false,
           size: modalSize,

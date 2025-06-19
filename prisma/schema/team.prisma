@@ -1,12 +1,16 @@
 model Team {
-    id               String   @id @default(uuid())
-    createdAt        DateTime @default(now())
-    updatedAt        DateTime @updatedAt
-    name             String
-    contactEmail     String?
-    users            User[]
-    forms            Form[]
-    responsibleForms Form[]   @relation("ResponsibleTeam")
+    id                   String     @id @default(uuid())
+    createdAt            DateTime   @default(now())
+    updatedAt            DateTime   @updatedAt
+    name                 String
+    contactEmail         String?
+    users                User[]
+    forms                Form[]
+    responsibleForms     Form[]     @relation("ResponsibleTeam")
+    responsibleProcesses Process[]  @relation("ResponsibleTeam")
+    responsibleWorkflows Workflow[] @relation("ResponsibleTeam")
+    processes            Process[]
+    workflows            Workflow[]
 
     @@unique([name])
 }
