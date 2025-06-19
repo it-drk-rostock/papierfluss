@@ -18,6 +18,12 @@ export const getWorkflowRuns = async (workflowId: string) => {
       status: true,
       startedAt: true,
       completedAt: true,
+      workflow: {
+        select: {
+          name: true,
+          description: true,
+        },
+      },
       processes: {
         select: {
           id: true,

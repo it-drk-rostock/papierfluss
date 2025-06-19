@@ -68,17 +68,18 @@ model WorkflowRun {
 }
 
 model ProcessRun {
-    id            String        @id @default(uuid())
-    status        ProcessStatus @default(open)
-    data          Json?
-    startedAt     DateTime      @default(now())
-    completedAt   DateTime?
-    workflowRun   WorkflowRun   @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
-    workflowRunId String
-    process       Process       @relation(fields: [processId], references: [id], onDelete: Cascade)
-    processId     String
-    submittedBy   User?         @relation(fields: [submittedById], references: [id], onDelete: SetNull)
-    submittedById String?
+    id               String        @id @default(uuid())
+    status           ProcessStatus @default(open)
+    data             Json?
+    resetProcessText String?
+    startedAt        DateTime      @default(now())
+    completedAt      DateTime?
+    workflowRun      WorkflowRun   @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+    workflowRunId    String
+    process          Process       @relation(fields: [processId], references: [id], onDelete: Cascade)
+    processId        String
+    submittedBy      User?         @relation(fields: [submittedById], references: [id], onDelete: SetNull)
+    submittedById    String?
 
     @@index([workflowRunId])
     @@index([processId])

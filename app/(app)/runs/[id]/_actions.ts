@@ -8,7 +8,56 @@ import { revalidatePath } from "next/cache";
 import { formatError } from "@/utils/format-error";
 import { idSchema } from "@/schemas/id-schema";
 import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
-import { saveProcessRunSchema } from "./_schemas";
+import { resetProcessRunSchema, saveProcessRunSchema } from "./_schemas";
+
+/**
+ * Helper function to get all process run data for a workflow run
+ */
+const getAllProcessRunData = async (workflowRunId: string) => {
+  const allProcessRuns = await prisma.processRun.findMany({
+    where: {
+      workflowRunId: workflowRunId,
+    },
+    select: {
+      id: true,
+      data: true,
+      status: true,
+      process: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+        },
+      },
+    },
+  });
+
+  // Transform the data to be more accessible in webhooks
+  const processDataMap: Record<
+    string,
+    {
+      id: string;
+      data: Record<string, unknown> | null;
+      status: string;
+      processName: string;
+      processDescription: string | null;
+    }
+  > = {};
+  allProcessRuns.forEach((processRun) => {
+    processDataMap[processRun.process.name] = {
+      id: processRun.id,
+      data: processRun.data as Record<string, unknown> | null,
+      status: processRun.status,
+      processName: processRun.process.name,
+      processDescription: processRun.process.description,
+    };
+  });
+
+  return {
+    allProcessRuns,
+    processDataMap,
+  };
+};
 
 /**
  * Gets a workflow run
@@ -237,12 +286,12 @@ export type WorkflowRunProps = Awaited<ReturnType<typeof getWorkflowRun>>;
  *  - Database operation fails
  */
 export const resetProcessRun = authActionClient
-  .schema(idSchema)
+  .schema(resetProcessRunSchema)
   .metadata({
     event: "resetProcessRunAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { id } = parsedInput;
+    const { id, resetProcessText } = parsedInput;
 
     let workflowRunId: string;
     try {
@@ -250,6 +299,7 @@ export const resetProcessRun = authActionClient
         where: { id, status: "completed" },
         data: {
           status: "ongoing",
+          resetProcessText: resetProcessText,
         },
         select: {
           data: true,
@@ -270,10 +320,14 @@ export const resetProcessRun = authActionClient
               },
             },
           },
+          resetProcessText: true,
           workflowRunId: true,
         },
       });
       workflowRunId = processRun.workflowRunId;
+
+      // Get all process run data for the workflow run
+      const { processDataMap } = await getAllProcessRunData(workflowRunId);
 
       const submissionContext = {
         user: {
@@ -282,6 +336,8 @@ export const resetProcessRun = authActionClient
         },
         data: {
           data: processRun.data,
+          allProcessData: processDataMap,
+          resetProcessText: processRun.resetProcessText,
         },
         process: {
           ...processRun.process,
@@ -434,6 +490,34 @@ export const completeProcessRun = authActionClient
       });
       workflowRunId = processRun.workflowRunId;
 
+      // Check if all processes in the workflow run are completed
+      const allProcessRuns = await prisma.processRun.findMany({
+        where: {
+          workflowRunId: workflowRunId,
+        },
+        select: {
+          id: true,
+          status: true,
+        },
+      });
+
+      const allProcessesCompleted = allProcessRuns.every(
+        (run) => run.status === "completed"
+      );
+
+      // If all processes are completed, also complete the workflow run
+      if (allProcessesCompleted) {
+        await prisma.workflowRun.update({
+          where: { id: workflowRunId },
+          data: {
+            status: "completed",
+          },
+        });
+      }
+
+      // Get all process run data for the workflow run
+      const { processDataMap } = await getAllProcessRunData(workflowRunId);
+
       const submissionContext = {
         user: {
           ...ctx.session.user,
@@ -441,6 +525,7 @@ export const completeProcessRun = authActionClient
         },
         data: {
           data: processRun.data,
+          allProcessData: processDataMap,
         },
         process: {
           ...processRun.process,
@@ -601,6 +686,9 @@ export const saveProcessRun = authActionClient
       });
       workflowRunId = processRun.workflowRunId;
 
+      // Get all process run data for the workflow run
+      const { processDataMap } = await getAllProcessRunData(workflowRunId);
+
       const submissionContext = {
         user: {
           ...ctx.session.user,
@@ -608,6 +696,7 @@ export const saveProcessRun = authActionClient
         },
         data: {
           data: processRun.data,
+          allProcessData: processDataMap,
         },
         process: {
           ...processRun.process,

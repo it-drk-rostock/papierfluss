@@ -4,6 +4,7 @@ import { workflowStatus } from "@/constants/workflow-status";
 import { ModalButton } from "@/components/modal-button";
 import { ButtonAction } from "@/components/button-action";
 import { resetProcessRun } from "../_actions";
+import { ResetProcessRunForm } from "./reset-process-run-form";
 
 interface ProcessRunItemProps {
   id: string;
@@ -123,14 +124,10 @@ export const ProcessRunItem = ({
               color="yellow"
               size="compact-xs"
               content={
-                <ButtonAction
-                  fullWidth
-                  color="yellow"
-                  action={resetProcessRun}
-                  values={{ id }}
-                >
-                  Prozess zurücksetzen
-                </ButtonAction>
+                <ResetProcessRunForm
+                  id={id}
+                 
+                />
               }
             >
               Prozess zurücksetzen
