@@ -26,6 +26,7 @@ export const getWorkflowRun = async (id: string) => {
         completedAt: true,
         workflow: {
           select: {
+            id: true,
             name: true,
             description: true,
             isActive: true,
@@ -115,6 +116,7 @@ export const getWorkflowRun = async (id: string) => {
       completedAt: true,
       workflow: {
         select: {
+          id: true,
           name: true,
           description: true,
           isActive: true,
@@ -570,6 +572,11 @@ export const saveProcessRun = authActionClient
         data: {
           data,
           status: "ongoing",
+          workflowRun: {
+            update: {
+              status: "ongoing",
+            },
+          },
         },
         select: {
           data: true,

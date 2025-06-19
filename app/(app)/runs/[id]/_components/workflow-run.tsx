@@ -1,10 +1,22 @@
-import { Grid, Stack, Title, Text, Paper, GridCol } from "@mantine/core";
+import {
+  Grid,
+  Stack,
+  Title,
+  Text,
+  Paper,
+  GridCol,
+  Group,
+  Divider,
+} from "@mantine/core";
 import React from "react";
 import { getWorkflowRun } from "../_actions";
 import { notFound } from "next/navigation";
 import { WorkflowStatusBadge } from "@/components/workflow-status-badge";
 import { ProcessRunTree } from "./process-run-tree";
 import { WorkflowRunForms } from "./workflow-run-forms";
+import { LinkButton } from "@/components/link-button";
+import { IconArrowLeft } from "@tabler/icons-react";
+import { buttonIconStyles } from "@/constants/button-icon-styles";
 
 export const WorkflowRun = async ({
   params,
@@ -21,11 +33,19 @@ export const WorkflowRun = async ({
 
   return (
     <Stack gap="md">
-      <Stack gap="0">
-        <Title order={2}>{workflowRun.workflow.name}</Title>
-        <Text c="dimmed">{workflowRun.workflow.description}</Text>
-      </Stack>
-
+      <Group align="flex-end" justify="space-between">
+        <Stack gap="0">
+          <Title order={2}>{workflowRun.workflow.name}</Title>
+          <Text c="dimmed">{workflowRun.workflow.description}</Text>
+        </Stack>
+        <LinkButton
+          leftSection={<IconArrowLeft style={buttonIconStyles} />}
+          variant="outline"
+          href={`/workflows/${workflowRun.workflow.id}`}
+          title={`Zurück zu ${workflowRun.workflow.name}`}
+        />
+      </Group>
+      <Divider />
       <Grid gutter="lg">
         {/* Forms Section - 6 columns (half the width) */}
         <GridCol span={{ base: 12, md: 6 }}>
