@@ -108,7 +108,7 @@ export const ProcessRunItem = ({
             {name}
           </Text>
           {description && (
-            <Text size="sm" c="dimmed" fw={500}>
+            <Text size="sm" c="dimmed">
               {description}
             </Text>
           )}
@@ -118,7 +118,7 @@ export const ProcessRunItem = ({
             </Text>
           )}
           {resetProcessText && (
-            <Text size="xs" c="yellow" fw={500}>
+            <Text size="xs" c="yellow">
               Bitte beachten Sie: {resetProcessText}
             </Text>
           )}
