@@ -5,6 +5,7 @@ import { idSchema } from "@/schemas/id-schema";
 import { authActionClient } from "@/server/utils/action-clients";
 import { authQuery } from "@/server/utils/auth-query";
 import { formatError } from "@/utils/format-error";
+import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
 
 import { redirect } from "next/navigation";
 
@@ -56,7 +57,7 @@ export const initializeWorkflowRun = authActionClient
   .metadata({
     event: "initializeWorkflowRunAction",
   })
-  .stateAction(async ({ parsedInput }) => {
+  .stateAction(async ({ parsedInput, ctx }) => {
     const { id: workflowId } = parsedInput;
 
     let workflowRunId: string;
@@ -67,10 +68,23 @@ export const initializeWorkflowRun = authActionClient
         where: { id: workflowId },
         select: {
           id: true,
+          name: true,
+          description: true,
           processes: {
             select: {
               id: true,
               isCategory: true,
+            },
+          },
+          initializeN8nWorkflows: {
+            select: {
+              workflowId: true,
+            },
+          },
+          responsibleTeam: {
+            select: {
+              contactEmail: true,
+              name: true,
             },
           },
         },
@@ -98,6 +112,28 @@ export const initializeWorkflowRun = authActionClient
       });
 
       workflowRunId = workflowRun.id;
+
+      const submissionContext = {
+        user: {
+          ...ctx.session.user,
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+        },
+        data: {
+          workflow: {
+            name: workflow.name,
+            description: workflow.description,
+          },
+          responsibleTeam: {
+            name: workflow.responsibleTeam?.name,
+            contactEmail: workflow.responsibleTeam?.contactEmail,
+          },
+        },
+      };
+
+      await triggerN8nWebhooks(
+        workflow.initializeN8nWorkflows.map((w) => w.workflowId),
+        submissionContext
+      );
     } catch (error) {
       throw formatError(error);
     }
