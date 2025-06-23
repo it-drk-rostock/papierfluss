@@ -9,7 +9,7 @@ import {
   Divider,
 } from "@mantine/core";
 import React from "react";
-import { getWorkflowRun } from "../_actions";
+import { archiveWorkflowRun, getWorkflowRun } from "../_actions";
 import { notFound } from "next/navigation";
 import { WorkflowStatusBadge } from "@/components/workflow-status-badge";
 import { ProcessRunTree } from "./process-run-tree";
@@ -17,6 +17,8 @@ import { WorkflowRunForms } from "./workflow-run-forms";
 import { LinkButton } from "@/components/link-button";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { buttonIconStyles } from "@/constants/button-icon-styles";
+import { ModalButton } from "@/components/modal-button";
+import { ButtonAction } from "@/components/button-action";
 
 export const WorkflowRun = async ({
   params,
@@ -38,12 +40,31 @@ export const WorkflowRun = async ({
           <Title order={2}>{workflowRun.workflow.name}</Title>
           <Text c="dimmed">{workflowRun.workflow.description}</Text>
         </Stack>
-        <LinkButton
-          leftSection={<IconArrowLeft style={buttonIconStyles} />}
-          variant="outline"
-          href={`/workflows/${workflowRun.workflow.id}`}
-          title={`Zurück zu ${workflowRun.workflow.name}`}
-        />
+        <Group gap="sm">
+          <LinkButton
+            leftSection={<IconArrowLeft style={buttonIconStyles} />}
+            variant="outline"
+            href={`/workflows/${workflowRun.workflow.id}`}
+            title={`Zurück zu ${workflowRun.workflow.name}`}
+          />
+          <ModalButton
+            variant="outline"
+            color="gray"
+            title="Archivieren"
+            content={
+              <ButtonAction
+                fullWidth
+                color="gray"
+                action={archiveWorkflowRun}
+                values={{ id: workflowRunId }}
+              >
+                Archivieren
+              </ButtonAction>
+            }
+          >
+            Archivieren
+          </ModalButton>
+        </Group>
       </Group>
       <Divider />
       <Grid gutter="lg">
