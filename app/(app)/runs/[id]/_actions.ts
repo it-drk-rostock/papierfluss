@@ -295,6 +295,45 @@ export const resetProcessRun = authActionClient
 
     let workflowRunId: string;
     try {
+      // First, get the current process run to check workflow run status
+      const currentProcessRun = await prisma.processRun.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          status: true,
+          workflowRunId: true,
+          workflowRun: {
+            select: {
+              id: true,
+              status: true,
+              workflow: {
+                select: {
+                  reactivateN8nWorkflows: {
+                    select: {
+                      workflowId: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!currentProcessRun) {
+        throw new Error("Prozess nicht gefunden");
+      }
+
+      if (currentProcessRun.status !== "completed") {
+        throw new Error("Prozess ist nicht abgeschlossen");
+      }
+
+      workflowRunId = currentProcessRun.workflowRunId;
+      const workflowRun = currentProcessRun.workflowRun;
+      const shouldReactivateWorkflow =
+        workflowRun.status === "archived" || workflowRun.status === "completed";
+
+      // Update the process run status
       const processRun = await prisma.processRun.update({
         where: { id, status: "completed" },
         data: {
@@ -307,7 +346,6 @@ export const resetProcessRun = authActionClient
             select: {
               name: true,
               description: true,
-
               responsibleTeam: {
                 select: {
                   name: true,
@@ -324,7 +362,16 @@ export const resetProcessRun = authActionClient
           workflowRunId: true,
         },
       });
-      workflowRunId = processRun.workflowRunId;
+
+      // If workflow run was archived or completed, reactivate it
+      if (shouldReactivateWorkflow) {
+        await prisma.workflowRun.update({
+          where: { id: workflowRunId },
+          data: {
+            status: "ongoing",
+          },
+        });
+      }
 
       // Get all process run data for the workflow run
       const { processDataMap } = await getAllProcessRunData(workflowRunId);
@@ -344,10 +391,15 @@ export const resetProcessRun = authActionClient
         },
       };
 
-      await triggerN8nWebhooks(
-        processRun.process.reactivateN8nWorkflows.map((w) => w.workflowId),
-        submissionContext
-      );
+      // Collect all workflow IDs to trigger (process + workflow reactivate workflows)
+      const allWorkflowIds = [
+        ...processRun.process.reactivateN8nWorkflows.map((w) => w.workflowId),
+        ...(shouldReactivateWorkflow
+          ? workflowRun.workflow.reactivateN8nWorkflows.map((w) => w.workflowId)
+          : []),
+      ];
+
+      await triggerN8nWebhooks(allWorkflowIds, submissionContext);
     } catch (error) {
       throw formatError(error);
     }
