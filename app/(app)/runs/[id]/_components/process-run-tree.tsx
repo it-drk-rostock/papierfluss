@@ -16,9 +16,10 @@ interface ProcessRun {
   id: string;
   status: "open" | "ongoing" | "completed";
   data: JsonValue;
+  resetProcessText: string | null;
+  submittedBy: { id: string; name: string } | null;
   startedAt: Date;
   completedAt: Date | null;
-  submittedBy: { id: string; name: string } | null;
   process: {
     id: string;
     name: string;
@@ -130,6 +131,7 @@ export function ProcessRunTree({ workflowRun }: { workflowRun: WorkflowRun }) {
             description={processRun.process.description}
             isCategory={processRun.process.isCategory}
             status={processRun.status}
+            resetProcessText={processRun.resetProcessText}
             hasChildren={(node.children?.length ?? 0) > 0}
             expanded={expanded}
             childrenStatus={childrenStatus}

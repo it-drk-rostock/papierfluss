@@ -98,6 +98,7 @@ export const getWorkflowRun = async (id: string) => {
             id: true,
             data: true,
             status: true,
+            resetProcessText: true,
             startedAt: true,
             completedAt: true,
             submittedBy: {
@@ -188,6 +189,7 @@ export const getWorkflowRun = async (id: string) => {
           id: true,
           data: true,
           status: true,
+          resetProcessText: true,
           startedAt: true,
           completedAt: true,
           submittedBy: {
