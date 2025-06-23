@@ -655,6 +655,7 @@ export const saveProcessRun = authActionClient
       const processRun = await prisma.processRun.update({
         where: { id },
         data: {
+          resetProcessText: null,
           data,
           status: "ongoing",
           workflowRun: {
