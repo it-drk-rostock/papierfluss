@@ -440,10 +440,17 @@ export const completeProcessRun = authActionClient
     try {
       // First, get the current process run and its dependencies
       const currentProcessRun = await prisma.processRun.findUnique({
-        where: { id },
+        where: {
+          id,
+        },
         select: {
           id: true,
           status: true,
+          workflowRun: {
+            select: {
+              status: true,
+            },
+          },
           workflowRunId: true,
           process: {
             select: {
@@ -473,6 +480,15 @@ export const completeProcessRun = authActionClient
 
       if (!currentProcessRun) {
         throw new Error("Prozess nicht gefunden");
+      }
+
+      if (
+        currentProcessRun.workflowRun.status === "archived" ||
+        currentProcessRun.workflowRun.status === "completed"
+      ) {
+        throw new Error(
+          "Workflow Ausführung ist abgeschlossen oder archiviert"
+        );
       }
 
       if (currentProcessRun.status !== "ongoing") {
@@ -630,10 +646,17 @@ export const saveProcessRun = authActionClient
     try {
       // First, get the current process run and its dependencies
       const currentProcessRun = await prisma.processRun.findUnique({
-        where: { id },
+        where: {
+          id,
+        },
         select: {
           id: true,
           status: true,
+          workflowRun: {
+            select: {
+              status: true,
+            },
+          },
           workflowRunId: true,
           process: {
             select: {
@@ -663,6 +686,15 @@ export const saveProcessRun = authActionClient
 
       if (!currentProcessRun) {
         throw new Error("Prozess nicht gefunden");
+      }
+
+      if (
+        currentProcessRun.workflowRun.status === "archived" ||
+        currentProcessRun.workflowRun.status === "completed"
+      ) {
+        throw new Error(
+          "Workflow Ausführung ist abgeschlossen oder archiviert"
+        );
       }
 
       if (currentProcessRun.status === "completed") {
