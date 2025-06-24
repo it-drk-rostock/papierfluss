@@ -1,6 +1,11 @@
 "use client";
 import React from "react";
-import { ActionIcon, ActionIconProps, MantineSize } from "@mantine/core";
+import {
+  ActionIcon,
+  ActionIconProps,
+  MantineSize,
+  ModalProps,
+} from "@mantine/core";
 import { modals } from "@mantine/modals";
 
 export type ModalActionIconProps = ActionIconProps & {
@@ -8,6 +13,7 @@ export type ModalActionIconProps = ActionIconProps & {
   title?: string;
   content: React.ReactNode;
   modalSize?: MantineSize;
+  fullScreen?: boolean;
 };
 
 export const ModalActionIcon = ({
@@ -15,6 +21,7 @@ export const ModalActionIcon = ({
   title,
   content,
   modalSize = "md",
+  fullScreen = false,
   ...props
 }: ModalActionIconProps) => {
   return (
@@ -23,6 +30,7 @@ export const ModalActionIcon = ({
       onClick={(e) => {
         e.stopPropagation();
         modals.open({
+          fullScreen: fullScreen,
           closeOnClickOutside: false,
           size: modalSize,
           title: title,

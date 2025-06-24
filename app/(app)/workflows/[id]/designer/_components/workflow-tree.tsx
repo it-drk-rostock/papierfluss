@@ -1,6 +1,13 @@
 "use client";
 
-import { getTreeExpandedState, Paper, Title, Tree, TreeNodeData, useTree } from "@mantine/core";
+import {
+  getTreeExpandedState,
+  Paper,
+  Title,
+  Tree,
+  TreeNodeData,
+  useTree,
+} from "@mantine/core";
 import {
   IconFolder,
   IconFolderOpen,
@@ -30,8 +37,15 @@ import { ModalButton } from "@/components/modal-button";
 import { ManageDependenciesForm } from "./manage-dependencies-form";
 import { ActionIconAction } from "@/components/action-icon-action";
 import { DrawerActionIcon } from "@/components/drawer-action-icon";
-import { ProcessDesignerForm } from "./process-designer-form";
+/* import { ProcessDesignerForm } from "./process-designer-form"; */
 import { ProcessN8nWorkflows } from "./process-n8n-workflows";
+import dynamic from "next/dynamic";
+
+const ProcessDesignerForm = dynamic(
+  () =>
+    import("./process-designer-form").then((mod) => mod.ProcessDesignerForm),
+  { ssr: false }
+);
 
 interface Process {
   id: string;
@@ -182,7 +196,23 @@ export function WorkflowTree({
               )}
               {!process.isCategory && (
                 <Tooltip color="red" label="Prozess Formular Designer">
-                  <DrawerActionIcon
+                  <ModalActionIcon
+                    variant="subtle"
+                    title="Prozess Formular Designer"
+                    content={
+                      <ProcessDesignerForm
+                        processId={process.id}
+                        json={process.schema}
+                        theme={process.theme}
+                        name={process.name}
+                        description={process.description}
+                      />
+                    }
+                    fullScreen
+                  >
+                    <IconClipboard style={baseIconStyles} />
+                  </ModalActionIcon>
+                 {/*  <DrawerActionIcon
                     variant="subtle"
                     drawers={[
                       {
@@ -203,7 +233,7 @@ export function WorkflowTree({
                     initialDrawerId="process-designer"
                   >
                     <IconClipboard style={baseIconStyles} />
-                  </DrawerActionIcon>
+                  </DrawerActionIcon> */}
                 </Tooltip>
               )}
 

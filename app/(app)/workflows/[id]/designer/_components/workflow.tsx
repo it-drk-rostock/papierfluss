@@ -65,16 +65,15 @@ export const Workflow = async ({
           <TabsTab value="preview">Vorschau</TabsTab>
         </TabsList>
 
-        <TabsPanel value="preview">
-          <WorkflowPreview workflow={workflow} />
-        </TabsPanel>
-
         <TabsPanel value="designer">
           <WorkflowTree
             workflowId={workflow.id}
             initialProcesses={workflow.processes}
             treeData={treeData}
           />
+        </TabsPanel>
+        <TabsPanel value="preview">
+          <WorkflowPreview workflow={workflow} />
         </TabsPanel>
       </Tabs>
     </>
