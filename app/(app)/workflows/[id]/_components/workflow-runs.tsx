@@ -12,17 +12,19 @@ export const WorkflowRuns = async ({
   params: Promise<{ id: string }>;
 }) => {
   const workflowId = (await params).id;
-  const workflow = await getWorkflowRuns(workflowId);
+  const workflowData = await getWorkflowRuns(workflowId);
 
-  if (!workflow) {
+  if (!workflowData) {
     return notFound();
   }
+
+  const { workflow, runs } = workflowData;
 
   return (
     <Stack gap="md">
       <Stack gap="0">
-        <Title order={1}>Übersicht {workflow[0].workflow.name}</Title>
-        <Text c="dimmed">{workflow[0].workflow.description}</Text>
+        <Title order={1}>Übersicht {workflow.name}</Title>
+        <Text c="dimmed">{workflow.description}</Text>
       </Stack>
       <QuickSearchAdd
         modalTitle="Workflow ausführen"
@@ -38,7 +40,7 @@ export const WorkflowRuns = async ({
           </ButtonAction>
         }
       />
-      <WorkflowRunsTable runs={workflow} />
+      <WorkflowRunsTable runs={runs} />
     </Stack>
   );
 };

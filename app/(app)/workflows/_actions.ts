@@ -7,6 +7,7 @@ import {
   removeTeamSchema,
   updateWorkflowSchema,
   workflowSchema,
+  workflowInformationSchema,
 } from "./_schemas";
 import prisma from "@/lib/prisma";
 import { formatError } from "@/utils/format-error";
@@ -523,3 +524,79 @@ export const getAvailableTeams = async (workflowId: string) => {
 
   return teams;
 };
+
+/**
+ * Gets workflow information configuration
+ */
+export const getWorkflowInformation = async (workflowId: string) => {
+  await authQuery();
+
+  // Get the workflow with basic info
+  const workflow = await prisma.workflow.findUnique({
+    where: { id: workflowId },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      information: true,
+    },
+  });
+
+  if (!workflow) {
+    throw new Error("Workflow not found");
+  }
+
+  // Get the latest workflow run with process runs
+  const latestWorkflowRun = await prisma.workflowRun.findFirst({
+    where: { workflowId },
+    orderBy: { startedAt: "desc" },
+    select: {
+      id: true,
+      processes: {
+        select: {
+          id: true,
+          data: true,
+          process: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return {
+    ...workflow,
+    latestWorkflowRun,
+  };
+};
+
+/**
+ * Updates workflow information configuration
+ */
+export const updateWorkflowInformation = authActionClient
+  .schema(workflowInformationSchema.extend(idSchema.shape))
+  .metadata({
+    event: "updateWorkflowInformationAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { id, fields } = parsedInput;
+
+    try {
+      await prisma.workflow.update({
+        where: { id },
+        data: {
+          information: { fields },
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/workflows/${id}/designer`);
+    return {
+      message: "Workflow Informationen aktualisiert",
+    };
+  });

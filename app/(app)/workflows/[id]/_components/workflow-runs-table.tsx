@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import "survey-analytics/survey.analytics.tabulator.css";
 import "tabulator-tables/dist/css/tabulator.min.css";
 import { Tabulator } from "survey-analytics/survey.analytics.tabulator";
 import { Model } from "survey-core";
 import { Box, Button, Group, Menu, Paper, Stack, Title } from "@mantine/core";
-import { WorkflowRunsProps } from "../_actions";
 import { WorkflowStatusBadge } from "@/components/workflow-status-badge";
 import { WorkflowStatus } from "@prisma/client";
-import { LinkButton } from "@/components/link-button";
 import { useDisclosure } from "@mantine/hooks";
 import { MenuItemLink } from "@/components/link-menu-item";
 
@@ -34,7 +32,6 @@ interface WorkflowRunTableProps {
 
 export const WorkflowRunTable = ({ workflowRun }: WorkflowRunTableProps) => {
   const [opened, handlers] = useDisclosure(false);
-  let [vizPanel, setVizPanel] = useState<Tabulator>();
 
   useEffect(() => {
     // Clear existing content
@@ -65,7 +62,6 @@ export const WorkflowRunTable = ({ workflowRun }: WorkflowRunTableProps) => {
             const survey = new Model(process.process.schema);
             const panel = new Tabulator(survey, transformedData);
             panel.render(`summaryContainer-${workflowRun.id}`);
-            setVizPanel(panel);
           }
         });
       } catch (error) {
@@ -110,7 +106,17 @@ export const WorkflowRunTable = ({ workflowRun }: WorkflowRunTableProps) => {
   );
 };
 
-export const WorkflowRunsTable = ({ runs }: { runs: WorkflowRunsProps }) => {
+export const WorkflowRunsTable = ({
+  runs,
+}: {
+  runs: Array<{
+    id: string;
+    status: string;
+    startedAt: Date;
+    completedAt: Date | null;
+    processes: ProcessRunData[];
+  }>;
+}) => {
   return (
     <Stack>
       {runs.map((run) => (

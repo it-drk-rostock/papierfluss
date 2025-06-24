@@ -81,6 +81,7 @@ export const getWorkflowRun = async (id: string) => {
             isActive: true,
             isPublic: true,
             submitProcessPermissions: true,
+            information: true,
             responsibleTeam: {
               select: {
                 name: true,
@@ -172,6 +173,7 @@ export const getWorkflowRun = async (id: string) => {
           isActive: true,
           isPublic: true,
           submitProcessPermissions: true,
+          information: true,
           responsibleTeam: {
             select: {
               name: true,
@@ -602,6 +604,7 @@ export const completeProcessRun = authActionClient
         },
       };
 
+      console.log(processRun.process.completeN8nWorkflows);
       await triggerN8nWebhooks(
         processRun.process.completeN8nWorkflows.map((w) => w.workflowId),
         submissionContext

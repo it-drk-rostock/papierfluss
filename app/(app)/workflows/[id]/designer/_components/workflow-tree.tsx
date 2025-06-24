@@ -19,6 +19,7 @@ import {
   IconClipboard,
   IconPencil,
   IconTopologyBus,
+  IconInfoCircle,
 } from "@tabler/icons-react";
 import {
   Button,
@@ -36,9 +37,8 @@ import { ProcessForm } from "./process-form";
 import { ModalButton } from "@/components/modal-button";
 import { ManageDependenciesForm } from "./manage-dependencies-form";
 import { ActionIconAction } from "@/components/action-icon-action";
-import { DrawerActionIcon } from "@/components/drawer-action-icon";
-/* import { ProcessDesignerForm } from "./process-designer-form"; */
 import { ProcessN8nWorkflows } from "./process-n8n-workflows";
+import { WorkflowInformationForm } from "./workflow-information-form";
 import dynamic from "next/dynamic";
 
 const ProcessDesignerForm = dynamic(
@@ -212,28 +212,6 @@ export function WorkflowTree({
                   >
                     <IconClipboard style={baseIconStyles} />
                   </ModalActionIcon>
-                 {/*  <DrawerActionIcon
-                    variant="subtle"
-                    drawers={[
-                      {
-                        id: "process-designer",
-                        title: `Prozess Formular Designer: ${process.name}`,
-                        size: "100%",
-                        children: (
-                          <ProcessDesignerForm
-                            processId={process.id}
-                            json={process.schema}
-                            theme={process.theme}
-                            name={process.name}
-                            description={process.description}
-                          />
-                        ),
-                      },
-                    ]}
-                    initialDrawerId="process-designer"
-                  >
-                    <IconClipboard style={baseIconStyles} />
-                  </DrawerActionIcon> */}
                 </Tooltip>
               )}
 
@@ -323,6 +301,14 @@ export function WorkflowTree({
   return (
     <Stack>
       <Group justify="flex-end">
+        <ModalButton
+          variant="subtle"
+          leftSection={<IconInfoCircle style={baseIconStyles} />}
+          title="Workflow Informationen verwalten"
+          content={<WorkflowInformationForm workflowId={workflowId} />}
+        >
+          Informationen
+        </ModalButton>
         <Button onClick={() => tree.expandAllNodes()} variant="subtle">
           Alle ausklappen
         </Button>

@@ -8,6 +8,7 @@ model Workflow {
     updatedAt                DateTime      @updatedAt
     editWorkflowPermissions  String?
     submitProcessPermissions String?
+    information              Json?
     teams                    Team[]
     responsibleTeamId        String?
     responsibleTeam          Team?         @relation(fields: [responsibleTeamId], references: [id], onDelete: SetNull, name: "ResponsibleTeam")

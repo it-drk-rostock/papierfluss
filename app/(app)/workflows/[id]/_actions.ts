@@ -12,19 +12,28 @@ import { redirect } from "next/navigation";
 export const getWorkflowRuns = async (workflowId: string) => {
   await authQuery();
 
-  const workflow = await prisma.workflowRun.findMany({
+  // Get the workflow data first
+  const workflow = await prisma.workflow.findUnique({
+    where: { id: workflowId },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+    },
+  });
+
+  if (!workflow) {
+    throw new Error("Workflow not found");
+  }
+
+  // Get the workflow runs
+  const workflowRuns = await prisma.workflowRun.findMany({
     where: { workflowId: workflowId },
     select: {
       id: true,
       status: true,
       startedAt: true,
       completedAt: true,
-      workflow: {
-        select: {
-          name: true,
-          description: true,
-        },
-      },
       processes: {
         select: {
           id: true,
@@ -40,7 +49,10 @@ export const getWorkflowRuns = async (workflowId: string) => {
     },
   });
 
-  return workflow;
+  return {
+    workflow,
+    runs: workflowRuns,
+  };
 };
 
 /**
