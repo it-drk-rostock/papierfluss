@@ -27,7 +27,7 @@ export const TextIcon: React.FC<TextIconProps> = ({
   text,
   size = "lg",
   fontSize = "sm",
-  color = "blue",
+  color = "red",
   variant = "filled",
   radius = "sm",
   ...props

@@ -20,6 +20,7 @@ export const getWorkflowRuns = async (workflowId: string) => {
       id: true,
       name: true,
       description: true,
+      information: true,
     },
   });
 
@@ -42,6 +43,7 @@ export const getWorkflowRuns = async (workflowId: string) => {
           process: {
             select: {
               schema: true,
+              name: true,
             },
           },
           data: true,

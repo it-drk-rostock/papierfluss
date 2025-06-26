@@ -132,7 +132,7 @@ export const WorkflowInformationForm = ({
         Object.keys(data).forEach((key) => {
           allFields.push({
             value: key,
-            label: `${key} (${processRun.process.name})`,
+            label: key,
             processName: processRun.process.name,
           });
         });

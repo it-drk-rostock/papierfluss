@@ -40,7 +40,7 @@ export const WorkflowRuns = async ({
           </ButtonAction>
         }
       />
-      <WorkflowRunsTable runs={runs} />
+      <WorkflowRunsTable workflow={workflow} runs={runs} />
     </Stack>
   );
 };

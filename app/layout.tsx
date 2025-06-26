@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import "@mantine/core/styles.css";
+import "mantine-datatable/styles.layer.css";
 import "@mantine/notifications/styles.css";
-import {
-  ColorSchemeScript,
-  mantineHtmlProps,
-} from "@mantine/core";
+import { ColorSchemeScript, mantineHtmlProps } from "@mantine/core";
 import "dayjs/locale/de";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
