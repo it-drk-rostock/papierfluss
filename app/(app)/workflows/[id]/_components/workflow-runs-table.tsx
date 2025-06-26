@@ -5,11 +5,25 @@ import "survey-analytics/survey.analytics.tabulator.css";
 import "tabulator-tables/dist/css/tabulator.min.css";
 import { Tabulator } from "survey-analytics/survey.analytics.tabulator";
 import { Model } from "survey-core";
-import { Box, Button, Group, Menu, Paper, Stack, Title } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Group,
+  Menu,
+  MenuDivider,
+  Paper,
+  Stack,
+  Title,
+} from "@mantine/core";
 import { WorkflowStatusBadge } from "@/components/workflow-status-badge";
 import { WorkflowStatus } from "@prisma/client";
 import { useDisclosure } from "@mantine/hooks";
 import { MenuItemLink } from "@/components/link-menu-item";
+import { ModalMenuItem } from "@/components/modal-menu-item";
+import { useAuthSession } from "@/hooks/use-auth-session";
+import { IconArchive, IconTrash } from "@tabler/icons-react";
+import { ButtonAction } from "@/components/button-action";
+import { archiveWorkflowRun, deleteWorkflowRun } from "../_actions";
 
 interface ProcessRunData {
   id: string;
@@ -32,6 +46,7 @@ interface WorkflowRunTableProps {
 
 export const WorkflowRunTable = ({ workflowRun }: WorkflowRunTableProps) => {
   const [opened, handlers] = useDisclosure(false);
+  const { hasAccess } = useAuthSession();
 
   useEffect(() => {
     // Clear existing content
@@ -60,6 +75,7 @@ export const WorkflowRunTable = ({ workflowRun }: WorkflowRunTableProps) => {
         validProcesses.forEach((process) => {
           if (process.process.schema) {
             const survey = new Model(process.process.schema);
+            survey.locale = "de";
             const panel = new Tabulator(survey, transformedData);
             panel.render(`summaryContainer-${workflowRun.id}`);
           }
@@ -94,6 +110,45 @@ export const WorkflowRunTable = ({ workflowRun }: WorkflowRunTableProps) => {
               <MenuItemLink href={`/runs/${workflowRun.id}`}>
                 Zum Formular
               </MenuItemLink>
+
+              <MenuDivider />
+              <ModalMenuItem
+                leftSection={<IconArchive size={14} />}
+                color="gray"
+                title="Archivieren"
+                content={
+                  <>
+                    <ButtonAction
+                      color="gray"
+                      fullWidth
+                      action={archiveWorkflowRun}
+                      values={{ id: workflowRun.id }}
+                    >
+                      Archivieren
+                    </ButtonAction>
+                  </>
+                }
+              >
+                Archivieren
+              </ModalMenuItem>
+              <ModalMenuItem
+                leftSection={<IconTrash size={14} />}
+                color="red"
+                title="Löschen"
+                content={
+                  <>
+                    <ButtonAction
+                      fullWidth
+                      action={deleteWorkflowRun}
+                      values={{ id: workflowRun.id }}
+                    >
+                      Löschen
+                    </ButtonAction>
+                  </>
+                }
+              >
+                Löschen
+              </ModalMenuItem>
             </Menu.Dropdown>
           </Menu>
         </Group>

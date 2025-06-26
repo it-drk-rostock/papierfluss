@@ -604,13 +604,11 @@ export const completeProcessRun = authActionClient
         },
       };
 
-      console.log(processRun.process.completeN8nWorkflows);
       await triggerN8nWebhooks(
         processRun.process.completeN8nWorkflows.map((w) => w.workflowId),
         submissionContext
       );
     } catch (error) {
-      console.log(error);
       throw formatError(error);
     }
 
@@ -807,80 +805,6 @@ export const saveProcessRun = authActionClient
     };
   });
 
-/**
- * Archives a workflow run
- */
-export const archiveWorkflowRun = authActionClient
-  .schema(idSchema)
-  .metadata({
-    event: "archiveWorkflowRunAction",
-  })
-  .stateAction(async ({ parsedInput, ctx }) => {
-    const { id } = parsedInput;
 
-    try {
-      // Get the workflow with its processes
-      const workflowRun = await prisma.workflowRun.update({
-        where: { id },
-        data: {
-          status: "archived",
-        },
-        select: {
-          workflow: {
-            select: {
-              name: true,
-              description: true,
-              archiveN8nWorkflows: {
-                select: {
-                  workflowId: true,
-                },
-              },
-              responsibleTeam: {
-                select: {
-                  name: true,
-                  contactEmail: true,
-                },
-              },
-            },
-          },
-        },
-      });
 
-      if (!workflowRun) {
-        throw new Error("Workflow Ausführung nicht gefunden");
-      }
 
-      const { processDataMap } = await getAllProcessRunData(id);
-
-      const submissionContext = {
-        user: {
-          ...ctx.session.user,
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-        },
-        data: {
-          workflow: {
-            name: workflowRun.workflow.name,
-            description: workflowRun.workflow.description,
-          },
-          responsibleTeam: {
-            name: workflowRun.workflow.responsibleTeam?.name,
-            contactEmail: workflowRun.workflow.responsibleTeam?.contactEmail,
-          },
-          allProcessData: processDataMap,
-        },
-      };
-
-      await triggerN8nWebhooks(
-        workflowRun.workflow.archiveN8nWorkflows.map((w) => w.workflowId),
-        submissionContext
-      );
-    } catch (error) {
-      throw formatError(error);
-    }
-
-    revalidatePath(`/runs/${id}`);
-
-    return {
-      message: "Workflow Ausführung archiviert",
-    };
-  });
