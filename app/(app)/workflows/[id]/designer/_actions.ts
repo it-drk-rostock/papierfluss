@@ -12,6 +12,7 @@ import {
   updateProcessFormSchema,
   moveProcessSchema,
   updateProcessSchema,
+  updateProcessPermissionsSchema,
 } from "./_schemas";
 import { Prisma } from "@prisma/client";
 import jsonLogic from "json-logic-js";
@@ -51,6 +52,8 @@ export const getWorkflowProcesses = async (workflowId: string) => {
           isCategory: true,
           schema: true,
           theme: true,
+          editProcessPermissions: true,
+          submitProcessPermissions: true,
           dependencies: {
             select: {
               id: true,
@@ -502,5 +505,74 @@ export const updateProcess = authActionClient
 
     return {
       message: "Prozess aktualisiert",
+    };
+  });
+
+/**
+ * Updates process permissions
+ */
+export const updateProcessPermissions = authActionClient
+  .schema(updateProcessPermissionsSchema)
+  .metadata({
+    event: "updateProcessPermissionsAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, editProcessPermissions, submitProcessPermissions } =
+      parsedInput;
+
+    try {
+      const process = await prisma.process.findUnique({
+        where: { id },
+        select: {
+          workflow: {
+            select: {
+              editWorkflowPermissions: true,
+              responsibleTeam: true,
+              teams: true,
+            },
+          },
+        },
+      });
+
+      if (!process) {
+        throw new Error("Process not found");
+      }
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            ...ctx.session.user,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: process.workflow.responsibleTeam?.name,
+            teams: process.workflow.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          process.workflow.editWorkflowPermissions || "{}"
+        );
+        const hasPermission = await jsonLogic.apply(rules, context);
+
+        if (!hasPermission) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Prozesses");
+        }
+      }
+
+      await prisma.process.update({
+        where: { id },
+        data: {
+          editProcessPermissions,
+          submitProcessPermissions,
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/workflows/${id}/designer`);
+    return {
+      message: "Prozess Berechtigungen aktualisiert",
     };
   });

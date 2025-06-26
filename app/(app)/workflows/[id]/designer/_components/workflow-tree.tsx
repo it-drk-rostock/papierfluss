@@ -20,6 +20,7 @@ import {
   IconPencil,
   IconTopologyBus,
   IconInfoCircle,
+  IconShieldLock,
 } from "@tabler/icons-react";
 import {
   Button,
@@ -39,6 +40,7 @@ import { ManageDependenciesForm } from "./manage-dependencies-form";
 import { ActionIconAction } from "@/components/action-icon-action";
 import { ProcessN8nWorkflows } from "./process-n8n-workflows";
 import { WorkflowInformationForm } from "./workflow-information-form";
+import { ProcessPermissionForm } from "./process-permission-form";
 import dynamic from "next/dynamic";
 
 const ProcessDesignerForm = dynamic(
@@ -59,6 +61,8 @@ interface Process {
   children: Array<{ id: string; name: string }>;
   schema: object | undefined;
   theme: object | undefined;
+  editProcessPermissions: string | null;
+  submitProcessPermissions: string | null;
 }
 
 interface TreeNode {
@@ -272,6 +276,25 @@ export function WorkflowTree({
                   </ModalActionIcon>
                 </Tooltip>
               )}
+              <Tooltip color="red" label="Berechtigungen">
+                <ModalActionIcon
+                  title="Prozess Berechtigungen"
+                  variant="subtle"
+                  content={
+                    <ProcessPermissionForm
+                      workflowId={workflowId}
+                      processId={process.id}
+                      editProcessPermissions={process.editProcessPermissions}
+                      submitProcessPermissions={
+                        process.submitProcessPermissions
+                      }
+                      formActionName="process-permissions"
+                    />
+                  }
+                >
+                  <IconShieldLock style={baseIconStyles} />
+                </ModalActionIcon>
+              </Tooltip>
               <Tooltip color="red" label="Löschen">
                 <ModalActionIcon
                   title="Prozess löschen"

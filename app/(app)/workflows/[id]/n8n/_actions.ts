@@ -91,6 +91,10 @@ export const getWorkflowN8nWorkflows = async (id: string) => {
     });
   }
 
+  if (user.role !== "moderator") {
+    throw new Error("Keine Berechtigung zum Bearbeiten von Workflows");
+  }
+
   const workflow = await prisma.workflow.findUnique({
     where: {
       id,
@@ -145,24 +149,22 @@ export const getWorkflowN8nWorkflows = async (id: string) => {
 
   if (!workflow) return notFound();
 
-  if (user.role !== "admin") {
-    const context = {
-      user: {
-        ...user,
-        teams: user.teams?.map((t) => t.name) ?? [],
-      },
-      workflow: {
-        responsibleTeam: workflow.responsibleTeam?.name,
-        teams: workflow.teams?.map((t) => t.name) ?? [],
-      },
-    };
+  const context = {
+    user: {
+      ...user,
+      teams: user.teams?.map((t) => t.name) ?? [],
+    },
+    workflow: {
+      responsibleTeam: workflow.responsibleTeam?.name,
+      teams: workflow.teams?.map((t) => t.name) ?? [],
+    },
+  };
 
-    const rules = JSON.parse(workflow.editWorkflowPermissions || "{}");
-    const hasPermission = await jsonLogic.apply(rules, context);
+  const rules = JSON.parse(workflow.editWorkflowPermissions || "{}");
+  const hasPermission = await jsonLogic.apply(rules, context);
 
-    if (!hasPermission) {
-      throw new Error("Keine Berechtigung zum Bearbeiten dieses Workflows");
-    }
+  if (!hasPermission) {
+    throw new Error("Keine Berechtigung zum Bearbeiten dieses Workflows");
   }
 
   return workflow;
@@ -191,6 +193,12 @@ export const connectN8nWorkflow = authActionClient
     const { workflowId, workflowType, workflows } = parsedInput;
 
     try {
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "moderator"
+      ) {
+        throw new Error("Keine Berechtigung zum Bearbeiten von Workflows");
+      }
       const workflow = await prisma.workflow.findUnique({
         where: { id: workflowId },
         select: {
@@ -256,6 +264,12 @@ export const disconnectN8nWorkflow = authActionClient
     const { workflowId, workflowType, n8nWorkflowId } = parsedInput;
 
     try {
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "moderator"
+      ) {
+        throw new Error("Keine Berechtigung zum Bearbeiten von Workflows");
+      }
       const workflow = await prisma.workflow.findUnique({
         where: { id: workflowId },
         select: {

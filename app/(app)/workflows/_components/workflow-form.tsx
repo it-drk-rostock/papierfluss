@@ -3,7 +3,12 @@ import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { updateWorkflowSchema, workflowSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
-import { createWorkflow, updateWorkflow, WorkflowProps } from "../_actions";
+import {
+  createWorkflow,
+  updateWorkflow,
+  WorkflowProps,
+  getWorkflowRunsForPermissions,
+} from "../_actions";
 import {
   Button,
   Group,
@@ -11,9 +16,12 @@ import {
   Textarea,
   TextInput,
   Checkbox,
+  Alert,
 } from "@mantine/core";
 import { EntitySelect } from "@/components/entity-select";
 import { getTeams } from "../../dashboard/_actions";
+import { WorkflowPermissionBuilder } from "@/components/workflow-permission-builder";
+import { useQuery } from "@tanstack/react-query";
 
 export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
   const formForm = useForm({
@@ -50,6 +58,17 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
     hideModals: true,
   });
 
+  // Get workflow runs for permission builder (only for existing workflows)
+  const { data: workflowRuns } = useQuery({
+    queryKey: ["workflowRunsForPermissions", workflow?.id],
+    queryFn: () =>
+      workflow?.id
+        ? getWorkflowRunsForPermissions(workflow.id)
+        : Promise.resolve([]),
+    enabled: !!workflow?.id,
+    staleTime: 0,
+  });
+
   return (
     <form
       onSubmit={formForm.onSubmit(async (values) => {
@@ -81,31 +100,33 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
           {...formForm.getInputProps("isActive", { type: "checkbox" })}
         />
 
-        {/* {workflow && (
+        {workflow && (
           <>
-            {workflow.processes.length === 0 && (
+            {workflowRuns && workflowRuns.length === 0 && (
               <Alert color="yellow" variant="light">
-                Es wurde noch kein Beispielformular erstellt. Das heißt, die
-                dynamischen Felder von den Formularen sind in den Berechtigungen
+                Es wurde noch keine Workflow-Ausführung erstellt. Das heißt, die
+                dynamischen Felder von den Prozessen sind in den Berechtigungen
                 nicht auswählbar.
               </Alert>
             )}
-            <PermissionBuilder
-              label="Bearbeitungs Berechtigungen"
+            <WorkflowPermissionBuilder
+              label="Workflow Bearbeitungs Berechtigungen"
               initialData={workflow.editWorkflowPermissions ?? ""}
               formActionName="create-workflow"
               fieldValue="editWorkflowPermissions"
-              submissions={workflow.processes}
+              workflowRuns={workflowRuns}
+              permissionType="workflow"
             />
-            <PermissionBuilder
-              label="Überprüfungs Berechtigungen"
-              initialData={form.reviewFormPermissions ?? ""}
-              formActionName="create-form"
-              fieldValue="reviewFormPermissions"
-              submissions={form.submissions}
+            <WorkflowPermissionBuilder
+              label="Workflow Übermittlungs Berechtigungen"
+              initialData={workflow.submitProcessPermissions ?? ""}
+              formActionName="create-workflow"
+              fieldValue="submitProcessPermissions"
+              workflowRuns={workflowRuns}
+              permissionType="workflow"
             />
           </>
-        )} */}
+        )}
 
         <Group mt="lg" justify="flex-end">
           <Button loading={status === "executing"} type="submit">

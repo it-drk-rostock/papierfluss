@@ -19,6 +19,12 @@ export const updateProcessSchema = z.object({
   description: z.string().optional(),
 });
 
+export const updateProcessPermissionsSchema = z.object({
+  id: z.string().min(1),
+  editProcessPermissions: z.string().optional(),
+  submitProcessPermissions: z.string().optional(),
+});
+
 export const manageDependenciesSchema = z.object({
   processId: z.string().min(1),
   dependencies: z.array(
