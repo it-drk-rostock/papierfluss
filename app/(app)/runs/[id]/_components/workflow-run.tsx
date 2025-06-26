@@ -9,7 +9,7 @@ import {
   Divider,
 } from "@mantine/core";
 import React from "react";
-import { archiveWorkflowRun, getWorkflowRun } from "../_actions";
+import { getWorkflowRun } from "../_actions";
 import { notFound } from "next/navigation";
 import { WorkflowStatusBadge } from "@/components/workflow-status-badge";
 import { ProcessRunTree } from "./process-run-tree";
@@ -89,31 +89,12 @@ export const WorkflowRun = async ({
           <Title order={2}>{workflowRun.workflow.name}</Title>
           <Text c="dimmed">{workflowRun.workflow.description}</Text>
         </Stack>
-        <Group gap="sm">
-          <LinkButton
-            leftSection={<IconArrowLeft style={buttonIconStyles} />}
-            variant="outline"
-            href={`/workflows/${workflowRun.workflow.id}`}
-            title={`Zurück zu ${workflowRun.workflow.name}`}
-          />
-          <ModalButton
-            variant="outline"
-            color="gray"
-            title="Archivieren"
-            content={
-              <ButtonAction
-                fullWidth
-                color="gray"
-                action={archiveWorkflowRun}
-                values={{ id: workflowRunId }}
-              >
-                Archivieren
-              </ButtonAction>
-            }
-          >
-            Archivieren
-          </ModalButton>
-        </Group>
+        <LinkButton
+          leftSection={<IconArrowLeft style={buttonIconStyles} />}
+          variant="outline"
+          href={`/workflows/${workflowRun.workflow.id}`}
+          title={`Zurück zu ${workflowRun.workflow.name}`}
+        />
       </Group>
       <Divider />
       <Grid gutter="lg">
@@ -181,7 +162,7 @@ export const WorkflowRun = async ({
                   <>
                     <Divider />
                     {configuredFields.map((field, index) => (
-                      <Text key={index} size="sm">
+                      <Text key={index}>
                         {field.fieldKey}:{" "}
                         {field.data
                           ? String(field.data.value)
