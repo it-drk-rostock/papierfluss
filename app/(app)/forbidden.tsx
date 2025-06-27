@@ -1,11 +1,19 @@
+import { LinkBackButton } from "@/components/link-back-button";
+import { Center, Paper, Stack, Text, Title } from "@mantine/core";
 import Link from "next/link";
 
 export default function Forbidden() {
   return (
-    <div>
-      <h2>Forbidden</h2>
-      <p>You are not authorized to access this resource.</p>
-      <Link href="/dashboard">Return Dashboard</Link>
-    </div>
+    <Center>
+      <Paper withBorder p="lg">
+        <Stack>
+          <Title order={1}>Fehlende Berechtigung</Title>
+          <Text>
+            Sie haben keine Berechtigung, um auf diese Ressource zuzugreifen.
+          </Text>
+          <LinkBackButton>Zurück</LinkBackButton>
+        </Stack>
+      </Paper>
+    </Center>
   );
 }
