@@ -1,6 +1,5 @@
 import { LinkBackButton } from "@/components/link-back-button";
 import { Center, Paper, Stack, Text, Title } from "@mantine/core";
-import Link from "next/link";
 
 export default function Forbidden() {
   return (
