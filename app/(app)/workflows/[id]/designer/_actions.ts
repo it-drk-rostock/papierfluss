@@ -560,50 +560,11 @@ export const updateProcessPermissions = authActionClient
   .metadata({
     event: "updateProcessPermissionsAction",
   })
-  .stateAction(async ({ parsedInput, ctx }) => {
+  .stateAction(async ({ parsedInput }) => {
     const { id, editProcessPermissions, submitProcessPermissions } =
       parsedInput;
-
+    console.log(editProcessPermissions, submitProcessPermissions);
     try {
-      const process = await prisma.process.findUnique({
-        where: { id },
-        select: {
-          workflow: {
-            select: {
-              editWorkflowPermissions: true,
-              responsibleTeam: true,
-              teams: true,
-            },
-          },
-        },
-      });
-
-      if (!process) {
-        throw new Error("Process not found");
-      }
-
-      if (ctx.session.user.role !== "admin") {
-        const context = {
-          user: {
-            ...ctx.session.user,
-            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-          },
-          workflow: {
-            responsibleTeam: process.workflow.responsibleTeam?.name,
-            teams: process.workflow.teams?.map((t) => t.name) ?? [],
-          },
-        };
-
-        const rules = JSON.parse(
-          process.workflow.editWorkflowPermissions || "{}"
-        );
-        const hasPermission = await jsonLogic.apply(rules, context);
-
-        if (!hasPermission) {
-          throw new Error("Keine Berechtigung zum Bearbeiten dieses Prozesses");
-        }
-      }
-
       await prisma.process.update({
         where: { id },
         data: {

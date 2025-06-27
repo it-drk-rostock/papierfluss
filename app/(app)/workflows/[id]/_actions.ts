@@ -7,11 +7,12 @@ import { authQuery } from "@/server/utils/auth-query";
 import { formatError } from "@/utils/format-error";
 import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
 import { revalidatePath } from "next/cache";
+import jsonLogic from "json-logic-js";
 
 import { redirect } from "next/navigation";
 
 export const getWorkflowRuns = async (workflowId: string) => {
-  await authQuery();
+  const { user } = await authQuery();
 
   // Get the workflow data first
   const workflow = await prisma.workflow.findUnique({
@@ -21,6 +22,16 @@ export const getWorkflowRuns = async (workflowId: string) => {
       name: true,
       description: true,
       information: true,
+      responsibleTeam: {
+        select: {
+          name: true,
+        },
+      },
+      teams: {
+        select: {
+          name: true,
+        },
+      },
     },
   });
 
@@ -28,8 +39,8 @@ export const getWorkflowRuns = async (workflowId: string) => {
     throw new Error("Workflow not found");
   }
 
-  // Get the workflow runs
-  const workflowRuns = await prisma.workflowRun.findMany({
+  // Get all workflow runs with their processes
+  const allWorkflowRuns = await prisma.workflowRun.findMany({
     where: { workflowId: workflowId },
     select: {
       id: true,
@@ -42,8 +53,20 @@ export const getWorkflowRuns = async (workflowId: string) => {
           status: true,
           process: {
             select: {
-              schema: true,
+              id: true,
               name: true,
+              schema: true,
+              submitProcessPermissions: true,
+              responsibleTeam: {
+                select: {
+                  name: true,
+                },
+              },
+              teams: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           data: true,
@@ -52,9 +75,60 @@ export const getWorkflowRuns = async (workflowId: string) => {
     },
   });
 
+  // If user is admin, return all workflow runs
+  if (user.role === "admin") {
+    return {
+      workflow,
+      runs: allWorkflowRuns,
+    };
+  }
+
+  // For non-admin users, filter workflow runs based on process permissions
+  const filteredWorkflowRuns = allWorkflowRuns.filter((workflowRun) => {
+    // Check if user has permission to access at least one process in this workflow run
+    return workflowRun.processes.some((processRun) => {
+      const process = processRun.process;
+
+      // If process has no submit permissions, deny access
+      if (!process.submitProcessPermissions) {
+        return false;
+      }
+
+      try {
+        const context = {
+          user: {
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            id: user.id,
+            teams: user.teams?.map((t) => t.name) ?? [],
+          },
+          process: {
+            responsibleTeam: process.responsibleTeam?.name,
+            teams: process.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: workflow.responsibleTeam?.name,
+            teams: workflow.teams?.map((t) => t.name) ?? [],
+          },
+          data: processRun.data || {},
+        };
+
+        const rules = JSON.parse(process.submitProcessPermissions);
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        return hasPermission === true;
+      } catch (error) {
+        // If there's an error parsing permissions, deny access
+        console.error("Error checking process permissions:", error);
+        return false;
+      }
+    });
+  });
+
   return {
     workflow,
-    runs: workflowRuns,
+    runs: filteredWorkflowRuns,
   };
 };
 

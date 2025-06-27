@@ -1,10 +1,15 @@
 "use client";
 
 import React from "react";
-import { Stack, Title, Paper, Text, Alert } from "@mantine/core";
+import { Stack, Title, Paper, Text, Alert, Button } from "@mantine/core";
 import { WorkflowPermissionBuilder } from "@/components/workflow-permission-builder";
 import { useQuery } from "@tanstack/react-query";
 import { getWorkflowRunsForPermissions } from "../../../_actions";
+import { useForm } from "@mantine/form";
+import { zodResolver } from "mantine-form-zod-resolver";
+import { useEnhancedAction } from "@/hooks/use-enhanced-action";
+import { updateProcessPermissions } from "../_actions";
+import { updateProcessPermissionsSchema } from "../_schemas";
 
 interface ProcessPermissionFormProps {
   workflowId: string;
@@ -21,12 +26,34 @@ export const ProcessPermissionForm = ({
   submitProcessPermissions,
   formActionName,
 }: ProcessPermissionFormProps) => {
-  // Get workflow runs for permission builder
   const { data: workflowRuns } = useQuery({
     queryKey: ["workflowRunsForPermissions", workflowId],
     queryFn: () => getWorkflowRunsForPermissions(workflowId),
     staleTime: 0,
   });
+
+  // Initialize form
+  const form = useForm({
+    name: formActionName,
+    validate: zodResolver(updateProcessPermissionsSchema),
+    mode: "uncontrolled",
+    initialValues: {
+      id: processId,
+      editProcessPermissions: editProcessPermissions ?? "",
+      submitProcessPermissions: submitProcessPermissions ?? "",
+    },
+  });
+
+  const { execute, status } = useEnhancedAction({
+    action: updateProcessPermissions,
+    hideModals: true,
+  });
+
+  console.log(form.values);
+
+  const handleSave = () => {
+    execute(form.values);
+  };
 
   return (
     <Stack gap="xl">
@@ -64,6 +91,14 @@ export const ProcessPermissionForm = ({
             workflowRuns={workflowRuns}
             permissionType="process"
           />
+
+          <Button
+            fullWidth
+            onClick={handleSave}
+            loading={status === "executing"}
+          >
+            Berechtigungen speichern
+          </Button>
         </Stack>
       </Paper>
     </Stack>
