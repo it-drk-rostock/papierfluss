@@ -276,6 +276,7 @@ export function WorkflowTree({
                   </ModalActionIcon>
                 </Tooltip>
               )}
+               {!process.isCategory && (
               <Tooltip color="red" label="Berechtigungen">
                 <ModalActionIcon
                   title="Prozess Berechtigungen"
@@ -295,6 +296,7 @@ export function WorkflowTree({
                   <IconShieldLock style={baseIconStyles} />
                 </ModalActionIcon>
               </Tooltip>
+              )}
               <Tooltip color="red" label="Löschen">
                 <ModalActionIcon
                   title="Prozess löschen"
