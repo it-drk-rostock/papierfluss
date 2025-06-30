@@ -538,7 +538,7 @@ export const getWorkflowInformation = async (workflowId: string) => {
 
   // Get the latest workflow run with process runs
   const latestWorkflowRun = await prisma.workflowRun.findFirst({
-    where: { workflowId },
+    where: { workflowId, status: "completed" },
     orderBy: { startedAt: "desc" },
     select: {
       id: true,
@@ -641,7 +641,7 @@ export const getWorkflowRunsForPermissions = async (workflowId: string) => {
   await authQuery();
 
   const workflowRuns = await prisma.workflowRun.findMany({
-    where: { workflowId },
+    where: { workflowId, status: "completed" },
     select: {
       id: true,
       processes: {

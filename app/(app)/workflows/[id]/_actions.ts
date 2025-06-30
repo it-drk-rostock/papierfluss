@@ -159,6 +159,12 @@ export const initializeWorkflowRun = authActionClient
           id: true,
           name: true,
           description: true,
+          submitProcessPermissions: true,
+          teams: {
+            select: {
+              name: true,
+            },
+          },
           processes: {
             select: {
               id: true,
@@ -181,6 +187,30 @@ export const initializeWorkflowRun = authActionClient
 
       if (!workflow) {
         throw new Error("Workflow nicht gefunden");
+      }
+
+      // Only check permissions if user is not admin
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: workflow.responsibleTeam?.name,
+            teams: workflow.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(workflow.submitProcessPermissions || "{}");
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error("Keine Berechtigung zum Ausführen dieses Workflows");
+        }
       }
 
       // Create the workflow run
@@ -242,18 +272,61 @@ export const deleteWorkflowRun = authActionClient
     const { id } = parsedInput;
 
     try {
-      const workflow = await prisma.workflowRun.delete({
-        where: {
-          id,
-          ...(ctx.session.user.role !== "admin" && {
-            workflow: {
+      const workflowRun = await prisma.workflowRun.findUnique({
+        where: { id },
+        select: {
+          workflow: {
+            select: {
+              submitProcessPermissions: true,
               responsibleTeam: {
-                id: {
-                  in: ctx.session.user.teams?.map((team) => team.id) ?? [],
+                select: {
+                  name: true,
+                },
+              },
+              teams: {
+                select: {
+                  name: true,
                 },
               },
             },
-          }),
+          },
+        },
+      });
+
+      if (!workflowRun) {
+        throw new Error("Workflow Ausführung nicht gefunden");
+      }
+
+      // Only check permissions if user is not admin
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
+            teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          workflowRun.workflow.submitProcessPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error(
+            "Keine Berechtigung zum Löschen dieser Workflow Ausführung"
+          );
+        }
+      }
+      const workflow = await prisma.workflowRun.delete({
+        where: {
+          id,
         },
         select: {
           workflow: {
@@ -286,28 +359,20 @@ export const archiveWorkflowRun = authActionClient
     const { id } = parsedInput;
 
     try {
-      const workflowRun = await prisma.workflowRun.update({
-        where: {
-          id,
-          ...(ctx.session.user.role !== "admin" && {
-            workflow: {
-              responsibleTeam: {
-                id: {
-                  in: ctx.session.user.teams?.map((team) => team.id) ?? [],
-                },
-              },
-            },
-          }),
-        },
-        data: {
-          status: "archived",
-        },
+      const workflowRun = await prisma.workflowRun.findUnique({
+        where: { id },
         select: {
           workflow: {
             select: {
               id: true,
               name: true,
               description: true,
+              submitProcessPermissions: true,
+              teams: {
+                select: {
+                  name: true,
+                },
+              },
               archiveN8nWorkflows: {
                 select: {
                   workflowId: true,
@@ -335,6 +400,46 @@ export const archiveWorkflowRun = authActionClient
               },
             },
           },
+        },
+      });
+
+      if (!workflowRun) {
+        throw new Error("Workflow Ausführung nicht gefunden");
+      }
+
+      // Only check permissions if user is not admin
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
+            teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          workflowRun.workflow.submitProcessPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error(
+            "Keine Berechtigung zum Archivieren dieser Workflow Ausführung"
+          );
+        }
+      }
+      await prisma.workflowRun.update({
+        where: {
+          id,
+        },
+        data: {
+          status: "archived",
         },
       });
 
