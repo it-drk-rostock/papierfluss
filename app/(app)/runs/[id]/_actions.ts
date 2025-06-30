@@ -453,14 +453,35 @@ export const completeProcessRun = authActionClient
           workflowRun: {
             select: {
               status: true,
+              processes: {
+                select: {
+                  data: true,
+                },
+              },
+              workflow: {
+                select: {
+                  responsibleTeam: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  teams: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
             },
           },
+          data: true,
           workflowRunId: true,
           process: {
             select: {
               id: true,
               name: true,
               description: true,
+              submitProcessPermissions: true,
               responsibleTeam: {
                 select: {
                   name: true,
@@ -484,6 +505,45 @@ export const completeProcessRun = authActionClient
 
       if (!currentProcessRun) {
         throw new Error("Prozess nicht gefunden");
+      }
+
+      const allProcessData = Object.assign(
+        {},
+        ...currentProcessRun.workflowRun.processes
+          .filter((p) => p.data && typeof p.data === "object")
+          .map((p) => p.data)
+      );
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          data: allProcessData,
+          process: {
+            responsibleTeam:
+              currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+            teams:
+              currentProcessRun.workflowRun.workflow.teams?.map(
+                (t) => t.name
+              ) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          currentProcessRun.process.submitProcessPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error(
+            "Keine Berechtigung zum Abschließen dieses Prozesses"
+          );
+        }
       }
 
       if (
@@ -657,12 +717,33 @@ export const saveProcessRun = authActionClient
           status: true,
           workflowRun: {
             select: {
+              processes: {
+                select: {
+                  data: true,
+                },
+              },
               status: true,
+              workflow: {
+                select: {
+                  teams: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  responsibleTeam: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
             },
           },
+
           workflowRunId: true,
           process: {
             select: {
+              submitProcessPermissions: true,
               id: true,
               name: true,
               description: true,
@@ -689,6 +770,47 @@ export const saveProcessRun = authActionClient
 
       if (!currentProcessRun) {
         throw new Error("Prozess nicht gefunden");
+      }
+
+      const allProcessData = Object.assign(
+        {},
+        ...currentProcessRun.workflowRun.processes
+          .filter((p) => p.data && typeof p.data === "object")
+          .map((p) => p.data)
+      );
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          data: allProcessData,
+          process: {
+            responsibleTeam:
+              currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+            teams:
+              currentProcessRun.workflowRun.workflow.teams?.map(
+                (t) => t.name
+              ) ?? [],
+          },
+        };
+
+        console.log(context.data);
+
+        const rules = JSON.parse(
+          currentProcessRun.process.submitProcessPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error(
+            "Keine Berechtigung zum Abschließen dieses Prozesses"
+          );
+        }
       }
 
       if (
@@ -804,7 +926,3 @@ export const saveProcessRun = authActionClient
       message: "Prozess aktualisiert",
     };
   });
-
-
-
-
