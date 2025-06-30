@@ -49,12 +49,6 @@ export const ProcessPermissionForm = ({
     hideModals: true,
   });
 
-  console.log(form.values);
-
-  const handleSave = () => {
-    execute(form.values);
-  };
-
   return (
     <Stack gap="xl">
       <Stack gap="0">
@@ -65,41 +59,43 @@ export const ProcessPermissionForm = ({
       </Stack>
 
       <Paper p="lg" withBorder>
-        <Stack gap="md">
-          {workflowRuns && workflowRuns.length === 0 && (
-            <Alert color="yellow" variant="light">
-              Es wurde noch keine Workflow-Ausführung erstellt. Das heißt, die
-              dynamischen Felder von den Prozessen sind in den Berechtigungen
-              nicht auswählbar.
-            </Alert>
-          )}
+        <form
+          onSubmit={form.onSubmit(async (values) => {
+            execute(values);
+          })}
+        >
+          <Stack gap="md">
+            {workflowRuns && workflowRuns.length === 0 && (
+              <Alert color="yellow" variant="light">
+                Es wurde noch keine Workflow-Ausführung erstellt. Das heißt, die
+                dynamischen Felder von den Prozessen sind in den Berechtigungen
+                nicht auswählbar.
+              </Alert>
+            )}
 
-          <WorkflowPermissionBuilder
-            label="Prozess Bearbeitungs Berechtigungen"
-            initialData={editProcessPermissions ?? ""}
-            formActionName={formActionName}
-            fieldValue="editProcessPermissions"
-            workflowRuns={workflowRuns}
-            permissionType="process"
-          />
+            <WorkflowPermissionBuilder
+              label="Prozess Bearbeitungs Berechtigungen"
+              initialData={editProcessPermissions ?? ""}
+              formActionName={formActionName}
+              fieldValue="editProcessPermissions"
+              workflowRuns={workflowRuns}
+              permissionType="process"
+            />
 
-          <WorkflowPermissionBuilder
-            label="Prozess Übermittlungs Berechtigungen"
-            initialData={submitProcessPermissions ?? ""}
-            formActionName={formActionName}
-            fieldValue="submitProcessPermissions"
-            workflowRuns={workflowRuns}
-            permissionType="process"
-          />
+            <WorkflowPermissionBuilder
+              label="Prozess Übermittlungs Berechtigungen"
+              initialData={submitProcessPermissions ?? ""}
+              formActionName={formActionName}
+              fieldValue="submitProcessPermissions"
+              workflowRuns={workflowRuns}
+              permissionType="process"
+            />
 
-          <Button
-            fullWidth
-            onClick={handleSave}
-            loading={status === "executing"}
-          >
-            Berechtigungen speichern
-          </Button>
-        </Stack>
+            <Button fullWidth type="submit" loading={status === "executing"}>
+              Berechtigungen speichern
+            </Button>
+          </Stack>
+        </form>
       </Paper>
     </Stack>
   );
