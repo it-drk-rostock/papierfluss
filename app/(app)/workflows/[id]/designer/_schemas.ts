@@ -23,6 +23,8 @@ export const updateProcessPermissionsSchema = z.object({
   id: z.string().min(1),
   editProcessPermissions: z.string().optional(),
   submitProcessPermissions: z.string().optional(),
+  viewProcessPermissions: z.string().optional(),
+  resetProcessPermissions: z.string().optional(),
 });
 
 export const manageDependenciesSchema = z.object({

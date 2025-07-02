@@ -289,6 +289,8 @@ export function WorkflowTree({
                       submitProcessPermissions={
                         process.submitProcessPermissions
                       }
+                      viewProcessPermissions={process.viewProcessPermissions}
+                      resetProcessPermissions={process.resetProcessPermissions}
                       formActionName="process-permissions"
                     />
                   }

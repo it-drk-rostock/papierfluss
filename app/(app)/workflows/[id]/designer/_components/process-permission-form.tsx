@@ -16,6 +16,8 @@ interface ProcessPermissionFormProps {
   processId: string;
   editProcessPermissions?: string | null;
   submitProcessPermissions?: string | null;
+  viewProcessPermissions?: string | null;
+  resetProcessPermissions?: string | null;
   formActionName: string;
 }
 
@@ -24,6 +26,8 @@ export const ProcessPermissionForm = ({
   processId,
   editProcessPermissions,
   submitProcessPermissions,
+  viewProcessPermissions,
+  resetProcessPermissions,
   formActionName,
 }: ProcessPermissionFormProps) => {
   const { data: workflowRuns } = useQuery({
@@ -41,6 +45,8 @@ export const ProcessPermissionForm = ({
       id: processId,
       editProcessPermissions: editProcessPermissions ?? "",
       submitProcessPermissions: submitProcessPermissions ?? "",
+      viewProcessPermissions: viewProcessPermissions ?? "",
+      resetProcessPermissions: resetProcessPermissions ?? "",
     },
   });
 
@@ -87,6 +93,25 @@ export const ProcessPermissionForm = ({
               initialData={submitProcessPermissions ?? ""}
               formActionName={formActionName}
               fieldValue="submitProcessPermissions"
+              workflowRuns={workflowRuns}
+              permissionType="process"
+            />
+
+            <WorkflowPermissionBuilder
+
+              label="Prozess Ansicht Berechtigungen"
+              initialData={viewProcessPermissions ?? ""}
+              formActionName={formActionName}
+              fieldValue="viewProcessPermissions"
+              workflowRuns={workflowRuns}
+              permissionType="process"
+            />
+
+            <WorkflowPermissionBuilder
+              label="Prozess Zurücksetzen Berechtigungen"
+              initialData={resetProcessPermissions ?? ""}
+              formActionName={formActionName}
+              fieldValue="resetProcessPermissions"
               workflowRuns={workflowRuns}
               permissionType="process"
             />

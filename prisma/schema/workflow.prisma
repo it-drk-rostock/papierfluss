@@ -32,6 +32,8 @@ model Process {
     theme                    Json?
     editProcessPermissions   String?
     submitProcessPermissions String?
+    viewProcessPermissions   String?
+    resetProcessPermissions  String?
     reactivateNotes          String?
     teams                    Team[]
     responsibleTeamId        String?
