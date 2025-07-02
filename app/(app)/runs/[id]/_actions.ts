@@ -470,6 +470,11 @@ export const completeProcessRun = authActionClient
                       name: true,
                     },
                   },
+                  lastN8nWorkflows: {
+                    select: {
+                      workflowId: true,
+                    },
+                  },
                 },
               },
             },
@@ -633,9 +638,15 @@ export const completeProcessRun = authActionClient
         },
       });
 
+      const ongoingProcesses = allProcessRuns.filter(
+        (run) => run.status === "ongoing"
+      );
       const allProcessesCompleted = allProcessRuns.every(
         (run) => run.status === "completed"
       );
+
+      // Check if only one process remains (second-to-last was just completed)
+      const onlyOneProcessRemains = ongoingProcesses.length === 1;
 
       // If all processes are completed, also complete the workflow run
       if (allProcessesCompleted) {
@@ -668,6 +679,16 @@ export const completeProcessRun = authActionClient
         processRun.process.completeN8nWorkflows.map((w) => w.workflowId),
         submissionContext
       );
+
+      // Trigger lastN8nWorkflows if only one process remains
+      if (onlyOneProcessRemains) {
+        await triggerN8nWebhooks(
+          currentProcessRun.workflowRun.workflow.lastN8nWorkflows.map(
+            (w) => w.workflowId
+          ),
+          submissionContext
+        );
+      }
     } catch (error) {
       throw formatError(error);
     }

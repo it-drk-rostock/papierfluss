@@ -20,6 +20,7 @@ model N8nWorkflow {
     completeWorkflows   Workflow[] @relation("CompleteWorkflows")
     archiveWorkflows    Workflow[] @relation("ArchiveWorkflows")
     reactivateWorkflows Workflow[] @relation("ReactivateWorkflows")
+    lastWorkflows       Workflow[] @relation("LastWorkflows")
 
     saveProcesses       Process[] @relation("SaveProcesses")
     completeProcesses   Process[] @relation("CompleteProcesses")

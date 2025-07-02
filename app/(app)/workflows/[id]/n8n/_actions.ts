@@ -87,6 +87,13 @@ export const getWorkflowN8nWorkflows = async (id: string) => {
             workflowId: true,
           },
         },
+        lastN8nWorkflows: {
+          select: {
+            id: true,
+            name: true,
+            workflowId: true,
+          },
+        },
       },
     });
   }
@@ -144,6 +151,13 @@ export const getWorkflowN8nWorkflows = async (id: string) => {
           workflowId: true,
         },
       },
+      lastN8nWorkflows: {
+        select: {
+          id: true,
+          name: true,
+          workflowId: true,
+        },
+      },
     },
   });
 
@@ -179,7 +193,8 @@ export type WorkflowType =
   | "saveN8nWorkflows"
   | "completeN8nWorkflows"
   | "archiveN8nWorkflows"
-  | "reactivateN8nWorkflows";
+  | "reactivateN8nWorkflows"
+  | "lastN8nWorkflows";
 
 /**
  * Connects an N8n workflow to/from a form

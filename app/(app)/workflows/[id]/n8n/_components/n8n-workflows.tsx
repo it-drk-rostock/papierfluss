@@ -103,6 +103,7 @@ export const N8nWorkflows = async ({
             <TabsTab value="completeN8nWorkflows">Abschließen</TabsTab>
             <TabsTab value="archiveN8nWorkflows">Archivieren</TabsTab>
             <TabsTab value="reactivateN8nWorkflows">Wiederherstellen</TabsTab>
+            <TabsTab value="lastN8nWorkflows">Vorletzter Prozess</TabsTab>
           </TabsList>
 
           <TabsPanel value="initializeN8nWorkflows">
@@ -142,6 +143,14 @@ export const N8nWorkflows = async ({
               workflow.reactivateN8nWorkflows,
               "reactivateN8nWorkflows",
               "Diese Workflows werden ausgeführt, wenn der Workflow wieder in Bearbeitung gesetzt wird."
+            )}
+          </TabsPanel>
+
+          <TabsPanel value="lastN8nWorkflows">
+            {renderWorkflowTab(
+              workflow.lastN8nWorkflows,
+              "lastN8nWorkflows",
+              "Diese Workflows werden ausgeführt, wenn der vorletzte Prozess abgeschlossen wird."
             )}
           </TabsPanel>
         </Tabs>
