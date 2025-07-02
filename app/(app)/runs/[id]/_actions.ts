@@ -305,13 +305,33 @@ export const resetProcessRun = authActionClient
         select: {
           id: true,
           status: true,
+          process: {
+            select: {
+              resetProcessPermissions: true,
+            },
+          },
           workflowRunId: true,
           workflowRun: {
             select: {
+              processes: {
+                select: {
+                  data: true,
+                },
+              },
               id: true,
               status: true,
               workflow: {
                 select: {
+                  responsibleTeam: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  teams: {
+                    select: {
+                      name: true,
+                    },
+                  },
                   reactivateN8nWorkflows: {
                     select: {
                       workflowId: true,
@@ -330,6 +350,45 @@ export const resetProcessRun = authActionClient
 
       if (currentProcessRun.status !== "completed") {
         throw new Error("Prozess ist nicht abgeschlossen");
+      }
+
+      const allProcessData = Object.assign(
+        {},
+        ...currentProcessRun.workflowRun.processes
+          .filter((p) => p.data && typeof p.data === "object")
+          .map((p) => p.data)
+      );
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          data: allProcessData,
+          process: {
+            responsibleTeam:
+              currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+            teams:
+              currentProcessRun.workflowRun.workflow.teams?.map(
+                (t) => t.name
+              ) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          currentProcessRun.process.resetProcessPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error(
+            "Keine Berechtigung zum Zurücksetzen dieses Prozesses"
+          );
+        }
       }
 
       workflowRunId = currentProcessRun.workflowRunId;
