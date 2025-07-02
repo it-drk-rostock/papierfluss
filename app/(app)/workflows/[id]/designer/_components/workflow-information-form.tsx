@@ -11,12 +11,18 @@ import {
   ActionIcon,
   Button,
 } from "@mantine/core";
+
 import {
   getWorkflowInformation,
   updateWorkflowInformation,
 } from "../../../_actions";
 import { EmptyState } from "@/components/empty-state";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconTrash,
+  IconArrowUp,
+  IconArrowDown,
+} from "@tabler/icons-react";
 import { baseIconStyles } from "@/constants/base-icon-styles";
 import { useQuery } from "@tanstack/react-query";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
@@ -235,15 +241,43 @@ export const WorkflowInformationForm = ({
                                   </Text>
                                 )}
                               </Stack>
-                              <ActionIcon
-                                variant="light"
-                                color="red"
-                                onClick={() =>
-                                  form.removeListItem("fields", index)
-                                }
-                              >
-                                <IconTrash style={baseIconStyles} />
-                              </ActionIcon>
+                              <Group gap="xs">
+                                <ActionIcon
+                                  variant="light"
+                                  disabled={index === 0}
+                                  onClick={() =>
+                                    form.reorderListItem("fields", {
+                                      from: index,
+                                      to: index - 1,
+                                    })
+                                  }
+                                >
+                                  <IconArrowUp style={baseIconStyles} />
+                                </ActionIcon>
+                                <ActionIcon
+                                  variant="light"
+                                  disabled={
+                                    index === form.values.fields.length - 1
+                                  }
+                                  onClick={() =>
+                                    form.reorderListItem("fields", {
+                                      from: index,
+                                      to: index + 1,
+                                    })
+                                  }
+                                >
+                                  <IconArrowDown style={baseIconStyles} />
+                                </ActionIcon>
+                                <ActionIcon
+                                  variant="light"
+                                  color="red"
+                                  onClick={() =>
+                                    form.removeListItem("fields", index)
+                                  }
+                                >
+                                  <IconTrash style={baseIconStyles} />
+                                </ActionIcon>
+                              </Group>
                             </Group>
                           </Paper>
                         );
