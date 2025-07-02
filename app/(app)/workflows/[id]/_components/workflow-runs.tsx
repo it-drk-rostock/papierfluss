@@ -1,6 +1,10 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { getWorkflowRuns, initializeWorkflowRun } from "../_actions";
+import {
+  getWorkflowRuns,
+  initializeWorkflowRun,
+  WorkflowRunsSearchParams,
+} from "../_actions";
 import { Stack, Title, Text } from "@mantine/core";
 import { WorkflowRunsTable } from "./workflow-runs-table";
 import { ButtonAction } from "@/components/button-action";
@@ -8,11 +12,14 @@ import { QuickSearchAdd } from "@/components/quick-search-add";
 
 export const WorkflowRuns = async ({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<WorkflowRunsSearchParams>;
 }) => {
   const workflowId = (await params).id;
-  const workflowData = await getWorkflowRuns(workflowId);
+  const { search } = await searchParams;
+  const workflowData = await getWorkflowRuns(workflowId, search);
 
   if (!workflowData) {
     return notFound();

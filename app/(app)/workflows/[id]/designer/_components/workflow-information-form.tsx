@@ -108,9 +108,7 @@ export const WorkflowInformationForm = ({
   const hasWorkflowRun = workflow.latestWorkflowRun !== null;
   const latestWorkflowRun = workflow.latestWorkflowRun;
 
-  console.log("Workflow data:", workflow);
-  console.log("Has workflow run:", hasWorkflowRun);
-  console.log("Latest workflow run:", latestWorkflowRun);
+  
 
   // Get all available field keys from workflow run data
   const getAllAvailableFields = () => {
@@ -121,20 +119,17 @@ export const WorkflowInformationForm = ({
     }> = [];
 
     if (!latestWorkflowRun) {
-      console.log("No latest workflow run found");
+      
       return allFields;
     }
 
-    console.log(
-      "Processing workflow run processes:",
-      latestWorkflowRun.processes
-    );
+   
 
     latestWorkflowRun.processes.forEach((processRun: any) => {
       console.log("Processing run:", processRun);
       if (processRun.data && typeof processRun.data === "object") {
         const data = processRun.data as Record<string, unknown>;
-        console.log("Process run data:", data);
+        
         Object.keys(data).forEach((key) => {
           allFields.push({
             value: key,
@@ -147,7 +142,7 @@ export const WorkflowInformationForm = ({
       }
     });
 
-    console.log("Available fields found:", allFields);
+    
     return allFields;
   };
 

@@ -11,8 +11,13 @@ import jsonLogic from "json-logic-js";
 
 import { redirect } from "next/navigation";
 
-export const getWorkflowRuns = async (workflowId: string) => {
+export const getWorkflowRuns = async (
+  workflowId: string,
+  search?: string | Record<string, string>
+) => {
   const { user } = await authQuery();
+
+  console.log(search);
 
   // Get the workflow data first
   const workflow = await prisma.workflow.findUnique({
@@ -41,7 +46,24 @@ export const getWorkflowRuns = async (workflowId: string) => {
 
   // Get all workflow runs with their processes
   const allWorkflowRuns = await prisma.workflowRun.findMany({
-    where: { workflowId: workflowId },
+    where: {
+      workflowId: workflowId,
+      ...(search &&
+        workflow.information && {
+          processes: {
+            some: {
+              OR: (
+                workflow.information as { fields: { fieldKey: string }[] }
+              ).fields.map((field) => ({
+                data: {
+                  path: [field.fieldKey],
+                  string_contains: search as string,
+                },
+              })),
+            },
+          },
+        }),
+    },
     select: {
       id: true,
       status: true,
@@ -137,6 +159,10 @@ export const getWorkflowRuns = async (workflowId: string) => {
  * @type {WorkflowRun[]}
  */
 export type WorkflowRunsProps = Awaited<ReturnType<typeof getWorkflowRuns>>;
+
+export type WorkflowRunsSearchParams = {
+  search: string;
+};
 
 /**
  * Initializes a new workflow run with process runs
