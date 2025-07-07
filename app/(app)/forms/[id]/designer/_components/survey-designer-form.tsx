@@ -149,6 +149,7 @@ export const SurveyDesignerForm = (props: {
     body: {
       currentForm: creator?.JSON,
     },
+
     onFinish: (prompt, completion) => {
       try {
         const surveyJSON = JSON.parse(completion);

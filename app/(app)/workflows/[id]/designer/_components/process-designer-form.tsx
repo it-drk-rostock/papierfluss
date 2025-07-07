@@ -201,6 +201,7 @@ export const ProcessDesignerForm = (props: {
         position="right"
         title="KI Formular Generator"
         padding="md"
+        zIndex={1000}
       >
         <Stack>
           <form onSubmit={handleFormSubmit}>
