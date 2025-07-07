@@ -42,7 +42,7 @@ const FormNode = ({
   const process = node.processData;
 
   return (
-    <Stack gap="md">
+    <Stack gap="md" mb="md">
       <div {...elementProps}>
         <Group wrap="nowrap" justify="space-between">
           <div style={{ flex: 1 }}>
@@ -54,7 +54,7 @@ const FormNode = ({
             )}
           </div>
           {(hasChildren || !process.isCategory) && (
-            <ActionIcon variant="subtle" size="lg">
+            <ActionIcon variant="light" size="lg" disabled={!process.schema}>
               {expanded ? (
                 <IconChevronUp size={20} />
               ) : (
@@ -82,7 +82,8 @@ const FormNode = ({
                 />
               ) : (
                 <Text c="dimmed" ta="center" py="xl">
-                  Kein Formular verfügbar
+                  Kein Formular verfügbar oder fehlende Berechtigung dieses
+                  auszufüllen bzw. zu sehen
                 </Text>
               )}
             </Paper>
