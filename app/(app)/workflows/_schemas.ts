@@ -20,13 +20,21 @@ export const workflowSchema = z.object({
   }),
   isPublic: z.boolean().default(false),
   isActive: z.boolean().default(true),
+  showInitializeForm: z.boolean().default(false),
   editWorkflowPermissions: z.string().optional(),
   submitProcessPermissions: z.string().optional(),
   information: workflowInformationSchema.optional(),
+  initializeProcess: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+    })
+    .optional()
+    .nullable(),
   responsibleTeam: z
     .object({
-      id: z.string().optional().nullable(),
-      name: z.string().optional().nullable(),
+      id: z.string(),
+      name: z.string(),
     })
     .optional()
     .nullable(),

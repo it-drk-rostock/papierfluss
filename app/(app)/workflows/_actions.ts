@@ -15,6 +15,42 @@ import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
 import jsonLogic from "json-logic-js";
 
+export const getWorkflowProcesses = async (id: string, search?: string) => {
+  const { user } = await authQuery();
+
+  const whereClause = {
+    workflowId: id,
+    ...(search ? {
+      name: {
+        contains: search,
+        mode: 'insensitive' as const,
+      },
+    } : {}),
+  };
+
+  if (user.role === "admin") {
+    return prisma.process.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+  }
+
+  const processes = await prisma.process.findMany({
+    where: whereClause,
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return processes;
+};
+
+export type ProcessProps = Awaited<ReturnType<typeof getWorkflowProcesses>>;
+
 /**
  * Creates a new form in the database.
  *
@@ -31,8 +67,14 @@ export const createWorkflow = authActionClient
     event: "createWorkflowAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { name, description, isPublic, isActive, responsibleTeam } =
-      parsedInput;
+    const {
+      name,
+      description,
+      isPublic,
+      isActive,
+      responsibleTeam,
+      initializeProcess,
+    } = parsedInput;
 
     try {
       if (
@@ -49,6 +91,9 @@ export const createWorkflow = authActionClient
           isActive,
           editWorkflowPermissions: "true",
           submitProcessPermissions: "true",
+          ...(initializeProcess?.id && {
+            initializeProcessId: initializeProcess.id,
+          }),
           ...(responsibleTeam?.id && {
             responsibleTeamId: responsibleTeam.id,
           }),
@@ -89,6 +134,7 @@ export const updateWorkflow = authActionClient
       editWorkflowPermissions,
       submitProcessPermissions,
       responsibleTeam,
+      initializeProcess,
     } = parsedInput;
 
     try {
@@ -144,6 +190,9 @@ export const updateWorkflow = authActionClient
           isActive,
           editWorkflowPermissions,
           submitProcessPermissions,
+          ...(initializeProcess?.id && {
+            initializeProcessId: initializeProcess.id,
+          }),
           responsibleTeamId: responsibleTeam?.id,
         },
       });
@@ -266,11 +315,17 @@ export const getWorkflows = async () => {
         id: true,
         name: true,
         description: true,
-
         isActive: true,
         isPublic: true,
         editWorkflowPermissions: true,
         submitProcessPermissions: true,
+        initializeProcess: {
+          select: {
+            id: true,
+            name: true,
+            schema: true,
+          },
+        },
         responsibleTeam: {
           select: {
             id: true,
@@ -307,11 +362,17 @@ export const getWorkflows = async () => {
       id: true,
       name: true,
       description: true,
-
       isActive: true,
       isPublic: true,
       editWorkflowPermissions: true,
       submitProcessPermissions: true,
+      initializeProcess: {
+        select: {
+          id: true,
+          name: true,
+          schema: true,
+        },
+      },
       responsibleTeam: {
         select: {
           id: true,

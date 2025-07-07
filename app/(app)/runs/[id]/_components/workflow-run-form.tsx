@@ -45,7 +45,6 @@ export const WorkflowRunForm = ({
 
   const pdfDocOptions: IDocOptions = {
     fontSize: 12,
-    
   };
 
   const savePdf = (surveyData: Record<string, unknown>) => {

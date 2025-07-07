@@ -22,6 +22,7 @@ export type EntitySelectProps = {
   initialValue?: { id: string; [key: string]: any } | null;
   error?: string;
   action: any;
+  actionParams?: any; // Additional parameters to pass to the action
   displayKeys: string[];
   dataKey: string | string[] | Record<string, string>;
 };
@@ -33,6 +34,7 @@ export const EntitySelect = ({
   initialValue,
   error,
   action,
+  actionParams,
   displayKeys,
   dataKey,
 }: EntitySelectProps) => {
@@ -49,12 +51,12 @@ export const EntitySelect = ({
   const [debounced] = useDebouncedValue(search, 300);
 
   const { isLoading, data } = useQuery({
-    queryKey: [formField, debounced],
-    queryFn: () => action(debounced),
+    queryKey: [formField, debounced, actionParams],
+    queryFn: () => actionParams ? action(actionParams, debounced) : action(debounced),
     enabled: firstOpen,
   });
 
-  const items = Array.isArray(data) ? data : data?.[dataKey] || [];
+  const items = Array.isArray(data) ? data : (typeof dataKey === 'string' ? data?.[dataKey] : data) || [];
 
   const combobox = useCombobox({
     onDropdownClose: () => {
@@ -101,7 +103,7 @@ export const EntitySelect = ({
         store={combobox}
         withinPortal={true}
         onOptionSubmit={(val) => {
-          const selectedEntity = items.find((entity) => entity.id === val);
+          const selectedEntity = items.find((entity: any) => entity.id === val);
           setValue(selectedEntity);
           formAction.setFieldValue(formField, getFormValue(selectedEntity));
           combobox.closeDropdown();
@@ -133,7 +135,7 @@ export const EntitySelect = ({
                 <Loader size="sm" />
               </Combobox.Empty>
             ) : items.length > 0 ? (
-              items.map((item) => (
+              items.map((item: any) => (
                 <Combobox.Option value={item.id} key={item.id}>
                   {getDisplayValue(item)}
                 </Combobox.Option>

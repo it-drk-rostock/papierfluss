@@ -17,8 +17,13 @@ interface ProcessRunData {
   status: ProcessStatus;
   data: Record<string, unknown> | null;
   process: {
-    schema: Record<string, unknown> | null;
+    id: string;
     name: string;
+    schema: Record<string, unknown> | null;
+    order: number;
+    submitProcessPermissions: string | null;
+    teams: { name: string }[];
+    responsibleTeam: { name: string } | null;
   };
 }
 
@@ -35,6 +40,13 @@ interface WorkflowData {
   name: string;
   description: string | null;
   information: Record<string, unknown> | null;
+  teams: { name: string }[];
+  responsibleTeam: { name: string } | null;
+  initializeProcess?: {
+    id: string;
+    name: string;
+    schema: Record<string, unknown> | null;
+  } | null;
 }
 
 interface WorkflowRunsTableProps {

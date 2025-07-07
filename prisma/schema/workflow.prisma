@@ -1,9 +1,10 @@
 model Workflow {
-    id                       String        @id @default(uuid())
-    name                     String
-    description              String?
-    isActive                 Boolean       @default(true)
-    isPublic                 Boolean       @default(false)
+    id          String  @id @default(uuid())
+    name        String
+    description String?
+    isActive    Boolean @default(true)
+    isPublic    Boolean @default(false)
+
     createdAt                DateTime      @default(now())
     updatedAt                DateTime      @updatedAt
     editWorkflowPermissions  String?
@@ -12,6 +13,8 @@ model Workflow {
     teams                    Team[]
     responsibleTeamId        String?
     responsibleTeam          Team?         @relation(fields: [responsibleTeamId], references: [id], onDelete: SetNull, name: "ResponsibleTeam")
+    initializeProcess        Process?      @relation("InitializeProcess", fields: [initializeProcessId], references: [id], onDelete: SetNull)
+    initializeProcessId      String?       @unique
     processes                Process[]
     runs                     WorkflowRun[]
     initializeN8nWorkflows   N8nWorkflow[] @relation("InitializeWorkflows")
@@ -51,8 +54,9 @@ model Process {
     children Process[] @relation("ProcessHierarchy")
 
     // Dependencies relation (only for actual processes, not categories)
-    dependencies       Process[] @relation("ProcessDependencies")
-    dependentProcesses Process[] @relation("ProcessDependencies")
+    dependencies        Process[] @relation("ProcessDependencies")
+    dependentProcesses  Process[] @relation("ProcessDependencies")
+    initializeWorkflow Workflow? @relation("InitializeProcess")
 
     @@index([workflowId])
     @@index([parentId])

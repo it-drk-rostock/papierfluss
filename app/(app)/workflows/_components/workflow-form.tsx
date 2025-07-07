@@ -8,6 +8,7 @@ import {
   updateWorkflow,
   WorkflowProps,
   getWorkflowRunsForPermissions,
+  getWorkflowProcesses,
 } from "../_actions";
 import {
   Button,
@@ -38,6 +39,7 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
           editWorkflowPermissions: workflow.editWorkflowPermissions,
           submitProcessPermissions: workflow.submitProcessPermissions,
           responsibleTeam: workflow.responsibleTeam,
+          initializeProcess: workflow.initializeProcess,
         }
       : {
           name: "",
@@ -47,6 +49,10 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
           editWorkflowPermissions: "",
           submitProcessPermissions: "",
           responsibleTeam: {
+            id: "",
+            name: "",
+          },
+          initializeProcess: {
             id: "",
             name: "",
           },
@@ -86,8 +92,19 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
           formField="responsibleTeam"
           label="Verantwortlicher Bereich"
           initialValue={formForm.values.responsibleTeam}
-          error={formForm.errors.responsibleTeam}
+          error={formForm.errors.responsibleTeam as string}
           action={getTeams}
+          displayKeys={["name"]}
+          dataKey={{ id: "id", name: "name" }}
+        />
+        <EntitySelect
+          formActionName="create-workflow"
+          formField="initializeProcess"
+          label="Initialisierungsprozess"
+          initialValue={formForm.values.initializeProcess}
+          error={formForm.errors.initializeProcess as string}
+          action={getWorkflowProcesses}
+          actionParams={workflow.id}
           displayKeys={["name"]}
           dataKey={{ id: "id", name: "name" }}
         />
@@ -99,7 +116,6 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
           label="Aktiv"
           {...formForm.getInputProps("isActive", { type: "checkbox" })}
         />
-
         {workflow && (
           <>
             {workflowRuns && workflowRuns.length === 0 && (
@@ -127,7 +143,6 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
             />
           </>
         )}
-
         <Group mt="lg" justify="flex-end">
           <Button loading={status === "executing"} type="submit">
             {workflow ? "Speichern" : "Hinzufügen"}
