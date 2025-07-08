@@ -1,5 +1,5 @@
 "use client";
-import { AppShell, Burger, NavLink, Stack, Group } from "@mantine/core";
+import { AppShell, NavLink, Stack, Group, ActionIcon } from "@mantine/core";
 import React from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { Branding } from "./branding";
@@ -7,12 +7,14 @@ import { UserButton } from "./user-button";
 import {
   IconClipboard,
   IconHome,
+  IconLayoutSidebarRightExpand,
   IconTopologyRing,
   IconUserShield,
 } from "@tabler/icons-react";
 import Link from "next/link";
 
 import { useAuthSession } from "@/hooks/use-auth-session";
+import { baseIconStyles } from "@/constants/base-icon-styles";
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
@@ -30,21 +32,22 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       padding="md"
     >
       <AppShell.Header>
-        <Group h="100%" px="md">
-          <Branding />
+        <Group h="100%" px="md" w="100%" justify="space-between">
+          <Group>
+            <ActionIcon
+              size="lg"
+              color="gray"
+              onClick={mobileOpened ? toggleMobile : toggleDesktop}
+              variant="subtle"
+            >
+              <IconLayoutSidebarRightExpand
+                style={baseIconStyles}
+                stroke={1.5}
+              />
+            </ActionIcon>
+            <Branding />
+          </Group>
           <UserButton />
-          <Burger
-            opened={mobileOpened}
-            onClick={toggleMobile}
-            hiddenFrom="sm"
-            size="sm"
-          />
-          <Burger
-            opened={desktopOpened}
-            onClick={toggleDesktop}
-            visibleFrom="sm"
-            size="sm"
-          />
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
