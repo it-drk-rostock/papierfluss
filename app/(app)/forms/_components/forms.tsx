@@ -1,11 +1,16 @@
 import React from "react";
 import { Stack, Group } from "@mantine/core";
-import { getForms } from "../_actions";
+import { FormsSearchParams, getForms } from "../_actions";
 import { FormCard } from "./form-card";
 import { EmptyState } from "@/components/empty-state";
 
-export const Forms = async () => {
-  const forms = await getForms();
+export const Forms = async ({
+  searchParams,
+}: {
+  searchParams: Promise<FormsSearchParams>;
+}) => {
+  const { search } = await searchParams;
+  const forms = await getForms(search);
 
   return (
     <Stack align="center" gap="xl">
