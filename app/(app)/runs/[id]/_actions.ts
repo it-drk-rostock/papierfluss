@@ -119,6 +119,7 @@ export const getWorkflowRun = async (id: string) => {
                 theme: true,
                 parentId: true,
                 submitProcessPermissions: true,
+                viewProcessPermissions: true,
                 responsibleTeam: {
                   select: {
                     name: true,
@@ -211,6 +212,7 @@ export const getWorkflowRun = async (id: string) => {
               theme: true,
               parentId: true,
               submitProcessPermissions: true,
+              viewProcessPermissions: true,
               responsibleTeam: {
                 select: {
                   name: true,
@@ -267,6 +269,76 @@ export const getWorkflowRun = async (id: string) => {
 
   if (!hasPermission && !workflowRun.workflow.isPublic) {
     throw new Error("Keine Berechtigung zum Anzeigen dieses Workflow Runs");
+  }
+
+  // Apply view permissions filtering for regular users (not admins)
+  if (user.role === "user" || user.role === "moderator") {
+    // Get all process data for permission context
+    const allProcessData = Object.assign(
+      {},
+      ...workflowRun.processes
+        .filter((p) => p.data && typeof p.data === "object")
+        .map((p) => p.data)
+    );
+
+    // Filter processes based on view permissions
+    workflowRun.processes = workflowRun.processes.map((processRun) => {
+      const process = processRun.process;
+
+      // If no view permissions are set, allow view (backward compatibility)
+      if (!process.viewProcessPermissions) {
+        return processRun;
+      }
+
+      try {
+        const context = {
+          user: {
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            id: user.id,
+            teams: user.teams?.map((t) => t.name) ?? [],
+          },
+          process: {
+            responsibleTeam: process.responsibleTeam?.name,
+            teams: process.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
+            teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
+          },
+          data: allProcessData,
+        };
+
+        const rules = JSON.parse(process.viewProcessPermissions);
+        const hasViewPermission = jsonLogic.apply(rules, context);
+
+        // If user doesn't have view permission, remove schema and data
+        if (hasViewPermission !== true) {
+          return {
+            ...processRun,
+            data: null,
+            process: {
+              ...process,
+              schema: null,
+            },
+          };
+        }
+
+        return processRun;
+      } catch (error) {
+        // If there's an error parsing permissions, deny access to form data
+        console.error("Error checking view permissions:", error);
+        return {
+          ...processRun,
+          data: null,
+          process: {
+            ...process,
+            schema: null,
+          },
+        };
+      }
+    });
   }
 
   return workflowRun;

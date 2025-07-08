@@ -10,7 +10,6 @@ applyPlugin(jsPDF);
 
 import { Tabulator } from "survey-analytics/survey.analytics.tabulator";
 import { Model } from "survey-core";
-import { ButtonLink } from "@/components/button-link";
 import { useRouter } from "next/navigation";
 
 export const FormSubmissionsTable = ({
@@ -32,7 +31,6 @@ export const FormSubmissionsTable = ({
 
     // Filter out entries where data is null
     const validData = data.filter((submission) => submission.data !== null);
-    console.log("Valid data entries:", validData);
 
     if (validData.length > 0) {
       try {
@@ -42,7 +40,6 @@ export const FormSubmissionsTable = ({
           id: submission.id,
           status: submission.status,
         }));
-        console.log("Transformed data:", transformedData);
 
         const survey = new Model(json);
         const panel = new Tabulator(survey, transformedData, {

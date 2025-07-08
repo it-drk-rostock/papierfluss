@@ -47,15 +47,15 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
 
   return (
     <Card key={form.id} padding="lg" withBorder w={300}>
-      <Avatar color="red" radius="sm" size="xl">
-        {form.icon && <DynamicIcon name={form.icon} size={32} />}
-      </Avatar>
       <Title order={2}>{form.title}</Title>
       <Text c="dimmed">{form.description}</Text>
-      <Badge color="gray">{form.isPublic ? "Öffentlich" : "Privat"}</Badge>
-      <Badge color={form.isActive ? "green" : "red"}>
-        {form.isActive ? "Aktiv" : "Inaktiv"}
-      </Badge>
+      <Group gap="xs">
+        <Badge color="gray">{form.isPublic ? "Öffentlich" : "Privat"}</Badge>
+        <Badge color={form.isActive ? "green" : "red"}>
+          {form.isActive ? "Aktiv" : "Inaktiv"}
+        </Badge>
+      </Group>
+
       {form.responsibleTeam && (
         <Text>Verantwortlicher Bereich: {form.responsibleTeam?.name}</Text>
       )}

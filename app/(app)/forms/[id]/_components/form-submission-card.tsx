@@ -1,9 +1,8 @@
 "use client";
 
 import { MenuItemLink } from "@/components/link-menu-item";
-import { Card, Title, Text, Divider, Menu, Button, Badge } from "@mantine/core";
+import { Card, Title, Divider, Menu, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-
 import { FormProps } from "../_actions";
 import { FormSubmissionStatusBadge } from "@/components/form-submission-status-badge";
 
@@ -18,11 +17,6 @@ export const FormSubmissionCard = ({
     <Card key={submission.id} padding="lg" withBorder w={300}>
       <Title order={2}>{submission.submittedBy?.name ?? "Unbekannt"}</Title>
       <FormSubmissionStatusBadge status={submission.status} />
-      {submission.isExample && (
-        <Badge color="yellow" variant="light">
-          Beispielformular bitte nicht bearbeiten
-        </Badge>
-      )}
       <Card.Section>
         <Divider my="lg" />
       </Card.Section>

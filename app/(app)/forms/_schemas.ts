@@ -9,7 +9,6 @@ export const formSchema = z.object({
   description: z.string().min(1, {
     message: requiredFieldMessage,
   }),
-  icon: z.string().optional(),
   isPublic: z.boolean().default(false),
   isActive: z.boolean().default(true),
   editFormPermissions: z.string().optional(),

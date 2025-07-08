@@ -67,7 +67,7 @@ export const getForm = async (id: string) => {
             id: true,
             data: true,
             status: true,
-            isExample: true,
+            
             submittedBy: {
               select: {
                 id: true,
@@ -109,7 +109,7 @@ export const getForm = async (id: string) => {
           id: true,
           status: true,
           data: true,
-          isExample: true,
+          
           submittedBy: {
             select: {
               id: true,

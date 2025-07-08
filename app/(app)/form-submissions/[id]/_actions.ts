@@ -57,7 +57,6 @@ export const getFormSubmission = async (id: string) => {
         archivedNotes: true,
         status: true,
         data: true,
-        isExample: true,
       },
     });
   }
@@ -91,7 +90,6 @@ export const getFormSubmission = async (id: string) => {
       status: true,
       data: true,
       submittedById: true,
-      isExample: true,
     },
   });
 
@@ -111,7 +109,7 @@ export const getFormSubmission = async (id: string) => {
     };
 
     const rules = await JSON.parse(form.form.reviewFormPermissions || "{}");
-    
+
     const hasPermission = await jsonLogic.apply(rules, submissionContext);
 
     if (!hasPermission) {

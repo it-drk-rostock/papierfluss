@@ -9,6 +9,7 @@ import {
   updateFormSchema,
 } from "./_schemas";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
@@ -31,7 +32,7 @@ export const createForm = authActionClient
     event: "createFormAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { title, description, icon, isPublic, isActive, responsibleTeam } =
+    const { title, description, isPublic, isActive, responsibleTeam } =
       parsedInput;
 
     try {
@@ -45,11 +46,10 @@ export const createForm = authActionClient
         data: {
           title,
           description,
-          icon,
           isPublic,
           isActive,
-          editFormPermissions: "(1 = 1)",
-          reviewFormPermissions: "(1 = 1)",
+          editFormPermissions: "true",
+          reviewFormPermissions: "true",
           responsibleTeamId: responsibleTeam?.id,
           createdById: ctx.session.user.id,
         },
@@ -84,7 +84,6 @@ export const updateForm = authActionClient
       id,
       title,
       description,
-      icon,
       isPublic,
       isActive,
       editFormPermissions,
@@ -139,7 +138,6 @@ export const updateForm = authActionClient
         data: {
           title,
           description,
-          icon,
           isPublic,
           isActive,
           editFormPermissions,
@@ -148,7 +146,6 @@ export const updateForm = authActionClient
         },
       });
     } catch (error) {
-      console.log(error);
       throw formatError(error);
     }
 
@@ -250,15 +247,8 @@ export const fillOutForm = authActionClient
           where: { id: parsedInput.id },
           select: {
             isActive: true,
-            submissions: {
-              where: {
-                isExample: true,
-              },
-            },
           },
         });
-
-        const exampleSubmissionExists = form?.submissions.length > 0;
 
         if (!form?.isActive) {
           throw new Error("Formular ist nicht aktiviert");
@@ -268,7 +258,6 @@ export const fillOutForm = authActionClient
           data: {
             formId: parsedInput.id,
             submittedById: ctx.session.user.id,
-            isExample: exampleSubmissionExists ? false : true,
           },
         });
       });
@@ -307,97 +296,114 @@ export type UserSearchParams = {
  * }>>} Array of form objects matching the access criteria
  * @throws {Error} If the query fails or if the user is not authorized
  */
-export const getForms = async () => {
+export const getForms = async (search?: string) => {
   const { user } = await authQuery();
 
-  if (user.role === "admin") {
-    return prisma.form.findMany({
+  const selectClause = {
+    id: true,
+    title: true,
+    description: true,
+    schema: true,
+    isActive: true,
+    isPublic: true,
+    editFormPermissions: true,
+    reviewFormPermissions: true,
+    responsibleTeam: {
       select: {
         id: true,
-        title: true,
-        description: true,
-        icon: true,
-        schema: true,
-        isActive: true,
-        isPublic: true,
-        editFormPermissions: true,
-        reviewFormPermissions: true,
-        responsibleTeam: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        teams: {
-          select: {
-            id: true,
-            name: true,
-            contactEmail: true,
-          },
-        },
-        submissions: {
-          select: {
-            data: true,
-          },
-          where: { isExample: true },
-          take: 1,
-        },
+        name: true,
       },
+    },
+    teams: {
+      select: {
+        id: true,
+        name: true,
+        contactEmail: true,
+      },
+    },
+    submissions: {
+      select: {
+        data: true,
+      },
+      where: { status: "completed" },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 1,
+    },
+  } as const;
+
+  if (user.role === "admin") {
+    const whereClause = search
+      ? {
+          OR: [
+            { title: { contains: search, mode: Prisma.QueryMode.insensitive } },
+            {
+              description: {
+                contains: search,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+          ],
+        }
+      : {};
+
+    return prisma.form.findMany({
+      where: whereClause,
+      select: selectClause,
     });
   }
 
-  const forms = await prisma.form.findMany({
-    where: {
-      OR: [
-        { isPublic: true },
-        {
-          teams: {
-            some: {
-              users: {
-                some: { id: user.id },
-              },
+  // For non-admin users
+  const permissionConditions = {
+    OR: [
+      { isPublic: true },
+      {
+        teams: {
+          some: {
+            users: {
+              some: { id: user.id },
             },
           },
         },
-      ],
-    },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      icon: true,
-      schema: true,
-      isActive: true,
-      isPublic: true,
-      editFormPermissions: true,
-      reviewFormPermissions: true,
-      responsibleTeam: {
-        select: {
-          id: true,
-          name: true,
-        },
       },
-      teams: {
-        select: {
-          id: true,
-          name: true,
-          contactEmail: true,
-        },
-      },
-      submissions: {
-        select: {
-          data: true,
-        },
-        where: { isExample: true },
-        take: 1,
-      },
-    },
+    ],
+  };
+
+  const whereClause = search
+    ? {
+        AND: [
+          permissionConditions,
+          {
+            OR: [
+              {
+                title: { contains: search, mode: Prisma.QueryMode.insensitive },
+              },
+              {
+                description: {
+                  contains: search,
+                  mode: Prisma.QueryMode.insensitive,
+                },
+              },
+            ],
+          },
+        ],
+      }
+    : permissionConditions;
+
+  const forms = await prisma.form.findMany({
+    where: whereClause,
+    select: selectClause,
   });
 
   return forms;
 };
 
 export type FormProps = Awaited<ReturnType<typeof getForms>>;
+
+export type FormsSearchParams = {
+  search: string;
+};
 
 export const removeTeam = authActionClient
   .schema(removeTeamSchema)

@@ -97,17 +97,19 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
           displayKeys={["name"]}
           dataKey={{ id: "id", name: "name" }}
         />
-        <EntitySelect
-          formActionName="create-workflow"
-          formField="initializeProcess"
-          label="Initialisierungsprozess"
-          initialValue={formForm.values.initializeProcess}
-          error={formForm.errors.initializeProcess as string}
-          action={getWorkflowProcesses}
-          actionParams={workflow.id}
-          displayKeys={["name"]}
-          dataKey={{ id: "id", name: "name" }}
-        />
+        {workflow && (
+          <EntitySelect
+            formActionName="create-workflow"
+            formField="initializeProcess"
+            label="Initialisierungsprozess"
+            initialValue={formForm.values.initializeProcess}
+            error={formForm.errors.initializeProcess as string}
+            action={getWorkflowProcesses}
+            actionParams={workflow.id}
+            displayKeys={["name"]}
+            dataKey={{ id: "id", name: "name" }}
+          />
+        )}
         <Checkbox
           label="Öffentlich"
           {...formForm.getInputProps("isPublic", { type: "checkbox" })}

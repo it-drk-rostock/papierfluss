@@ -2,7 +2,6 @@ model Form {
     id          String  @id @default(uuid())
     title       String
     description String?
-    icon        String?
     schema      Json?
     theme       Json?
     isPublic    Boolean @default(false)
@@ -35,7 +34,6 @@ model FormSubmission {
     id             String           @id @default(uuid())
     data           Json?
     status         SubmissionStatus @default(ongoing)
-    isExample      Boolean          @default(false)
     reviewNotes    String? // Notes for when sending back for revision (shown in ongoing status)
     rejectedNotes  String? // Final rejection reason (shown in rejected status)
     completedNotes String? // Final approval notes (shown in completed status)
