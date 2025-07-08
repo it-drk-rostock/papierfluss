@@ -28,7 +28,6 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           id: form.id,
           title: form.title,
           description: form.description,
-          icon: form.icon,
           isPublic: form.isPublic,
           isActive: form.isActive,
           editFormPermissions: form.editFormPermissions,
@@ -38,7 +37,6 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
       : {
           title: "",
           description: "",
-          icon: "",
           isPublic: false,
           isActive: true,
           editFormPermissions: "",
@@ -62,11 +60,6 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
       })}
     >
       <Stack gap="sm">
-        <IconPicker
-          formName="create-form"
-          fieldName="icon"
-          value={formForm.values.icon}
-        />
         <TextInput label="Titel" {...formForm.getInputProps("title")} />
         <Textarea
           label="Beschreibung"
@@ -95,9 +88,9 @@ export const FormForm = ({ form }: { form?: FormProps[0] }) => {
           <>
             {form.submissions.length === 0 && (
               <Alert color="yellow" variant="light">
-                Es wurde noch kein Beispielformular erstellt. Das heißt, die
-                dynamischen Felder von den Formularen sind in den Berechtigungen
-                nicht auswählbar.
+                Es wurde noch keine Formular Einreichung erstellt. Das heißt,
+                die dynamischen Felder von den Formularen sind in den
+                Berechtigungen nicht auswählbar.
               </Alert>
             )}
             <PermissionBuilder

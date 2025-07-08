@@ -31,7 +31,7 @@ export const createForm = authActionClient
     event: "createFormAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { title, description, icon, isPublic, isActive, responsibleTeam } =
+    const { title, description, isPublic, isActive, responsibleTeam } =
       parsedInput;
 
     try {
@@ -45,11 +45,10 @@ export const createForm = authActionClient
         data: {
           title,
           description,
-          icon,
           isPublic,
           isActive,
-          editFormPermissions: "(1 = 1)",
-          reviewFormPermissions: "(1 = 1)",
+          editFormPermissions: "true",
+          reviewFormPermissions: "true",
           responsibleTeamId: responsibleTeam?.id,
           createdById: ctx.session.user.id,
         },
@@ -84,7 +83,6 @@ export const updateForm = authActionClient
       id,
       title,
       description,
-      icon,
       isPublic,
       isActive,
       editFormPermissions,
@@ -139,7 +137,6 @@ export const updateForm = authActionClient
         data: {
           title,
           description,
-          icon,
           isPublic,
           isActive,
           editFormPermissions,
@@ -148,7 +145,6 @@ export const updateForm = authActionClient
         },
       });
     } catch (error) {
-      console.log(error);
       throw formatError(error);
     }
 
@@ -250,15 +246,8 @@ export const fillOutForm = authActionClient
           where: { id: parsedInput.id },
           select: {
             isActive: true,
-            submissions: {
-              where: {
-                isExample: true,
-              },
-            },
           },
         });
-
-        const exampleSubmissionExists = form?.submissions.length > 0;
 
         if (!form?.isActive) {
           throw new Error("Formular ist nicht aktiviert");
@@ -268,7 +257,6 @@ export const fillOutForm = authActionClient
           data: {
             formId: parsedInput.id,
             submittedById: ctx.session.user.id,
-            isExample: exampleSubmissionExists ? false : true,
           },
         });
       });
@@ -339,7 +327,10 @@ export const getForms = async () => {
           select: {
             data: true,
           },
-          where: { isExample: true },
+          where: { status: "completed" },
+          orderBy: {
+            createdAt: "desc",
+          },
           take: 1,
         },
       },
@@ -365,7 +356,6 @@ export const getForms = async () => {
       id: true,
       title: true,
       description: true,
-      icon: true,
       schema: true,
       isActive: true,
       isPublic: true,
@@ -388,7 +378,10 @@ export const getForms = async () => {
         select: {
           data: true,
         },
-        where: { isExample: true },
+        where: { status: "completed" },
+        orderBy: {
+          createdAt: "desc",
+        },
         take: 1,
       },
     },

@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma";
 import { authActionClient } from "@/server/utils/action-clients";
 import { authQuery } from "@/server/utils/auth-query";
 import { formatError } from "@/utils/format-error";
-import jsonata from "jsonata";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 import {
