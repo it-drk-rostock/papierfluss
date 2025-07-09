@@ -1,9 +1,10 @@
-// src/app/api/chat/route.ts
-import { openai } from "@ai-sdk/openai";
-import { streamText } from "ai";
+import { generateText, streamText } from "ai";
 import { authQuery } from "@/server/utils/auth-query";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+
 export async function POST(req: Request) {
   await authQuery();
+
   // Parse the request body
   const { prompt, currentForm } = await req.json();
 
@@ -14,9 +15,17 @@ export async function POST(req: Request) {
       )}\n\nRequested changes: ${prompt}`
     : `Create a new form with these requirements: ${prompt}`;
 
-  const result = await streamText({
-    model: openai("gpt-4.1-mini"),
-    system: `You are an expert SurveyJS form builder assistant. Your role is to analyze requests and output ONLY valid SurveyJS JSON configurations.
+  try {
+    // Create OpenAI compatible client
+    const model = createOpenAICompatible({
+      baseURL: "https://openai.inference.de-txl.ionos.com/v1/chat/completions",
+      name: "meta-llama/CodeLlama-13b-Instruct-hf",
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const response = streamText({
+      model: model.chatModel("meta-llama/CodeLlama-13b-Instruct-hf"),
+      /* system: `You are an expert SurveyJS form builder assistant. Your role is to analyze requests and output ONLY valid SurveyJS JSON configurations.
 
 Rules:
 1. If input contains existing form JSON:
@@ -36,9 +45,32 @@ Rules:
    - Uses German language for all labels and text
    - Includes proper page organization and layout
 
-DO NOT include any explanations or text outside the JSON structure. Return ONLY the valid SurveyJS JSON object.`,
-    prompt: contextPrompt,
-  });
+DO NOT include any explanations or text outside the JSON structure. Return ONLY the valid SurveyJS JSON object.`, */
+      prompt: contextPrompt,
+      temperature: 0.7, // Add some creativity while keeping responses focused
+    });
 
-  return result.toDataStreamResponse();
+    if (!response || !response.text) {
+      throw new Error("No response received from AI service");
+    }
+
+    return response.toDataStreamResponse();
+  } catch (error) {
+    console.error("AI Service Error:", error);
+
+    // Return a proper error response
+    return new Response(
+      JSON.stringify({
+        error: "Failed to generate form",
+        message:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  }
 }
