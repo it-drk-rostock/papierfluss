@@ -19,8 +19,4 @@ export const formSubmissionStatus = {
     label: "Abgeschlossen",
     color: "green",
   },
-  archived: {
-    label: "Archiviert",
-    color: "black",
-  },
 };

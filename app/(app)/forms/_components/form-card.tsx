@@ -4,7 +4,6 @@ import { DrawerMenuItem } from "@/components/drawer-menu-item";
 import { MenuItemLink } from "@/components/link-menu-item";
 import {
   Card,
-  Avatar,
   Title,
   Text,
   Divider,
@@ -29,7 +28,6 @@ import {
 import { deleteForm, fillOutForm, FormProps, removeTeam } from "../_actions";
 import { ButtonAction } from "@/components/button-action";
 import { ModalMenuItem } from "@/components/modal-menu-item";
-import { DynamicIcon } from "@/components/dynamic-icon";
 import { FormForm } from "./form-form";
 import { SurveyPreview } from "@/components/survey-preview";
 import { MenuItemAction } from "@/components/menu-item-action";

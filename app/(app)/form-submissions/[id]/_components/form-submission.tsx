@@ -25,6 +25,7 @@ export const FormSubmission = async ({
     rejectedNotes: submission.rejectedNotes,
     completedNotes: submission.completedNotes,
     archivedNotes: submission.archivedNotes,
+    submittedNotes: submission.submittedNotes,
   };
 
   return (

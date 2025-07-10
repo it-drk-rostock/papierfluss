@@ -24,6 +24,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { showNotification } from "@/utils/notification";
 import { IDocOptions, SurveyPDF } from "survey-pdf";
+import { FormSubmissionSubmitForm } from "./form-submission-archive-form";
 
 export const FormSubmissionForm = ({
   submission,
@@ -178,7 +179,7 @@ export const FormSubmissionForm = ({
       innerCss: "sd-btn save-form",
       action: () => {
         const dataToSave = { ...model.data };
-        console.log("Saving form data:", dataToSave);
+
         executeUpdate({ id: submission.id, data: dataToSave });
       },
     });
@@ -190,15 +191,7 @@ export const FormSubmissionForm = ({
         modals.open({
           closeOnClickOutside: false,
           title: "Formular einreichen",
-          children: (
-            <ButtonAction
-              fullWidth
-              action={submitFormSubmission}
-              values={{ id: submission.id, data: model.data }}
-            >
-              Formular einreichen
-            </ButtonAction>
-          ),
+          children: <FormSubmissionSubmitForm id={submission.id} />,
         });
       },
     });

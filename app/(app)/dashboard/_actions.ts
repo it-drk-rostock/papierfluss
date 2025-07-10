@@ -48,9 +48,7 @@ export const getFormSubmissions = async () => {
   return prisma.formSubmission.findMany({
     where: {
       submittedById: user.id,
-      status: {
-        not: "archived",
-      },
+      isArchived: false,
     },
     select: {
       id: true,

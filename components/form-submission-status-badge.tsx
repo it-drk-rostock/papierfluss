@@ -1,7 +1,7 @@
 import React from "react";
 import { formSubmissionStatus } from "@/constants/form-submission-status";
 import { Badge } from "@mantine/core";
-import { SubmissionStatus } from "@prisma/client";
+import { SubmissionStatus } from "@prisma-client/client";
 
 export const FormSubmissionStatusBadge = ({
   status,

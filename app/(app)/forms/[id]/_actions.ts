@@ -4,6 +4,12 @@ import prisma from "@/lib/prisma";
 import { authQuery } from "@/server/utils/auth-query";
 import { notFound } from "next/navigation";
 import jsonLogic from "json-logic-js";
+import { formatError } from "@/utils/format-error";
+import { revalidatePath } from "next/cache";
+import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
+import { authActionClient } from "@/server/utils/action-clients";
+import { idSchema } from "@/schemas/id-schema";
+import { z } from "zod";
 
 /**
  * Retrieves a form from the database based on user's role and access permissions.
@@ -59,15 +65,13 @@ export const getForm = async (id: string) => {
         schema: true,
         submissions: {
           where: {
-            status: {
-              not: "archived",
-            },
+            isArchived: false,
           },
           select: {
             id: true,
             data: true,
             status: true,
-            
+
             submittedBy: {
               select: {
                 id: true,
@@ -101,15 +105,13 @@ export const getForm = async (id: string) => {
       schema: true,
       submissions: {
         where: {
-          status: {
-            not: "archived",
-          },
+          isArchived: false,
         },
         select: {
           id: true,
           status: true,
           data: true,
-          
+
           submittedBy: {
             select: {
               id: true,
@@ -150,4 +152,207 @@ export const getForm = async (id: string) => {
   return { ...form, submissions: filteredSubmissions };
 };
 
-export type FormProps = Awaited<ReturnType<typeof getForm>>;
+export type FormProps = NonNullable<Awaited<ReturnType<typeof getForm>>>;
+
+/**
+ * Deletes a form
+ */
+export const deleteFormSubmission = authActionClient
+  .schema(idSchema)
+  .metadata({
+    event: "deleteFormSubmissionAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id } = parsedInput;
+
+    try {
+      const formSubmission = await prisma.formSubmission.findUnique({
+        where: { id },
+        select: {
+          form: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              reviewFormPermissions: true,
+              teams: {
+                select: {
+                  name: true,
+                },
+              },
+              archiveWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+              responsibleTeam: {
+                select: {
+                  name: true,
+                  contactEmail: true,
+                },
+              },
+            },
+          },
+          data: true,
+        },
+      });
+
+      if (!formSubmission) {
+        throw new Error("Formular nicht gefunden");
+      }
+
+      // Only check permissions if user is not admin
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          form: {
+            responsibleTeam: formSubmission.form.responsibleTeam?.name,
+            teams: formSubmission.form.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          formSubmission.form.reviewFormPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error("Keine Berechtigung zum Löschen dieses Formulars");
+        }
+      }
+      await prisma.formSubmission.delete({
+        where: {
+          id,
+        },
+      });
+
+      revalidatePath(`/forms/${formSubmission.form.id}`);
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    return {
+      message: "Formular gelöscht",
+    };
+  });
+
+/**
+ * Archives a workflow run
+ */
+export const archiveFormSubmission = authActionClient
+  .schema(
+    idSchema.extend({
+      message: z.string().optional(),
+    })
+  )
+  .metadata({
+    event: "archiveFormSubmissionAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, message } = parsedInput;
+
+    try {
+      const formSubmission = await prisma.formSubmission.findUnique({
+        where: { id },
+        select: {
+          form: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              reviewFormPermissions: true,
+              teams: {
+                select: {
+                  name: true,
+                },
+              },
+              archiveWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+              responsibleTeam: {
+                select: {
+                  name: true,
+                  contactEmail: true,
+                },
+              },
+            },
+          },
+          data: true,
+        },
+      });
+
+      if (!formSubmission) {
+        throw new Error("Formular nicht gefunden");
+      }
+
+      // Only check permissions if user is not admin
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          form: {
+            responsibleTeam: formSubmission.form.responsibleTeam?.name,
+            teams: formSubmission.form.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          formSubmission.form.reviewFormPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error(
+            "Keine Berechtigung zum Archivieren dieses Formulars"
+          );
+        }
+      }
+      await prisma.formSubmission.update({
+        where: {
+          id,
+        },
+        data: {
+          isArchived: true,
+          archivedNotes: message,
+        },
+      });
+
+      const submissionContext = {
+        user: {
+          ...ctx.session.user,
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+        },
+        form: {
+          responsibleTeam: formSubmission.form.responsibleTeam?.name,
+          teams: formSubmission.form.teams?.map((t) => t.name) ?? [],
+        },
+        data: formSubmission.data,
+      };
+
+      await triggerN8nWebhooks(
+        formSubmission.form.archiveWorkflows.map((w) => w.workflowId),
+        submissionContext
+      );
+
+      revalidatePath(`/forms/${formSubmission.form.id}`);
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    return {
+      message: "Formular archiviert",
+    };
+  });

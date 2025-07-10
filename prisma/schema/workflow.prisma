@@ -54,8 +54,8 @@ model Process {
     children Process[] @relation("ProcessHierarchy")
 
     // Dependencies relation (only for actual processes, not categories)
-    dependencies        Process[] @relation("ProcessDependencies")
-    dependentProcesses  Process[] @relation("ProcessDependencies")
+    dependencies       Process[] @relation("ProcessDependencies")
+    dependentProcesses Process[] @relation("ProcessDependencies")
     initializeWorkflow Workflow? @relation("InitializeProcess")
 
     @@index([workflowId])
@@ -63,10 +63,12 @@ model Process {
 }
 
 model WorkflowRun {
-    id          String         @id @default(uuid())
-    status      WorkflowStatus @default(open)
-    startedAt   DateTime       @default(now())
-    completedAt DateTime?
+    id            String         @id @default(uuid())
+    status        WorkflowStatus @default(open)
+    startedAt     DateTime       @default(now())
+    completedAt   DateTime?
+    isArchived    Boolean        @default(false)
+    archivedNotes String? // Reason why the workflow run was archived
 
     workflow   Workflow     @relation(fields: [workflowId], references: [id], onDelete: Cascade)
     workflowId String
@@ -95,10 +97,9 @@ model ProcessRun {
 }
 
 enum WorkflowStatus {
-    open
-    ongoing
-    completed
-    archived
+    open // Initial state when workflow run is created
+    ongoing // Work has started on the workflow
+    completed // All processes are completed
 }
 
 enum ProcessStatus {

@@ -3,13 +3,17 @@
 import { MenuItemLink } from "@/components/link-menu-item";
 import { Card, Title, Divider, Menu, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { FormProps } from "../_actions";
+import { deleteFormSubmission, FormProps } from "../_actions";
 import { FormSubmissionStatusBadge } from "@/components/form-submission-status-badge";
+import { IconArchive, IconTrash } from "@tabler/icons-react";
+import { ModalMenuItem } from "@/components/modal-menu-item";
+import { FormSubmissionArchiveForm } from "./form-submission-archive-form";
+import { ButtonAction } from "@/components/button-action";
 
 export const FormSubmissionCard = ({
   submission,
 }: {
-  submission: NonNullable<FormProps>["submissions"][0];
+  submission: FormProps["submissions"][number];
 }) => {
   const [opened, handlers] = useDisclosure(false);
 
@@ -36,6 +40,30 @@ export const FormSubmissionCard = ({
           <MenuItemLink href={`/form-submissions/${submission.id}`}>
             Zum Formular
           </MenuItemLink>
+          <ModalMenuItem
+            leftSection={<IconArchive size={14} />}
+            color="gray"
+            title="Archivieren"
+            content={<FormSubmissionArchiveForm id={submission.id} />}
+          >
+            Archivieren
+          </ModalMenuItem>
+          <ModalMenuItem
+            leftSection={<IconTrash size={14} />}
+            color="red"
+            title="Löschen"
+            content={
+              <ButtonAction
+                fullWidth
+                action={deleteFormSubmission}
+                values={{ id: submission.id }}
+              >
+                Löschen
+              </ButtonAction>
+            }
+          >
+            Löschen
+          </ModalMenuItem>
         </Menu.Dropdown>
       </Menu>
     </Card>

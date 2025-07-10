@@ -23,7 +23,8 @@
       "@lib/*": ["./lib/*"],
       "@components/*": ["./components/*"],
       "@utils/*": ["./utils/*"],
-      "@server/*": ["./server/*"]
+      "@server/*": ["./server/*"],
+      "@prisma-client/*": ["./generated/prisma/*"]
     }
   },
   "include": [
