@@ -145,6 +145,7 @@ export function WorkflowRunForms({ processes }: WorkflowRunFormsProps) {
 
   return (
     <Tree
+      expandOnSpace={false}
       data={formTreeData}
       tree={tree}
       renderNode={({ node, expanded, hasChildren, elementProps }) => (
