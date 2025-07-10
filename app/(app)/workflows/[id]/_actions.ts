@@ -54,6 +54,7 @@ export const getWorkflowRuns = async (
   const allWorkflowRuns = await prisma.workflowRun.findMany({
     where: {
       workflowId: workflowId,
+      isArchived: false,
       ...(search &&
         workflow.information && {
           processes: {
@@ -187,7 +188,7 @@ export const initializeWorkflowRun = authActionClient
     try {
       // Get the workflow with its processes
       const workflow = await prisma.workflow.findUnique({
-        where: { id: workflowId },
+        where: { id: workflowId, isActive: true },
         select: {
           id: true,
           name: true,
@@ -219,7 +220,7 @@ export const initializeWorkflowRun = authActionClient
       });
 
       if (!workflow) {
-        throw new Error("Workflow nicht gefunden");
+        throw new Error("Workflow nicht gefunden oder nicht aktiv");
       }
 
       // Only check permissions if user is not admin
@@ -313,7 +314,7 @@ export const initializeWorkflowRunForm = authActionClient
     try {
       // Get the workflow with its initialize process and all processes
       const workflow = await prisma.workflow.findUnique({
-        where: { id: workflowId },
+        where: { id: workflowId, isActive: true },
         select: {
           id: true,
           name: true,
@@ -350,7 +351,7 @@ export const initializeWorkflowRunForm = authActionClient
       });
 
       if (!workflow) {
-        throw new Error("Workflow nicht gefunden");
+        throw new Error("Workflow nicht gefunden oder nicht aktiv");
       }
 
       // Only check permissions if user is not admin
@@ -416,6 +417,7 @@ export const initializeWorkflowRunForm = authActionClient
             name: workflow.responsibleTeam?.name,
             contactEmail: workflow.responsibleTeam?.contactEmail,
           },
+          data: data,
         },
       };
 
@@ -609,7 +611,7 @@ export const archiveWorkflowRun = authActionClient
           id,
         },
         data: {
-          status: "archived",
+          isArchived: true,
         },
       });
 
@@ -622,17 +624,16 @@ export const archiveWorkflowRun = authActionClient
           ...ctx.session.user,
           teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
         },
-        data: {
-          workflow: {
-            name: workflowRun.workflow.name,
-            description: workflowRun.workflow.description,
-          },
+        workflow: {
+          name: workflowRun.workflow.name,
+          description: workflowRun.workflow.description,
           responsibleTeam: {
             name: workflowRun.workflow.responsibleTeam?.name,
             contactEmail: workflowRun.workflow.responsibleTeam?.contactEmail,
           },
-          processes: workflowRun.processes,
+          processes: workflowRun.processes.map((p) => p.process),
         },
+        data: workflowRun.processes.map((p) => p.data),
       };
 
       await triggerN8nWebhooks(

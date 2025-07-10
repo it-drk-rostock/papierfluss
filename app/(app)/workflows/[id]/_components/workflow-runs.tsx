@@ -28,8 +28,6 @@ export const WorkflowRuns = async ({
 
   const { workflow, runs } = workflowData;
 
- 
-
   return (
     <Stack gap="md">
       <Stack gap="0">
@@ -41,14 +39,20 @@ export const WorkflowRuns = async ({
         searchPlaceholder="Workflow ausführungen suchen"
         modalContent={
           <>
-            {workflow.initializeProcess && workflow.initializeProcess.schema && (
-              <>
-                <WorkflowRunInitializeForm
-                  workflowId={workflowId}
-                  schema={workflow.initializeProcess.schema as Record<string, unknown>}
-                />
-              </>
-            )}
+            {workflow.initializeProcess &&
+              workflow.initializeProcess.schema && (
+                <>
+                  <WorkflowRunInitializeForm
+                    workflowId={workflowId}
+                    schema={
+                      workflow.initializeProcess.schema as Record<
+                        string,
+                        unknown
+                      >
+                    }
+                  />
+                </>
+              )}
             {!workflow.initializeProcess && (
               <ButtonAction
                 fullWidth

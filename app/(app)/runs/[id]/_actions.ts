@@ -326,9 +326,7 @@ export const getWorkflowRun = async (id: string) => {
         }
 
         return processRun;
-      } catch (error) {
-        // If there's an error parsing permissions, deny access to form data
-        console.error("Error checking view permissions:", error);
+      } catch {
         return {
           ...processRun,
           data: null,
@@ -385,6 +383,7 @@ export const resetProcessRun = authActionClient
           workflowRunId: true,
           workflowRun: {
             select: {
+              isArchived: true,
               processes: {
                 select: {
                   data: true,
@@ -404,6 +403,8 @@ export const resetProcessRun = authActionClient
                       name: true,
                     },
                   },
+                  name: true,
+                  description: true,
                   reactivateN8nWorkflows: {
                     select: {
                       workflowId: true,
@@ -466,7 +467,7 @@ export const resetProcessRun = authActionClient
       workflowRunId = currentProcessRun.workflowRunId;
       const workflowRun = currentProcessRun.workflowRun;
       const shouldReactivateWorkflow =
-        workflowRun.status === "archived" || workflowRun.status === "completed";
+        workflowRun.isArchived || workflowRun.status === "completed";
 
       // Update the process run status
       const processRun = await prisma.processRun.update({
@@ -520,6 +521,12 @@ export const resetProcessRun = authActionClient
           data: processRun.data,
           allProcessData: processDataMap,
           resetProcessText: processRun.resetProcessText,
+        },
+        workflow: {
+          name: workflowRun.workflow.name,
+          description: workflowRun.workflow.description,
+          responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
+          teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
         },
         process: {
           ...processRun.process,
@@ -583,6 +590,7 @@ export const completeProcessRun = authActionClient
           status: true,
           workflowRun: {
             select: {
+              isArchived: true,
               status: true,
               processes: {
                 select: {
@@ -591,6 +599,8 @@ export const completeProcessRun = authActionClient
               },
               workflow: {
                 select: {
+                  name: true,
+                  description: true,
                   responsibleTeam: {
                     select: {
                       name: true,
@@ -683,7 +693,7 @@ export const completeProcessRun = authActionClient
       }
 
       if (
-        currentProcessRun.workflowRun.status === "archived" ||
+        currentProcessRun.workflowRun.isArchived ||
         currentProcessRun.workflowRun.status === "completed"
       ) {
         throw new Error(
@@ -734,6 +744,7 @@ export const completeProcessRun = authActionClient
         where: { id, status: "ongoing" },
         data: {
           status: "completed",
+          resetProcessText: null,
         },
         select: {
           data: true,
@@ -800,6 +811,15 @@ export const completeProcessRun = authActionClient
         data: {
           data: processRun.data,
           allProcessData: processDataMap,
+        },
+        workflow: {
+          name: currentProcessRun.workflowRun.workflow.name,
+          description: currentProcessRun.workflowRun.workflow.description,
+          responsibleTeam:
+            currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+          teams:
+            currentProcessRun.workflowRun.workflow.teams?.map((t) => t.name) ??
+            [],
         },
         process: {
           ...processRun.process,
@@ -869,6 +889,7 @@ export const saveProcessRun = authActionClient
           status: true,
           workflowRun: {
             select: {
+              isArchived: true,
               processes: {
                 select: {
                   data: true,
@@ -877,6 +898,8 @@ export const saveProcessRun = authActionClient
               status: true,
               workflow: {
                 select: {
+                  name: true,
+                  description: true,
                   teams: {
                     select: {
                       name: true,
@@ -891,7 +914,6 @@ export const saveProcessRun = authActionClient
               },
             },
           },
-
           workflowRunId: true,
           process: {
             select: {
@@ -951,8 +973,6 @@ export const saveProcessRun = authActionClient
           },
         };
 
-        console.log(context.data);
-
         const rules = JSON.parse(
           currentProcessRun.process.submitProcessPermissions || "{}"
         );
@@ -966,7 +986,7 @@ export const saveProcessRun = authActionClient
       }
 
       if (
-        currentProcessRun.workflowRun.status === "archived" ||
+        currentProcessRun.workflowRun.isArchived ||
         currentProcessRun.workflowRun.status === "completed"
       ) {
         throw new Error(
@@ -1059,6 +1079,15 @@ export const saveProcessRun = authActionClient
         data: {
           data: processRun.data,
           allProcessData: processDataMap,
+        },
+        workflow: {
+          name: currentProcessRun.workflowRun.workflow.name,
+          description: currentProcessRun.workflowRun.workflow.description,
+          responsibleTeam:
+            currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+          teams:
+            currentProcessRun.workflowRun.workflow.teams?.map((t) => t.name) ??
+            [],
         },
         process: {
           ...processRun.process,
