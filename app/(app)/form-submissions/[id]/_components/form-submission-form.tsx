@@ -9,7 +9,6 @@ import React from "react";
 import {
   FormSubmissionProps,
   reviewFormSubmission,
-  submitFormSubmission,
   updateFormSubmission,
   withdrawFormSubmission,
 } from "../_actions";
@@ -24,7 +23,8 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { showNotification } from "@/utils/notification";
 import { IDocOptions, SurveyPDF } from "survey-pdf";
-import { FormSubmissionSubmitForm } from "./form-submission-archive-form";
+import { FormSubmissionArchiveForm } from "./form-submission-archive-form";
+import { FormSubmissionSubmitForm } from "./form-submission-submit-form";
 
 export const FormSubmissionForm = ({
   submission,
@@ -266,9 +266,7 @@ export const FormSubmissionForm = ({
         modals.open({
           closeOnClickOutside: false,
           title: "Formular archivieren",
-          children: (
-            <FormSubmissionStatusForm id={submission.id} status="archived" />
-          ),
+          children: <FormSubmissionArchiveForm id={submission.id} />,
         });
       },
     });
