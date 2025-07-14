@@ -5,11 +5,13 @@ import {
   initializeWorkflowRun,
   WorkflowRunsSearchParams,
 } from "../_actions";
-import { Stack, Title, Text } from "@mantine/core";
+import { Stack, Title, Text, Group } from "@mantine/core";
 import { WorkflowRunsTable } from "./workflow-runs-table";
 import { ButtonAction } from "@/components/button-action";
 import { QuickSearchAdd } from "@/components/quick-search-add";
 import { WorkflowRunInitializeForm } from "./workflow-run-initialize-form";
+import { ButtonLink } from "@/components/button-link";
+import { IconArchive } from "@tabler/icons-react";
 
 export const WorkflowRuns = async ({
   params,
@@ -30,13 +32,20 @@ export const WorkflowRuns = async ({
 
   return (
     <Stack gap="md">
-      <Stack gap="0">
-        <Title order={1}>Übersicht {workflow.name}</Title>
-        <Text c="dimmed">{workflow.description}</Text>
-      </Stack>
+      <Group justify="space-between" align="flex-start">
+        <Stack gap="0">
+          <Title order={1}>{workflow.name} - Übersicht</Title>
+          <Text c="dimmed">{workflow.description}</Text>
+        </Stack>
+        <ButtonLink
+          leftSection={<IconArchive size={14} stroke={1.5} />}
+          variant="outline"
+          title="Archiv anzeigen"
+          href={`/workflows/${workflowId}/archive`}
+        />
+      </Group>
       <QuickSearchAdd
         modalTitle="Workflow ausführen"
-        searchPlaceholder="Workflow ausführungen suchen"
         modalContent={
           <>
             {workflow.initializeProcess &&

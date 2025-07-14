@@ -9,7 +9,7 @@ import {
   ActionIcon,
   Loader,
 } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconSearch } from "@tabler/icons-react";
 import React, { ReactNode, useEffect, useState, useTransition } from "react";
 import { modals } from "@mantine/modals";
 import { useQueryState, parseAsString } from "nuqs";
@@ -17,9 +17,9 @@ import { baseIconStyles } from "@/constants/base-icon-styles";
 import { useAuthSession } from "@/hooks/use-auth-session";
 
 export type QuickSearchAddProps = {
-  modalTitle: string;
+  modalTitle?: string;
   modalDescription?: string;
-  modalContent: ReactNode;
+  modalContent?: ReactNode;
   searchParam?: string;
   searchPlaceholder?: string;
 };
@@ -60,9 +60,15 @@ export const QuickSearchAdd = ({
           onChange={handleInputChange}
           placeholder={searchPlaceholder}
           w="100%"
-          leftSection={isLoading ? <Loader size="xs" /> : null}
+          leftSection={
+            isLoading ? (
+              <Loader size="xs" />
+            ) : (
+              <IconSearch size={16} stroke={1.5} />
+            )
+          }
         />
-        {hasAccess("moderator") && (
+        {hasAccess("moderator") && modalContent && (
           <>
             <Button
               visibleFrom="sm"
