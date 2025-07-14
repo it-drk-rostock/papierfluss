@@ -15,6 +15,7 @@ import Link from "next/link";
 
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { baseIconStyles } from "@/constants/base-icon-styles";
+import { Breadcrumbs } from "./breadcrumbs";
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
@@ -80,7 +81,16 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
         </Stack>
       </AppShell.Navbar>
       <AppShell.Main>
-        <Stack gap="md">{children}</Stack>
+        <Stack gap="md">
+          <Breadcrumbs
+            items={[
+              { title: "Home", href: "/" },
+              { title: "About", href: "/about" },
+              { title: "Current Page" }, // No href for the current page
+            ]}
+          />
+          {children}
+        </Stack>
       </AppShell.Main>
     </AppShell>
   );
