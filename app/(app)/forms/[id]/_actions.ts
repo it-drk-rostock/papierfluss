@@ -57,6 +57,7 @@ export const getForm = async (id: string) => {
             name: true,
           },
         },
+        information: true,
         responsibleTeam: {
           select: {
             name: true,
@@ -102,6 +103,7 @@ export const getForm = async (id: string) => {
           name: true,
         },
       },
+      information: true,
       schema: true,
       submissions: {
         where: {
@@ -243,7 +245,7 @@ export const deleteFormSubmission = authActionClient
   });
 
 /**
- * Archives a workflow run
+ * Archives a form submission
  */
 export const archiveFormSubmission = authActionClient
   .schema(
@@ -348,6 +350,7 @@ export const archiveFormSubmission = authActionClient
       );
 
       revalidatePath(`/forms/${formSubmission.form.id}`);
+      revalidatePath(`/form-submissions/${id}`);
     } catch (error) {
       throw formatError(error);
     }

@@ -7,11 +7,11 @@ import { idSchema } from "@/schemas/id-schema";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { useForm } from "@mantine/form";
 import { Button, Stack, Textarea } from "@mantine/core";
-import { archiveFormSubmission } from "@/app/(app)/forms/[id]/_actions";
+import { archiveWorkflowRun } from "../_actions";
 
-export const FormSubmissionArchiveForm = ({ id }: { id: string }) => {
+export const WorkflowRunArchiveForm = ({ id }: { id: string }) => {
   const form = useForm({
-    name: "archive-form-submission",
+    name: "archive-workflow-run",
     validate: zodResolver(idSchema.extend({ message: z.string().optional() })),
     mode: "uncontrolled",
     initialValues: {
@@ -21,7 +21,7 @@ export const FormSubmissionArchiveForm = ({ id }: { id: string }) => {
   });
 
   const { execute, status } = useEnhancedAction({
-    action: archiveFormSubmission,
+    action: archiveWorkflowRun,
     hideModals: true,
   });
 
@@ -39,7 +39,7 @@ export const FormSubmissionArchiveForm = ({ id }: { id: string }) => {
           {...form.getInputProps("message")}
         />
         <Button fullWidth type="submit" loading={status === "executing"}>
-          Einreichen
+          Archivieren
         </Button>
       </Stack>
     </form>

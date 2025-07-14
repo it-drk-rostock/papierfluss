@@ -4,6 +4,7 @@ model Form {
     description String?
     schema      Json?
     theme       Json?
+    information Json?
     isPublic    Boolean @default(false)
     isActive    Boolean @default(true)
 

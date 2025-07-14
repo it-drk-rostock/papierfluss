@@ -3,7 +3,7 @@ import { getFormSubmission } from "../_actions";
 import { FormSubmissionForm } from "./form-submission-form";
 import { notFound } from "next/navigation";
 import { FormSubmissionStatusBadge } from "@/components/form-submission-status-badge";
-import { Stack } from "@mantine/core";
+import { Badge, Group, Stack } from "@mantine/core";
 import { FormSubmissionStatusAlert } from "@/components/form-submission-status-alert";
 
 export const FormSubmission = async ({
@@ -30,7 +30,10 @@ export const FormSubmission = async ({
 
   return (
     <Stack gap="sm">
-      <FormSubmissionStatusBadge status={submission.status} />
+      <Group gap="sm">
+        <FormSubmissionStatusBadge status={submission.status} />
+        {submission.isArchived && <Badge color="gray">Archiviert</Badge>}
+      </Group>
       {Object.entries(notesMapping).map(
         ([_, notes]) =>
           notes && (

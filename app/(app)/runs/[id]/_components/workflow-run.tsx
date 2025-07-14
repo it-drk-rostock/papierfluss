@@ -7,6 +7,7 @@ import {
   GridCol,
   Group,
   Divider,
+  Badge,
 } from "@mantine/core";
 import React from "react";
 import { getWorkflowRun } from "../_actions";
@@ -146,7 +147,12 @@ export const WorkflowRun = async ({
             <Stack>
               <Title order={3}>Informationen</Title>
               <Stack gap="md">
-                <WorkflowStatusBadge status={workflowRun.status} />
+                <Group>
+                  <WorkflowStatusBadge status={workflowRun.status} />
+                  {workflowRun.isArchived && (
+                    <Badge color="gray">Archiviert</Badge>
+                  )}
+                </Group>
                 <Text>
                   Gestartet am: {workflowRun.startedAt.toLocaleDateString()}
                 </Text>

@@ -73,6 +73,7 @@ export const getWorkflowRun = async (id: string) => {
         status: true,
         startedAt: true,
         completedAt: true,
+        isArchived: true,
         workflow: {
           select: {
             id: true,
@@ -166,6 +167,7 @@ export const getWorkflowRun = async (id: string) => {
       status: true,
       startedAt: true,
       completedAt: true,
+      isArchived: true,
       workflow: {
         select: {
           id: true,

@@ -7,6 +7,7 @@ import {
   formSchema,
   removeTeamSchema,
   updateFormSchema,
+  updateFormInformationSchema,
 } from "./_schemas";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
@@ -89,6 +90,7 @@ export const updateForm = authActionClient
       editFormPermissions,
       reviewFormPermissions,
       responsibleTeam,
+      information,
     } = parsedInput;
 
     try {
@@ -143,6 +145,7 @@ export const updateForm = authActionClient
           editFormPermissions,
           reviewFormPermissions,
           responsibleTeamId: responsibleTeam?.id,
+          information,
         },
       });
     } catch (error) {
@@ -306,6 +309,7 @@ export const getForms = async (search?: string) => {
     schema: true,
     isActive: true,
     isPublic: true,
+    information: true,
     editFormPermissions: true,
     reviewFormPermissions: true,
     responsibleTeam: {
@@ -556,4 +560,156 @@ export const getAvailableTeams = async ({ formId }: AvailableTeamsParams) => {
   });
 
   return teams;
+};
+
+/**
+ * Updates form information configuration
+ */
+export const updateFormInformation = authActionClient
+  .schema(updateFormInformationSchema)
+  .metadata({
+    event: "updateFormInformationAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, fields } = parsedInput;
+
+    try {
+      const form = await prisma.form.findUnique({
+        where: { id },
+        select: {
+          editFormPermissions: true,
+          responsibleTeam: {
+            select: {
+              name: true,
+            },
+          },
+          teams: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (!form) {
+        throw new Error("Form nicht gefunden");
+      }
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            ...ctx.session.user,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          form: {
+            responsibleTeam: form.responsibleTeam?.name,
+            teams: form.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(form.editFormPermissions || "{}");
+        const hasPermission = await jsonLogic.apply(rules, context);
+
+        if (!hasPermission) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
+        }
+      }
+
+      await prisma.form.update({
+        where: { id },
+        data: {
+          information: { fields },
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/forms/${id}`);
+    return {
+      message: "Formular Informationen aktualisiert",
+    };
+  });
+
+export const getForm = async (id: string) => {
+  const { user } = await authQuery();
+
+  if (user.role === "admin") {
+    return prisma.form.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        teams: {
+          select: {
+            name: true,
+          },
+        },
+        responsibleTeam: {
+          select: {
+            name: true,
+          },
+        },
+        schema: true,
+        information: true,
+        submissions: {
+          where: {
+            isArchived: false,
+          },
+          select: {
+            id: true,
+            data: true,
+            status: true,
+            submittedBy: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  const form = await prisma.form.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      title: true,
+      description: true,
+      id: true,
+      reviewFormPermissions: true,
+      teams: {
+        select: {
+          name: true,
+        },
+      },
+      responsibleTeam: {
+        select: {
+          name: true,
+        },
+      },
+      schema: true,
+      information: true,
+      submissions: {
+        where: {
+          isArchived: false,
+        },
+        select: {
+          id: true,
+          status: true,
+          data: true,
+          submittedBy: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
 };

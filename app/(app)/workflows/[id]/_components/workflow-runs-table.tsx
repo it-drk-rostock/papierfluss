@@ -11,6 +11,7 @@ import { ButtonAction } from "@/components/button-action";
 import { archiveWorkflowRun, deleteWorkflowRun } from "../_actions";
 import { MantineTable } from "@/components/mantine-table";
 import { DataTableColumn } from "mantine-datatable";
+import { WorkflowRunArchiveForm } from "./workflow-run-archive-form";
 
 interface ProcessRunData {
   id: string;
@@ -158,16 +159,7 @@ export const WorkflowRunsTable = ({
               leftSection={<IconArchive size={14} />}
               color="gray"
               title="Archivieren"
-              content={
-                <ButtonAction
-                  color="gray"
-                  fullWidth
-                  action={archiveWorkflowRun}
-                  values={{ id: record.id }}
-                >
-                  Archivieren
-                </ButtonAction>
-              }
+              content={<WorkflowRunArchiveForm id={record.id} />}
             >
               Archivieren
             </ModalMenuItem>

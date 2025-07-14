@@ -523,12 +523,12 @@ export const deleteWorkflowRun = authActionClient
  * Archives a workflow run
  */
 export const archiveWorkflowRun = authActionClient
-  .schema(idSchema)
+  .schema(idSchema.extend({ message: z.string().optional() }))
   .metadata({
     event: "archiveWorkflowRunAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { id } = parsedInput;
+    const { id, message } = parsedInput;
 
     try {
       const workflowRun = await prisma.workflowRun.findUnique({
@@ -612,6 +612,7 @@ export const archiveWorkflowRun = authActionClient
         },
         data: {
           isArchived: true,
+          archivedNotes: message,
         },
       });
 
