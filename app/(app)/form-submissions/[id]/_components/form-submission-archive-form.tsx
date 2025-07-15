@@ -38,8 +38,13 @@ export const FormSubmissionArchiveForm = ({ id }: { id: string }) => {
           key={form.key("message")}
           {...form.getInputProps("message")}
         />
-        <Button fullWidth type="submit" loading={status === "executing"}>
-          Einreichen
+        <Button
+          fullWidth
+          type="submit"
+          color="gray"
+          loading={status === "executing"}
+        >
+          Archivieren
         </Button>
       </Stack>
     </form>

@@ -52,6 +52,7 @@ export const getForm = async (id: string) => {
       select: {
         id: true,
         title: true,
+        description: true,
         teams: {
           select: {
             name: true,
@@ -92,6 +93,7 @@ export const getForm = async (id: string) => {
     select: {
       title: true,
       id: true,
+      description: true,
       reviewFormPermissions: true,
       teams: {
         select: {

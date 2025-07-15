@@ -24,7 +24,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AppShell
-      header={{ height: 60 }}
+      header={{ height: 70 }}
       navbar={{
         width: 300,
         breakpoint: "sm",
@@ -82,13 +82,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       </AppShell.Navbar>
       <AppShell.Main>
         <Stack gap="md">
-          <Breadcrumbs
-            items={[
-              { title: "Home", href: "/" },
-              { title: "About", href: "/about" },
-              { title: "Current Page" }, // No href for the current page
-            ]}
-          />
+          <Breadcrumbs />
           {children}
         </Stack>
       </AppShell.Main>
