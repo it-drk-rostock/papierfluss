@@ -149,7 +149,9 @@ export const SurveyDesignerForm = (props: {
     body: {
       currentForm: creator?.JSON,
     },
+
     onFinish: (prompt, completion) => {
+      console.log(prompt, completion);
       try {
         const surveyJSON = JSON.parse(completion);
         if (creator) {
@@ -160,6 +162,8 @@ export const SurveyDesignerForm = (props: {
       }
     },
   });
+
+  console.log(completion, complete);
 
   // Create a wrapped submit handler using Mantine form
   const handleFormSubmit = form.onSubmit((values) => {

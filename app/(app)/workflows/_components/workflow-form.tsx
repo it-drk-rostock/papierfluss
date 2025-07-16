@@ -3,7 +3,13 @@ import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { updateWorkflowSchema, workflowSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
-import { createWorkflow, updateWorkflow, WorkflowProps } from "../_actions";
+import {
+  createWorkflow,
+  updateWorkflow,
+  WorkflowProps,
+  getWorkflowRunsForPermissions,
+  getWorkflowProcesses,
+} from "../_actions";
 import {
   Button,
   Group,
@@ -11,9 +17,12 @@ import {
   Textarea,
   TextInput,
   Checkbox,
+  Alert,
 } from "@mantine/core";
 import { EntitySelect } from "@/components/entity-select";
 import { getTeams } from "../../dashboard/_actions";
+import { WorkflowPermissionBuilder } from "@/components/workflow-permission-builder";
+import { useQuery } from "@tanstack/react-query";
 
 export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
   const formForm = useForm({
@@ -30,6 +39,7 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
           editWorkflowPermissions: workflow.editWorkflowPermissions,
           submitProcessPermissions: workflow.submitProcessPermissions,
           responsibleTeam: workflow.responsibleTeam,
+          initializeProcess: workflow.initializeProcess,
         }
       : {
           name: "",
@@ -42,12 +52,27 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
             id: "",
             name: "",
           },
+          initializeProcess: {
+            id: "",
+            name: "",
+          },
         },
   });
 
   const { execute, status } = useEnhancedAction({
     action: workflow ? updateWorkflow : createWorkflow,
     hideModals: true,
+  });
+
+  // Get workflow runs for permission builder (only for existing workflows)
+  const { data: workflowRuns } = useQuery({
+    queryKey: ["workflowRunsForPermissions", workflow?.id],
+    queryFn: () =>
+      workflow?.id
+        ? getWorkflowRunsForPermissions(workflow.id)
+        : Promise.resolve([]),
+    enabled: !!workflow?.id,
+    staleTime: 0,
   });
 
   return (
@@ -67,11 +92,24 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
           formField="responsibleTeam"
           label="Verantwortlicher Bereich"
           initialValue={formForm.values.responsibleTeam}
-          error={formForm.errors.responsibleTeam}
+          error={formForm.errors.responsibleTeam as string}
           action={getTeams}
           displayKeys={["name"]}
           dataKey={{ id: "id", name: "name" }}
         />
+        {workflow && (
+          <EntitySelect
+            formActionName="create-workflow"
+            formField="initializeProcess"
+            label="Initialisierungsprozess"
+            initialValue={formForm.values.initializeProcess}
+            error={formForm.errors.initializeProcess as string}
+            action={getWorkflowProcesses}
+            actionParams={workflow.id}
+            displayKeys={["name"]}
+            dataKey={{ id: "id", name: "name" }}
+          />
+        )}
         <Checkbox
           label="Öffentlich"
           {...formForm.getInputProps("isPublic", { type: "checkbox" })}
@@ -80,33 +118,33 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
           label="Aktiv"
           {...formForm.getInputProps("isActive", { type: "checkbox" })}
         />
-
-        {/* {workflow && (
+        {workflow && (
           <>
-            {workflow.processes.length === 0 && (
+            {workflowRuns && workflowRuns.length === 0 && (
               <Alert color="yellow" variant="light">
-                Es wurde noch kein Beispielformular erstellt. Das heißt, die
-                dynamischen Felder von den Formularen sind in den Berechtigungen
+                Es wurde noch keine Workflow-Ausführung erstellt. Das heißt, die
+                dynamischen Felder von den Prozessen sind in den Berechtigungen
                 nicht auswählbar.
               </Alert>
             )}
-            <PermissionBuilder
-              label="Bearbeitungs Berechtigungen"
+            <WorkflowPermissionBuilder
+              label="Workflow Bearbeitungs Berechtigungen"
               initialData={workflow.editWorkflowPermissions ?? ""}
               formActionName="create-workflow"
               fieldValue="editWorkflowPermissions"
-              submissions={workflow.processes}
+              workflowRuns={workflowRuns}
+              permissionType="workflow"
             />
-            <PermissionBuilder
-              label="Überprüfungs Berechtigungen"
-              initialData={form.reviewFormPermissions ?? ""}
-              formActionName="create-form"
-              fieldValue="reviewFormPermissions"
-              submissions={form.submissions}
+            <WorkflowPermissionBuilder
+              label="Workflow Übermittlungs Berechtigungen"
+              initialData={workflow.submitProcessPermissions ?? ""}
+              formActionName="create-workflow"
+              fieldValue="submitProcessPermissions"
+              workflowRuns={workflowRuns}
+              permissionType="workflow"
             />
           </>
-        )} */}
-
+        )}
         <Group mt="lg" justify="flex-end">
           <Button loading={status === "executing"} type="submit">
             {workflow ? "Speichern" : "Hinzufügen"}

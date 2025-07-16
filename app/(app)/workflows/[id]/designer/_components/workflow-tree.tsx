@@ -1,6 +1,13 @@
 "use client";
 
-import { getTreeExpandedState, Paper, Title, Tree, TreeNodeData, useTree } from "@mantine/core";
+import {
+  getTreeExpandedState,
+  Paper,
+  Title,
+  Tree,
+  TreeNodeData,
+  useTree,
+} from "@mantine/core";
 import {
   IconFolder,
   IconFolderOpen,
@@ -12,6 +19,8 @@ import {
   IconClipboard,
   IconPencil,
   IconTopologyBus,
+  IconInfoCircle,
+  IconShieldLock,
 } from "@tabler/icons-react";
 import {
   Button,
@@ -29,9 +38,16 @@ import { ProcessForm } from "./process-form";
 import { ModalButton } from "@/components/modal-button";
 import { ManageDependenciesForm } from "./manage-dependencies-form";
 import { ActionIconAction } from "@/components/action-icon-action";
-import { DrawerActionIcon } from "@/components/drawer-action-icon";
-import { ProcessDesignerForm } from "./process-designer-form";
 import { ProcessN8nWorkflows } from "./process-n8n-workflows";
+import { WorkflowInformationForm } from "./workflow-information-form";
+import { ProcessPermissionForm } from "./process-permission-form";
+import dynamic from "next/dynamic";
+
+const ProcessDesignerForm = dynamic(
+  () =>
+    import("./process-designer-form").then((mod) => mod.ProcessDesignerForm),
+  { ssr: false }
+);
 
 interface Process {
   id: string;
@@ -45,6 +61,8 @@ interface Process {
   children: Array<{ id: string; name: string }>;
   schema: object | undefined;
   theme: object | undefined;
+  editProcessPermissions: string | null;
+  submitProcessPermissions: string | null;
 }
 
 interface TreeNode {
@@ -182,28 +200,22 @@ export function WorkflowTree({
               )}
               {!process.isCategory && (
                 <Tooltip color="red" label="Prozess Formular Designer">
-                  <DrawerActionIcon
+                  <ModalActionIcon
                     variant="subtle"
-                    drawers={[
-                      {
-                        id: "process-designer",
-                        title: `Prozess Formular Designer: ${process.name}`,
-                        size: "100%",
-                        children: (
-                          <ProcessDesignerForm
-                            processId={process.id}
-                            json={process.schema}
-                            theme={process.theme}
-                            name={process.name}
-                            description={process.description}
-                          />
-                        ),
-                      },
-                    ]}
-                    initialDrawerId="process-designer"
+                    title="Prozess Formular Designer"
+                    content={
+                      <ProcessDesignerForm
+                        processId={process.id}
+                        json={process.schema}
+                        theme={process.theme}
+                        name={process.name}
+                        description={process.description}
+                      />
+                    }
+                    fullScreen
                   >
                     <IconClipboard style={baseIconStyles} />
-                  </DrawerActionIcon>
+                  </ModalActionIcon>
                 </Tooltip>
               )}
 
@@ -264,6 +276,29 @@ export function WorkflowTree({
                   </ModalActionIcon>
                 </Tooltip>
               )}
+               {!process.isCategory && (
+              <Tooltip color="red" label="Berechtigungen">
+                <ModalActionIcon
+                  title="Prozess Berechtigungen"
+                  variant="subtle"
+                  content={
+                    <ProcessPermissionForm
+                      workflowId={workflowId}
+                      processId={process.id}
+                      editProcessPermissions={process.editProcessPermissions}
+                      submitProcessPermissions={
+                        process.submitProcessPermissions
+                      }
+                      viewProcessPermissions={process.viewProcessPermissions}
+                      resetProcessPermissions={process.resetProcessPermissions}
+                      formActionName="process-permissions"
+                    />
+                  }
+                >
+                  <IconShieldLock style={baseIconStyles} />
+                </ModalActionIcon>
+              </Tooltip>
+              )}
               <Tooltip color="red" label="Löschen">
                 <ModalActionIcon
                   title="Prozess löschen"
@@ -293,6 +328,14 @@ export function WorkflowTree({
   return (
     <Stack>
       <Group justify="flex-end">
+        <ModalButton
+          variant="subtle"
+          leftSection={<IconInfoCircle style={baseIconStyles} />}
+          title="Workflow Informationen verwalten"
+          content={<WorkflowInformationForm workflowId={workflowId} />}
+        >
+          Informationen
+        </ModalButton>
         <Button onClick={() => tree.expandAllNodes()} variant="subtle">
           Alle ausklappen
         </Button>

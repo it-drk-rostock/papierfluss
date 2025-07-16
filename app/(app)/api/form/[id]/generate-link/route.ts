@@ -33,15 +33,8 @@ export async function GET(
       },
       select: {
         isActive: true,
-        submissions: {
-          where: {
-            isExample: true,
-          },
-        },
       },
     });
-
-    const exampleSubmissionExists = form?.submissions.length > 0;
 
     if (!form?.isActive) {
       return new Response(
@@ -54,7 +47,6 @@ export async function GET(
       data: {
         formId,
         submittedById: user.id,
-        isExample: exampleSubmissionExists ? false : true,
       },
     });
 

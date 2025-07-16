@@ -2,8 +2,6 @@ import { Box, Group, Stack, Text, ActionIcon, Divider } from "@mantine/core";
 import { IconFolder, IconFolderOpen, IconFile } from "@tabler/icons-react";
 import { workflowStatus } from "@/constants/workflow-status";
 import { ModalButton } from "@/components/modal-button";
-import { ButtonAction } from "@/components/button-action";
-import { resetProcessRun } from "../_actions";
 import { ResetProcessRunForm } from "./reset-process-run-form";
 
 interface ProcessRunItemProps {
@@ -12,6 +10,7 @@ interface ProcessRunItemProps {
   description: string | null;
   isCategory: boolean;
   status?: "open" | "ongoing" | "completed";
+  resetProcessText?: string | null;
   hasChildren: boolean;
   expanded: boolean;
   childrenStatus?: {
@@ -31,6 +30,7 @@ export const ProcessRunItem = ({
   hasChildren,
   expanded,
   childrenStatus,
+  resetProcessText,
   elementProps,
 }: ProcessRunItemProps) => {
   const getIcon = () => {
@@ -108,7 +108,7 @@ export const ProcessRunItem = ({
             {name}
           </Text>
           {description && (
-            <Text size="sm" c="dimmed" fw={500}>
+            <Text size="sm" c="dimmed">
               {description}
             </Text>
           )}
@@ -117,18 +117,18 @@ export const ProcessRunItem = ({
               {workflowStatus[status].label}
             </Text>
           )}
+          {resetProcessText && (
+            <Text size="xs" c="yellow">
+              Bitte beachten Sie: {resetProcessText}
+            </Text>
+          )}
           {!isCategory && status === "completed" && (
             <ModalButton
               title="Prozess zurücksetzen"
               variant="subtle"
               color="yellow"
               size="compact-xs"
-              content={
-                <ResetProcessRunForm
-                  id={id}
-                 
-                />
-              }
+              content={<ResetProcessRunForm id={id} />}
             >
               Prozess zurücksetzen
             </ModalButton>

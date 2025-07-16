@@ -9,7 +9,6 @@ import React from "react";
 import {
   FormSubmissionProps,
   reviewFormSubmission,
-  submitFormSubmission,
   updateFormSubmission,
   withdrawFormSubmission,
 } from "../_actions";
@@ -24,6 +23,8 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { showNotification } from "@/utils/notification";
 import { IDocOptions, SurveyPDF } from "survey-pdf";
+import { FormSubmissionArchiveForm } from "./form-submission-archive-form";
+import { FormSubmissionSubmitForm } from "./form-submission-submit-form";
 
 export const FormSubmissionForm = ({
   submission,
@@ -178,7 +179,7 @@ export const FormSubmissionForm = ({
       innerCss: "sd-btn save-form",
       action: () => {
         const dataToSave = { ...model.data };
-        console.log("Saving form data:", dataToSave);
+
         executeUpdate({ id: submission.id, data: dataToSave });
       },
     });
@@ -190,15 +191,7 @@ export const FormSubmissionForm = ({
         modals.open({
           closeOnClickOutside: false,
           title: "Formular einreichen",
-          children: (
-            <ButtonAction
-              fullWidth
-              action={submitFormSubmission}
-              values={{ id: submission.id, data: model.data }}
-            >
-              Formular einreichen
-            </ButtonAction>
-          ),
+          children: <FormSubmissionSubmitForm id={submission.id} />,
         });
       },
     });
@@ -273,9 +266,7 @@ export const FormSubmissionForm = ({
         modals.open({
           closeOnClickOutside: false,
           title: "Formular archivieren",
-          children: (
-            <FormSubmissionStatusForm id={submission.id} status="archived" />
-          ),
+          children: <FormSubmissionArchiveForm id={submission.id} />,
         });
       },
     });

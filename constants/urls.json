@@ -1,0 +1,13 @@
+{
+  "runs": "Workflow-Ausführungen",
+  "workflows": "Workflows",
+  "designer": "Editor",
+  "users": "Benutzer",
+  "teams": "Bereiche",
+  "n8n": "n8n",
+  "dashboard": "Dashboard",
+  "forms": "Formulare",
+  "form-submissions": "Formulareingaben",
+  "admin": "Admin",
+  "archive": "Archiv"
+}

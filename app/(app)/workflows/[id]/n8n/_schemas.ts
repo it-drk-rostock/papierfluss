@@ -9,6 +9,7 @@ export const connectN8nWorkflowSchema = z.object({
     "completeN8nWorkflows",
     "archiveN8nWorkflows",
     "reactivateN8nWorkflows",
+    "lastN8nWorkflows",
   ]),
   workflows: z
     .array(
@@ -28,6 +29,7 @@ export const disconnectN8nWorkflowSchema = z.object({
     "completeN8nWorkflows",
     "archiveN8nWorkflows",
     "reactivateN8nWorkflows",
+    "lastN8nWorkflows",
   ]),
   n8nWorkflowId: z.string().min(1),
 });

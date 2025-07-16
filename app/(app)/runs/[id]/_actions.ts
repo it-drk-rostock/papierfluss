@@ -73,6 +73,7 @@ export const getWorkflowRun = async (id: string) => {
         status: true,
         startedAt: true,
         completedAt: true,
+        isArchived: true,
         workflow: {
           select: {
             id: true,
@@ -81,6 +82,7 @@ export const getWorkflowRun = async (id: string) => {
             isActive: true,
             isPublic: true,
             submitProcessPermissions: true,
+            information: true,
             responsibleTeam: {
               select: {
                 name: true,
@@ -98,6 +100,7 @@ export const getWorkflowRun = async (id: string) => {
             id: true,
             data: true,
             status: true,
+            resetProcessText: true,
             startedAt: true,
             completedAt: true,
             submittedBy: {
@@ -117,6 +120,7 @@ export const getWorkflowRun = async (id: string) => {
                 theme: true,
                 parentId: true,
                 submitProcessPermissions: true,
+                viewProcessPermissions: true,
                 responsibleTeam: {
                   select: {
                     name: true,
@@ -163,6 +167,7 @@ export const getWorkflowRun = async (id: string) => {
       status: true,
       startedAt: true,
       completedAt: true,
+      isArchived: true,
       workflow: {
         select: {
           id: true,
@@ -171,6 +176,7 @@ export const getWorkflowRun = async (id: string) => {
           isActive: true,
           isPublic: true,
           submitProcessPermissions: true,
+          information: true,
           responsibleTeam: {
             select: {
               name: true,
@@ -188,6 +194,7 @@ export const getWorkflowRun = async (id: string) => {
           id: true,
           data: true,
           status: true,
+          resetProcessText: true,
           startedAt: true,
           completedAt: true,
           submittedBy: {
@@ -207,6 +214,7 @@ export const getWorkflowRun = async (id: string) => {
               theme: true,
               parentId: true,
               submitProcessPermissions: true,
+              viewProcessPermissions: true,
               responsibleTeam: {
                 select: {
                   name: true,
@@ -265,6 +273,74 @@ export const getWorkflowRun = async (id: string) => {
     throw new Error("Keine Berechtigung zum Anzeigen dieses Workflow Runs");
   }
 
+  // Apply view permissions filtering for regular users (not admins)
+  if (user.role === "user" || user.role === "moderator") {
+    // Get all process data for permission context
+    const allProcessData = Object.assign(
+      {},
+      ...workflowRun.processes
+        .filter((p) => p.data && typeof p.data === "object")
+        .map((p) => p.data)
+    );
+
+    // Filter processes based on view permissions
+    workflowRun.processes = workflowRun.processes.map((processRun) => {
+      const process = processRun.process;
+
+      // If no view permissions are set, allow view (backward compatibility)
+      if (!process.viewProcessPermissions) {
+        return processRun;
+      }
+
+      try {
+        const context = {
+          user: {
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            id: user.id,
+            teams: user.teams?.map((t) => t.name) ?? [],
+          },
+          process: {
+            responsibleTeam: process.responsibleTeam?.name,
+            teams: process.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
+            teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
+          },
+          data: allProcessData,
+        };
+
+        const rules = JSON.parse(process.viewProcessPermissions);
+        const hasViewPermission = jsonLogic.apply(rules, context);
+
+        // If user doesn't have view permission, remove schema and data
+        if (hasViewPermission !== true) {
+          return {
+            ...processRun,
+            data: null,
+            process: {
+              ...process,
+              schema: null,
+            },
+          };
+        }
+
+        return processRun;
+      } catch {
+        return {
+          ...processRun,
+          data: null,
+          process: {
+            ...process,
+            schema: null,
+          },
+        };
+      }
+    });
+  }
+
   return workflowRun;
 };
 
@@ -295,6 +371,107 @@ export const resetProcessRun = authActionClient
 
     let workflowRunId: string;
     try {
+      // First, get the current process run to check workflow run status
+      const currentProcessRun = await prisma.processRun.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          status: true,
+          process: {
+            select: {
+              resetProcessPermissions: true,
+            },
+          },
+          workflowRunId: true,
+          workflowRun: {
+            select: {
+              isArchived: true,
+              processes: {
+                select: {
+                  data: true,
+                },
+              },
+              id: true,
+              status: true,
+              workflow: {
+                select: {
+                  responsibleTeam: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  teams: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  name: true,
+                  description: true,
+                  reactivateN8nWorkflows: {
+                    select: {
+                      workflowId: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!currentProcessRun) {
+        throw new Error("Prozess nicht gefunden");
+      }
+
+      if (currentProcessRun.status !== "completed") {
+        throw new Error("Prozess ist nicht abgeschlossen");
+      }
+
+      const allProcessData = Object.assign(
+        {},
+        ...currentProcessRun.workflowRun.processes
+          .filter((p) => p.data && typeof p.data === "object")
+          .map((p) => p.data)
+      );
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          data: allProcessData,
+          process: {
+            responsibleTeam:
+              currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+            teams:
+              currentProcessRun.workflowRun.workflow.teams?.map(
+                (t) => t.name
+              ) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          currentProcessRun.process.resetProcessPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error(
+            "Keine Berechtigung zum Zurücksetzen dieses Prozesses"
+          );
+        }
+      }
+
+      workflowRunId = currentProcessRun.workflowRunId;
+      const workflowRun = currentProcessRun.workflowRun;
+      const shouldReactivateWorkflow =
+        workflowRun.isArchived || workflowRun.status === "completed";
+
+      // Update the process run status
       const processRun = await prisma.processRun.update({
         where: { id, status: "completed" },
         data: {
@@ -307,7 +484,6 @@ export const resetProcessRun = authActionClient
             select: {
               name: true,
               description: true,
-
               responsibleTeam: {
                 select: {
                   name: true,
@@ -324,7 +500,16 @@ export const resetProcessRun = authActionClient
           workflowRunId: true,
         },
       });
-      workflowRunId = processRun.workflowRunId;
+
+      // If workflow run was archived or completed, reactivate it
+      if (shouldReactivateWorkflow) {
+        await prisma.workflowRun.update({
+          where: { id: workflowRunId },
+          data: {
+            status: "ongoing",
+          },
+        });
+      }
 
       // Get all process run data for the workflow run
       const { processDataMap } = await getAllProcessRunData(workflowRunId);
@@ -339,15 +524,26 @@ export const resetProcessRun = authActionClient
           allProcessData: processDataMap,
           resetProcessText: processRun.resetProcessText,
         },
+        workflow: {
+          name: workflowRun.workflow.name,
+          description: workflowRun.workflow.description,
+          responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
+          teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
+        },
         process: {
           ...processRun.process,
         },
       };
 
-      await triggerN8nWebhooks(
-        processRun.process.reactivateN8nWorkflows.map((w) => w.workflowId),
-        submissionContext
-      );
+      // Collect all workflow IDs to trigger (process + workflow reactivate workflows)
+      const allWorkflowIds = [
+        ...processRun.process.reactivateN8nWorkflows.map((w) => w.workflowId),
+        ...(shouldReactivateWorkflow
+          ? workflowRun.workflow.reactivateN8nWorkflows.map((w) => w.workflowId)
+          : []),
+      ];
+
+      await triggerN8nWebhooks(allWorkflowIds, submissionContext);
     } catch (error) {
       throw formatError(error);
     }
@@ -388,16 +584,52 @@ export const completeProcessRun = authActionClient
     try {
       // First, get the current process run and its dependencies
       const currentProcessRun = await prisma.processRun.findUnique({
-        where: { id },
+        where: {
+          id,
+        },
         select: {
           id: true,
           status: true,
+          workflowRun: {
+            select: {
+              isArchived: true,
+              status: true,
+              processes: {
+                select: {
+                  data: true,
+                },
+              },
+              workflow: {
+                select: {
+                  name: true,
+                  description: true,
+                  responsibleTeam: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  teams: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  lastN8nWorkflows: {
+                    select: {
+                      workflowId: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          data: true,
           workflowRunId: true,
           process: {
             select: {
               id: true,
               name: true,
               description: true,
+              submitProcessPermissions: true,
               responsibleTeam: {
                 select: {
                   name: true,
@@ -421,6 +653,54 @@ export const completeProcessRun = authActionClient
 
       if (!currentProcessRun) {
         throw new Error("Prozess nicht gefunden");
+      }
+
+      const allProcessData = Object.assign(
+        {},
+        ...currentProcessRun.workflowRun.processes
+          .filter((p) => p.data && typeof p.data === "object")
+          .map((p) => p.data)
+      );
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          data: allProcessData,
+          process: {
+            responsibleTeam:
+              currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+            teams:
+              currentProcessRun.workflowRun.workflow.teams?.map(
+                (t) => t.name
+              ) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          currentProcessRun.process.submitProcessPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error(
+            "Keine Berechtigung zum Abschließen dieses Prozesses"
+          );
+        }
+      }
+
+      if (
+        currentProcessRun.workflowRun.isArchived ||
+        currentProcessRun.workflowRun.status === "completed"
+      ) {
+        throw new Error(
+          "Workflow Ausführung ist abgeschlossen oder archiviert"
+        );
       }
 
       if (currentProcessRun.status !== "ongoing") {
@@ -466,6 +746,7 @@ export const completeProcessRun = authActionClient
         where: { id, status: "ongoing" },
         data: {
           status: "completed",
+          resetProcessText: null,
         },
         select: {
           data: true,
@@ -501,9 +782,15 @@ export const completeProcessRun = authActionClient
         },
       });
 
+      const ongoingProcesses = allProcessRuns.filter(
+        (run) => run.status === "ongoing"
+      );
       const allProcessesCompleted = allProcessRuns.every(
         (run) => run.status === "completed"
       );
+
+      // Check if only one process remains (second-to-last was just completed)
+      const onlyOneProcessRemains = ongoingProcesses.length === 1;
 
       // If all processes are completed, also complete the workflow run
       if (allProcessesCompleted) {
@@ -527,6 +814,15 @@ export const completeProcessRun = authActionClient
           data: processRun.data,
           allProcessData: processDataMap,
         },
+        workflow: {
+          name: currentProcessRun.workflowRun.workflow.name,
+          description: currentProcessRun.workflowRun.workflow.description,
+          responsibleTeam:
+            currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+          teams:
+            currentProcessRun.workflowRun.workflow.teams?.map((t) => t.name) ??
+            [],
+        },
         process: {
           ...processRun.process,
         },
@@ -536,8 +832,17 @@ export const completeProcessRun = authActionClient
         processRun.process.completeN8nWorkflows.map((w) => w.workflowId),
         submissionContext
       );
+
+      // Trigger lastN8nWorkflows if only one process remains
+      if (onlyOneProcessRemains) {
+        await triggerN8nWebhooks(
+          currentProcessRun.workflowRun.workflow.lastN8nWorkflows.map(
+            (w) => w.workflowId
+          ),
+          submissionContext
+        );
+      }
     } catch (error) {
-      console.log(error);
       throw formatError(error);
     }
 
@@ -578,13 +883,43 @@ export const saveProcessRun = authActionClient
     try {
       // First, get the current process run and its dependencies
       const currentProcessRun = await prisma.processRun.findUnique({
-        where: { id },
+        where: {
+          id,
+        },
         select: {
           id: true,
           status: true,
+          workflowRun: {
+            select: {
+              isArchived: true,
+              processes: {
+                select: {
+                  data: true,
+                },
+              },
+              status: true,
+              workflow: {
+                select: {
+                  name: true,
+                  description: true,
+                  teams: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  responsibleTeam: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
           workflowRunId: true,
           process: {
             select: {
+              submitProcessPermissions: true,
               id: true,
               name: true,
               description: true,
@@ -611,6 +946,54 @@ export const saveProcessRun = authActionClient
 
       if (!currentProcessRun) {
         throw new Error("Prozess nicht gefunden");
+      }
+
+      const allProcessData = Object.assign(
+        {},
+        ...currentProcessRun.workflowRun.processes
+          .filter((p) => p.data && typeof p.data === "object")
+          .map((p) => p.data)
+      );
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          data: allProcessData,
+          process: {
+            responsibleTeam:
+              currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+            teams:
+              currentProcessRun.workflowRun.workflow.teams?.map(
+                (t) => t.name
+              ) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          currentProcessRun.process.submitProcessPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error(
+            "Keine Berechtigung zum Abschließen dieses Prozesses"
+          );
+        }
+      }
+
+      if (
+        currentProcessRun.workflowRun.isArchived ||
+        currentProcessRun.workflowRun.status === "completed"
+      ) {
+        throw new Error(
+          "Workflow Ausführung ist abgeschlossen oder archiviert"
+        );
       }
 
       if (currentProcessRun.status === "completed") {
@@ -655,6 +1038,7 @@ export const saveProcessRun = authActionClient
       const processRun = await prisma.processRun.update({
         where: { id },
         data: {
+          resetProcessText: null,
           data,
           status: "ongoing",
           workflowRun: {
@@ -697,6 +1081,15 @@ export const saveProcessRun = authActionClient
         data: {
           data: processRun.data,
           allProcessData: processDataMap,
+        },
+        workflow: {
+          name: currentProcessRun.workflowRun.workflow.name,
+          description: currentProcessRun.workflowRun.workflow.description,
+          responsibleTeam:
+            currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+          teams:
+            currentProcessRun.workflowRun.workflow.teams?.map((t) => t.name) ??
+            [],
         },
         process: {
           ...processRun.process,

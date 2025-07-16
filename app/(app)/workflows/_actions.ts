@@ -7,12 +7,49 @@ import {
   removeTeamSchema,
   updateWorkflowSchema,
   workflowSchema,
+  workflowInformationSchema,
 } from "./_schemas";
 import prisma from "@/lib/prisma";
 import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
 import jsonLogic from "json-logic-js";
+
+export const getWorkflowProcesses = async (id: string, search?: string) => {
+  const { user } = await authQuery();
+
+  const whereClause = {
+    workflowId: id,
+    ...(search ? {
+      name: {
+        contains: search,
+        mode: 'insensitive' as const,
+      },
+    } : {}),
+  };
+
+  if (user.role === "admin") {
+    return prisma.process.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+  }
+
+  const processes = await prisma.process.findMany({
+    where: whereClause,
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return processes;
+};
+
+export type ProcessProps = Awaited<ReturnType<typeof getWorkflowProcesses>>;
 
 /**
  * Creates a new form in the database.
@@ -30,8 +67,14 @@ export const createWorkflow = authActionClient
     event: "createWorkflowAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { name, description, isPublic, isActive, responsibleTeam } =
-      parsedInput;
+    const {
+      name,
+      description,
+      isPublic,
+      isActive,
+      responsibleTeam,
+      initializeProcess,
+    } = parsedInput;
 
     try {
       if (
@@ -46,9 +89,12 @@ export const createWorkflow = authActionClient
           description,
           isPublic,
           isActive,
-          editWorkflowPermissions: "(1 = 1)",
-          submitProcessPermissions: "(1 = 1)",
-          ...(responsibleTeam.id && {
+          editWorkflowPermissions: "true",
+          submitProcessPermissions: "true",
+          ...(initializeProcess?.id && {
+            initializeProcessId: initializeProcess.id,
+          }),
+          ...(responsibleTeam?.id && {
             responsibleTeamId: responsibleTeam.id,
           }),
         },
@@ -88,9 +134,18 @@ export const updateWorkflow = authActionClient
       editWorkflowPermissions,
       submitProcessPermissions,
       responsibleTeam,
+      initializeProcess,
     } = parsedInput;
 
     try {
+      // Check if user has moderator or admin role
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "moderator"
+      ) {
+        throw new Error("Keine Berechtigung zum Bearbeiten von Workflows");
+      }
+
       const workflow = await prisma.workflow.findUnique({
         where: { id },
         select: {
@@ -104,6 +159,7 @@ export const updateWorkflow = authActionClient
         throw new Error("Workflow nicht gefunden");
       }
 
+      // Only check permissions if user is not admin
       if (ctx.session.user.role !== "admin") {
         const context = {
           user: {
@@ -125,13 +181,6 @@ export const updateWorkflow = authActionClient
         }
       }
 
-      if (
-        ctx.session.user.role !== "moderator" &&
-        ctx.session.user.role !== "admin"
-      ) {
-        throw new Error("Keine Berechtigung zum bearbeiten dieses Workflows");
-      }
-
       await prisma.workflow.update({
         where: { id },
         data: {
@@ -141,6 +190,9 @@ export const updateWorkflow = authActionClient
           isActive,
           editWorkflowPermissions,
           submitProcessPermissions,
+          ...(initializeProcess?.id && {
+            initializeProcessId: initializeProcess.id,
+          }),
           responsibleTeamId: responsibleTeam?.id,
         },
       });
@@ -169,6 +221,14 @@ export const deleteWorkflow = authActionClient
   .stateAction(async ({ parsedInput, ctx }) => {
     const { id } = parsedInput;
     try {
+      // Check if user has moderator or admin role
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "moderator"
+      ) {
+        throw new Error("Keine Berechtigung zum Bearbeiten von Workflows");
+      }
+
       const workflow = await prisma.workflow.findUnique({
         where: { id },
         select: {
@@ -186,7 +246,7 @@ export const deleteWorkflow = authActionClient
         throw new Error("Workflow nicht gefunden");
       }
 
-      // Skip permission check for admins
+      // Only check permissions if user is not admin
       if (ctx.session.user.role !== "admin") {
         // Do permission check for moderators
         const context = {
@@ -197,8 +257,7 @@ export const deleteWorkflow = authActionClient
             id: ctx.session.user.id,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
-
-          form: {
+          workflow: {
             responsibleTeam: workflow.responsibleTeam?.name,
             teams: workflow.teams?.map((t) => t.name) ?? [],
           },
@@ -207,17 +266,9 @@ export const deleteWorkflow = authActionClient
         const rules = JSON.parse(workflow.editWorkflowPermissions || "{}");
         const hasPermission = jsonLogic.apply(rules, context);
 
-        if (!hasPermission) {
-          throw new Error("Keine Berechtigung zum löschen dieses Workflows");
+        if (hasPermission !== true) {
+          throw new Error("Keine Berechtigung zum Löschen dieses Workflows");
         }
-      }
-
-      // Only allow moderators and admins to delete
-      if (
-        ctx.session.user.role !== "moderator" &&
-        ctx.session.user.role !== "admin"
-      ) {
-        throw new Error("Keine Berechtigung zum löschen dieses Workflows");
       }
 
       await prisma.workflow.delete({
@@ -226,56 +277,12 @@ export const deleteWorkflow = authActionClient
     } catch (error) {
       throw formatError(error);
     }
+
     revalidatePath("/workflows");
     return {
       message: "Workflow gelöscht",
     };
   });
-
-/* export const fillOutForm = authActionClient
-  .schema(idSchema)
-  .metadata({
-    event: "fillOutFormAction",
-  })
-  .stateAction(async ({ parsedInput, ctx }) => {
-    let formSubmissionId: string;
-
-    try {
-      const submission = await prisma.$transaction(async (tx) => {
-        const form = await tx.form.findUnique({
-          where: { id: parsedInput.id },
-          select: {
-            isActive: true,
-            submissions: {
-              where: {
-                isExample: true,
-              },
-            },
-          },
-        });
-
-        const exampleSubmissionExists = form?.submissions.length > 0;
-
-        if (!form?.isActive) {
-          throw new Error("Formular ist nicht aktiviert");
-        }
-
-        return await tx.formSubmission.create({
-          data: {
-            formId: parsedInput.id,
-            submittedById: ctx.session.user.id,
-            isExample: exampleSubmissionExists ? false : true,
-          },
-        });
-      });
-
-      formSubmissionId = submission.id;
-    } catch (error) {
-      throw formatError(error);
-    }
-
-    redirect(`/form-submissions/${formSubmissionId}`);
-  }); */
 
 /**
  * Retrieves forms from the database based on user's role and access permissions.
@@ -308,11 +315,17 @@ export const getWorkflows = async () => {
         id: true,
         name: true,
         description: true,
-
         isActive: true,
         isPublic: true,
         editWorkflowPermissions: true,
         submitProcessPermissions: true,
+        initializeProcess: {
+          select: {
+            id: true,
+            name: true,
+            schema: true,
+          },
+        },
         responsibleTeam: {
           select: {
             id: true,
@@ -349,11 +362,17 @@ export const getWorkflows = async () => {
       id: true,
       name: true,
       description: true,
-
       isActive: true,
       isPublic: true,
       editWorkflowPermissions: true,
       submitProcessPermissions: true,
+      initializeProcess: {
+        select: {
+          id: true,
+          name: true,
+          schema: true,
+        },
+      },
       responsibleTeam: {
         select: {
           id: true,
@@ -381,17 +400,38 @@ export const removeTeam = authActionClient
     event: "removeTeamAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { id, teamId } = parsedInput;
+    const { teamId, id } = parsedInput;
     try {
+      // Check if user has moderator or admin role
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "moderator"
+      ) {
+        throw new Error("Keine Berechtigung zum Bearbeiten von Workflows");
+      }
+
       const workflow = await prisma.workflow.findUnique({
         where: { id },
-        select: { editWorkflowPermissions: true },
+        select: {
+          editWorkflowPermissions: true,
+          responsibleTeam: {
+            select: {
+              name: true,
+            },
+          },
+          teams: {
+            select: {
+              name: true,
+            },
+          },
+        },
       });
 
       if (!workflow) {
         throw new Error("Workflow nicht gefunden");
       }
 
+      // Only check permissions if user is not admin
       if (ctx.session.user.role !== "admin") {
         const context = {
           user: {
@@ -400,6 +440,10 @@ export const removeTeam = authActionClient
             role: ctx.session.user.role,
             id: ctx.session.user.id,
             teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: workflow.responsibleTeam?.name,
+            teams: workflow.teams?.map((t) => t.name) ?? [],
           },
         };
 
@@ -410,15 +454,14 @@ export const removeTeam = authActionClient
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Workflows");
         }
       }
+
       await prisma.workflow.update({
         where: {
           id,
         },
         data: {
           teams: {
-            disconnect: {
-              id: teamId,
-            },
+            disconnect: { id: teamId },
           },
         },
       });
@@ -441,6 +484,14 @@ export const assignTeams = authActionClient
   .stateAction(async ({ parsedInput, ctx }) => {
     const { teams, id } = parsedInput;
     try {
+      // Check if user has moderator or admin role
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "moderator"
+      ) {
+        throw new Error("Keine Berechtigung zum Bearbeiten von Workflows");
+      }
+
       const workflow = await prisma.workflow.findUnique({
         where: { id },
         select: {
@@ -462,6 +513,7 @@ export const assignTeams = authActionClient
         throw new Error("Workflow nicht gefunden");
       }
 
+      // Only check permissions if user is not admin
       if (ctx.session.user.role !== "admin") {
         const context = {
           user: {
@@ -522,4 +574,162 @@ export const getAvailableTeams = async (workflowId: string) => {
   });
 
   return teams;
+};
+
+/**
+ * Gets workflow information configuration
+ */
+export const getWorkflowInformation = async (workflowId: string) => {
+  await authQuery();
+
+  // Get the workflow with basic info
+  const workflow = await prisma.workflow.findUnique({
+    where: { id: workflowId },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      information: true,
+    },
+  });
+
+  if (!workflow) {
+    throw new Error("Workflow not found");
+  }
+
+  // Get the latest workflow run with process runs
+  const latestWorkflowRun = await prisma.workflowRun.findFirst({
+    where: { workflowId, status: "completed" },
+    orderBy: { startedAt: "desc" },
+    select: {
+      id: true,
+      processes: {
+        select: {
+          id: true,
+          data: true,
+          process: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return {
+    ...workflow,
+    latestWorkflowRun,
+  };
+};
+
+/**
+ * Updates workflow information configuration
+ */
+export const updateWorkflowInformation = authActionClient
+  .schema(workflowInformationSchema.extend(idSchema.shape))
+  .metadata({
+    event: "updateWorkflowInformationAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, fields } = parsedInput;
+
+    try {
+      const workflow = await prisma.workflow.findUnique({
+        where: { id },
+        select: {
+          editWorkflowPermissions: true,
+          responsibleTeam: {
+            select: {
+              name: true,
+            },
+          },
+          teams: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (!workflow) {
+        throw new Error("Workflow nicht gefunden");
+      }
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: workflow.responsibleTeam?.name,
+            teams: workflow.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(workflow.editWorkflowPermissions || "{}");
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Workflows");
+        }
+      }
+      await prisma.workflow.update({
+        where: { id },
+        data: {
+          information: { fields },
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/workflows/${id}/designer`);
+    return {
+      message: "Workflow Informationen aktualisiert",
+    };
+  });
+
+/**
+ * Gets workflow runs for a specific workflow to provide data for permission builder
+ */
+export const getWorkflowRunsForPermissions = async (workflowId: string) => {
+  await authQuery();
+
+  const workflowRuns = await prisma.workflowRun.findMany({
+    where: { workflowId, status: "completed" },
+    select: {
+      id: true,
+      processes: {
+        select: {
+          data: true,
+          process: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+    take: 10, // Limit to last 10 runs to avoid performance issues
+    orderBy: {
+      startedAt: "desc",
+    },
+  });
+
+  // Transform the data to match the expected type
+  return workflowRuns.map((run) => ({
+    id: run.id,
+    processes: run.processes.map((process) => ({
+      data: process.data as Record<string, unknown> | null,
+      process: {
+        name: process.process.name,
+      },
+    })),
+  }));
 };

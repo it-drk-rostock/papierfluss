@@ -18,7 +18,6 @@ export const MantineProvider = ({
       <DatesProvider
         settings={{
           locale: "de",
-          timezone: "Europe/Berlin",
         }}
       >
         <ModalsProvider>{children}</ModalsProvider>

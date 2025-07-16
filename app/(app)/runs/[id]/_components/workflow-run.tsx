@@ -7,6 +7,7 @@ import {
   GridCol,
   Group,
   Divider,
+  Badge,
 } from "@mantine/core";
 import React from "react";
 import { getWorkflowRun } from "../_actions";
@@ -17,6 +18,32 @@ import { WorkflowRunForms } from "./workflow-run-forms";
 import { LinkButton } from "@/components/link-button";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { buttonIconStyles } from "@/constants/button-icon-styles";
+
+// Helper function to extract information field data
+const getInformationFieldData = (
+  workflowRun: Awaited<ReturnType<typeof getWorkflowRun>>,
+  fieldKey: string
+) => {
+  if (!workflowRun) return null;
+
+  // Search through all process runs to find the field data
+  for (const processRun of workflowRun.processes) {
+    if (
+      processRun.data &&
+      typeof processRun.data === "object" &&
+      processRun.data !== null
+    ) {
+      const data = processRun.data as Record<string, unknown>;
+      if (fieldKey in data) {
+        return {
+          value: data[fieldKey],
+          processName: processRun.process.name,
+        };
+      }
+    }
+  }
+  return null;
+};
 
 export const WorkflowRun = async ({
   params,
@@ -30,6 +57,29 @@ export const WorkflowRun = async ({
   if (!workflowRun) {
     return notFound();
   }
+
+  // Extract configured information fields
+  const configuredFields = (() => {
+    if (
+      !workflowRun.workflow.information ||
+      typeof workflowRun.workflow.information !== "object" ||
+      !("fields" in workflowRun.workflow.information)
+    ) {
+      return [];
+    }
+
+    const info = workflowRun.workflow.information as {
+      fields: Array<{ label: string; fieldKey: string }>;
+    };
+
+    return info.fields.map((field) => {
+      const fieldData = getInformationFieldData(workflowRun, field.fieldKey);
+      return {
+        ...field,
+        data: fieldData,
+      };
+    });
+  })();
 
   return (
     <Stack gap="md">
@@ -52,7 +102,32 @@ export const WorkflowRun = async ({
           <Paper withBorder p="md">
             <Stack>
               <Title order={3}>Formulare</Title>
-              <WorkflowRunForms processes={workflowRun.processes} />
+              <WorkflowRunForms
+                processes={workflowRun.processes.map((processRun) => ({
+                  id: processRun.id,
+                  status: processRun.status,
+                  data:
+                    processRun.data &&
+                    typeof processRun.data === "object" &&
+                    processRun.data !== null
+                      ? (processRun.data as Record<string, unknown>)
+                      : null,
+                  process: {
+                    id: processRun.process.id,
+                    name: processRun.process.name,
+                    description: processRun.process.description,
+                    isCategory: processRun.process.isCategory,
+                    order: processRun.process.order,
+                    schema:
+                      processRun.process.schema &&
+                      typeof processRun.process.schema === "object" &&
+                      processRun.process.schema !== null
+                        ? (processRun.process.schema as Record<string, unknown>)
+                        : null,
+                    parentId: processRun.process.parentId,
+                  },
+                }))}
+              />
             </Stack>
           </Paper>
         </GridCol>
@@ -72,7 +147,12 @@ export const WorkflowRun = async ({
             <Stack>
               <Title order={3}>Informationen</Title>
               <Stack gap="md">
-                <WorkflowStatusBadge status={workflowRun.status} />
+                <Group>
+                  <WorkflowStatusBadge status={workflowRun.status} />
+                  {workflowRun.isArchived && (
+                    <Badge color="gray">Archiviert</Badge>
+                  )}
+                </Group>
                 <Text>
                   Gestartet am: {workflowRun.startedAt.toLocaleDateString()}
                 </Text>
@@ -80,6 +160,21 @@ export const WorkflowRun = async ({
                   Abgeschlossen am:{" "}
                   {workflowRun.completedAt?.toLocaleDateString()}
                 </Text>
+
+                {/* Dynamic Information Fields */}
+                {configuredFields.length > 0 && (
+                  <>
+                    <Divider />
+                    {configuredFields.map((field, index) => (
+                      <Text key={index}>
+                        {field.fieldKey}:{" "}
+                        {field.data
+                          ? String(field.data.value)
+                          : "Keine Daten verfügbar"}
+                      </Text>
+                    ))}
+                  </>
+                )}
               </Stack>
             </Stack>
           </Paper>

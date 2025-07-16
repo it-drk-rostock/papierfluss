@@ -1,20 +1,10 @@
 import React from "react";
-import {
-  Stack,
-  Group,
-  Title,
-  TabsList,
-  TabsTab,
-  TabsPanel,
-  Tabs,
-} from "@mantine/core";
-import { EmptyState } from "@/components/empty-state";
+import { Stack, Title, Text, Group } from "@mantine/core";
 import { getForm } from "../_actions";
 import { notFound } from "next/navigation";
-import { FormSubmissionCard } from "./form-submission-card";
-import { IconLayoutGrid, IconList } from "@tabler/icons-react";
-import { baseIconStyles } from "@/constants/base-icon-styles";
 import { FormSubmissionsTable } from "./form-submissions-table";
+import { ButtonLink } from "@/components/button-link";
+import { IconArchive } from "@tabler/icons-react";
 
 export const Form = async ({ params }: { params: Promise<{ id: string }> }) => {
   const formId = (await params).id;
@@ -25,43 +15,20 @@ export const Form = async ({ params }: { params: Promise<{ id: string }> }) => {
   }
 
   return (
-    <Stack align="center" gap="xl">
-      <Title order={2}>Einreichungen: {form.title}</Title>
-
-      {form.submissions.length === 0 ? (
-        <EmptyState
-          text="Keine Formular Einreichungen gefunden"
-          variant="light"
+    <Stack gap="xl">
+      <Group justify="space-between" align="flex-start">
+        <Stack gap="0">
+          <Title order={1}>{form.title} - Übersicht</Title>
+          <Text c="dimmed">{form.description}</Text>
+        </Stack>
+        <ButtonLink
+          leftSection={<IconArchive size={14} stroke={1.5} />}
+          variant="outline"
+          title="Archiv anzeigen"
+          href={`/forms/${formId}/archive`}
         />
-      ) : (
-        <Tabs defaultValue="cards">
-          <TabsList>
-            <TabsTab
-              value="cards"
-              leftSection={<IconLayoutGrid style={baseIconStyles} />}
-            ></TabsTab>
-            <TabsTab
-              value="list"
-              leftSection={<IconList style={baseIconStyles} />}
-            ></TabsTab>
-          </TabsList>
-
-          <TabsPanel value="cards" mt="sm">
-            <Group justify="center" gap="sm">
-              {form.submissions.map((submission) => (
-                <FormSubmissionCard
-                  key={submission.id}
-                  submission={submission}
-                />
-              ))}
-            </Group>
-          </TabsPanel>
-
-          <TabsPanel value="list">
-            <FormSubmissionsTable json={form.schema} data={form.submissions} />
-          </TabsPanel>
-        </Tabs>
-      )}
+      </Group>
+      <FormSubmissionsTable form={form} />
     </Stack>
   );
 };

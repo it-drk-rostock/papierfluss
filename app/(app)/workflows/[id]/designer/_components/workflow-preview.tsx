@@ -13,11 +13,7 @@ import {
   Grid,
   ActionIcon,
 } from "@mantine/core";
-import {
-  IconChevronDown,
-  IconChevronRight,
-  IconChevronUp,
-} from "@tabler/icons-react";
+import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import React, { useMemo } from "react";
 import { WorkflowProcessesProps } from "../_actions";
 import { ProcessPreviewItem } from "./process-preview-item";
@@ -146,6 +142,26 @@ export const WorkflowPreview = ({
     return buildTree(null);
   }, [workflow]);
 
+  // Extract dynamic information from workflow
+  const dynamicInformation = useMemo(() => {
+    if (
+      !workflow?.information ||
+      typeof workflow.information !== "object" ||
+      !("fields" in workflow.information)
+    )
+      return [];
+
+    const info = workflow.information as {
+      fields: Array<{ label: string; fieldKey: string }>;
+    };
+
+    return info.fields.map((field) => {
+      return {
+        fieldKey: field.fieldKey,
+      };
+    });
+  }, [workflow]);
+
   const renderNode = ({
     node,
     expanded,
@@ -228,7 +244,23 @@ export const WorkflowPreview = ({
           <Paper withBorder p="md">
             <Stack>
               <Title order={3}>Informationen</Title>
-              <Stack gap="md"></Stack>
+              <Stack gap="md">
+                {dynamicInformation.length === 0 ? (
+                  <Text c="dimmed" ta="center" py="xl">
+                    Keine Informationen konfiguriert
+                  </Text>
+                ) : (
+                  dynamicInformation.map(
+                    (info: { fieldKey: string }, index: number) => (
+                      <Stack key={index} gap="xs">
+                        <Text size="sm" fw={500}>
+                          {info.fieldKey}
+                        </Text>
+                      </Stack>
+                    )
+                  )
+                )}
+              </Stack>
             </Stack>
           </Paper>
         </Grid.Col>

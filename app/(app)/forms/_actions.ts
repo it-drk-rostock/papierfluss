@@ -7,8 +7,10 @@ import {
   formSchema,
   removeTeamSchema,
   updateFormSchema,
+  updateFormInformationSchema,
 } from "./_schemas";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
@@ -31,7 +33,7 @@ export const createForm = authActionClient
     event: "createFormAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { title, description, icon, isPublic, isActive, responsibleTeam } =
+    const { title, description, isPublic, isActive, responsibleTeam } =
       parsedInput;
 
     try {
@@ -45,11 +47,10 @@ export const createForm = authActionClient
         data: {
           title,
           description,
-          icon,
           isPublic,
           isActive,
-          editFormPermissions: "(1 = 1)",
-          reviewFormPermissions: "(1 = 1)",
+          editFormPermissions: "true",
+          reviewFormPermissions: "true",
           responsibleTeamId: responsibleTeam?.id,
           createdById: ctx.session.user.id,
         },
@@ -84,12 +85,12 @@ export const updateForm = authActionClient
       id,
       title,
       description,
-      icon,
       isPublic,
       isActive,
       editFormPermissions,
       reviewFormPermissions,
       responsibleTeam,
+      information,
     } = parsedInput;
 
     try {
@@ -139,16 +140,15 @@ export const updateForm = authActionClient
         data: {
           title,
           description,
-          icon,
           isPublic,
           isActive,
           editFormPermissions,
           reviewFormPermissions,
           responsibleTeamId: responsibleTeam?.id,
+          information,
         },
       });
     } catch (error) {
-      console.log(error);
       throw formatError(error);
     }
 
@@ -250,15 +250,8 @@ export const fillOutForm = authActionClient
           where: { id: parsedInput.id },
           select: {
             isActive: true,
-            submissions: {
-              where: {
-                isExample: true,
-              },
-            },
           },
         });
-
-        const exampleSubmissionExists = form?.submissions.length > 0;
 
         if (!form?.isActive) {
           throw new Error("Formular ist nicht aktiviert");
@@ -268,7 +261,6 @@ export const fillOutForm = authActionClient
           data: {
             formId: parsedInput.id,
             submittedById: ctx.session.user.id,
-            isExample: exampleSubmissionExists ? false : true,
           },
         });
       });
@@ -307,97 +299,115 @@ export type UserSearchParams = {
  * }>>} Array of form objects matching the access criteria
  * @throws {Error} If the query fails or if the user is not authorized
  */
-export const getForms = async () => {
+export const getForms = async (search?: string) => {
   const { user } = await authQuery();
 
-  if (user.role === "admin") {
-    return prisma.form.findMany({
+  const selectClause = {
+    id: true,
+    title: true,
+    description: true,
+    schema: true,
+    isActive: true,
+    isPublic: true,
+    information: true,
+    editFormPermissions: true,
+    reviewFormPermissions: true,
+    responsibleTeam: {
       select: {
         id: true,
-        title: true,
-        description: true,
-        icon: true,
-        schema: true,
-        isActive: true,
-        isPublic: true,
-        editFormPermissions: true,
-        reviewFormPermissions: true,
-        responsibleTeam: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        teams: {
-          select: {
-            id: true,
-            name: true,
-            contactEmail: true,
-          },
-        },
-        submissions: {
-          select: {
-            data: true,
-          },
-          where: { isExample: true },
-          take: 1,
-        },
+        name: true,
       },
+    },
+    teams: {
+      select: {
+        id: true,
+        name: true,
+        contactEmail: true,
+      },
+    },
+    submissions: {
+      select: {
+        data: true,
+      },
+      where: { status: "completed" },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 1,
+    },
+  } as const;
+
+  if (user.role === "admin") {
+    const whereClause = search
+      ? {
+          OR: [
+            { title: { contains: search, mode: Prisma.QueryMode.insensitive } },
+            {
+              description: {
+                contains: search,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+          ],
+        }
+      : {};
+
+    return prisma.form.findMany({
+      where: whereClause,
+      select: selectClause,
     });
   }
 
-  const forms = await prisma.form.findMany({
-    where: {
-      OR: [
-        { isPublic: true },
-        {
-          teams: {
-            some: {
-              users: {
-                some: { id: user.id },
-              },
+  // For non-admin users
+  const permissionConditions = {
+    OR: [
+      { isPublic: true },
+      {
+        teams: {
+          some: {
+            users: {
+              some: { id: user.id },
             },
           },
         },
-      ],
-    },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      icon: true,
-      schema: true,
-      isActive: true,
-      isPublic: true,
-      editFormPermissions: true,
-      reviewFormPermissions: true,
-      responsibleTeam: {
-        select: {
-          id: true,
-          name: true,
-        },
       },
-      teams: {
-        select: {
-          id: true,
-          name: true,
-          contactEmail: true,
-        },
-      },
-      submissions: {
-        select: {
-          data: true,
-        },
-        where: { isExample: true },
-        take: 1,
-      },
-    },
+    ],
+  };
+
+  const whereClause = search
+    ? {
+        AND: [
+          permissionConditions,
+          {
+            OR: [
+              {
+                title: { contains: search, mode: Prisma.QueryMode.insensitive },
+              },
+              {
+                description: {
+                  contains: search,
+                  mode: Prisma.QueryMode.insensitive,
+                },
+              },
+            ],
+          },
+        ],
+      }
+    : permissionConditions;
+
+  const forms = await prisma.form.findMany({
+    where: whereClause,
+    select: selectClause,
   });
 
   return forms;
 };
 
 export type FormProps = Awaited<ReturnType<typeof getForms>>;
+
+export type FormsSearchParams = {
+  search: string;
+};
 
 export const removeTeam = authActionClient
   .schema(removeTeamSchema)
@@ -550,4 +560,156 @@ export const getAvailableTeams = async ({ formId }: AvailableTeamsParams) => {
   });
 
   return teams;
+};
+
+/**
+ * Updates form information configuration
+ */
+export const updateFormInformation = authActionClient
+  .schema(updateFormInformationSchema)
+  .metadata({
+    event: "updateFormInformationAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, fields } = parsedInput;
+
+    try {
+      const form = await prisma.form.findUnique({
+        where: { id },
+        select: {
+          editFormPermissions: true,
+          responsibleTeam: {
+            select: {
+              name: true,
+            },
+          },
+          teams: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (!form) {
+        throw new Error("Form nicht gefunden");
+      }
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            ...ctx.session.user,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          form: {
+            responsibleTeam: form.responsibleTeam?.name,
+            teams: form.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(form.editFormPermissions || "{}");
+        const hasPermission = await jsonLogic.apply(rules, context);
+
+        if (!hasPermission) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Formulars");
+        }
+      }
+
+      await prisma.form.update({
+        where: { id },
+        data: {
+          information: { fields },
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/forms/${id}`);
+    return {
+      message: "Formular Informationen aktualisiert",
+    };
+  });
+
+export const getForm = async (id: string) => {
+  const { user } = await authQuery();
+
+  if (user.role === "admin") {
+    return prisma.form.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        teams: {
+          select: {
+            name: true,
+          },
+        },
+        responsibleTeam: {
+          select: {
+            name: true,
+          },
+        },
+        schema: true,
+        information: true,
+        submissions: {
+          where: {
+            isArchived: false,
+          },
+          select: {
+            id: true,
+            data: true,
+            status: true,
+            submittedBy: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  const form = await prisma.form.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      title: true,
+      description: true,
+      id: true,
+      reviewFormPermissions: true,
+      teams: {
+        select: {
+          name: true,
+        },
+      },
+      responsibleTeam: {
+        select: {
+          name: true,
+        },
+      },
+      schema: true,
+      information: true,
+      submissions: {
+        where: {
+          isArchived: false,
+        },
+        select: {
+          id: true,
+          status: true,
+          data: true,
+          submittedBy: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
 };

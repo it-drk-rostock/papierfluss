@@ -12,10 +12,12 @@ import {
   updateProcessFormSchema,
   moveProcessSchema,
   updateProcessSchema,
+  updateProcessPermissionsSchema,
 } from "./_schemas";
 import { Prisma } from "@prisma/client";
 import jsonLogic from "json-logic-js";
 import { idSchema } from "@/schemas/id-schema";
+import { forbidden } from "next/navigation";
 
 export interface Process {
   id: string;
@@ -32,7 +34,11 @@ export interface Process {
  * Gets all processes for a workflow, including their relationships
  */
 export const getWorkflowProcesses = async (workflowId: string) => {
-  await authQuery();
+  const { user } = await authQuery();
+
+  if (user.role !== "admin" && user.role !== "moderator") {
+    forbidden();
+  }
 
   const workflow = await prisma.workflow.findUnique({
     where: { id: workflowId },
@@ -40,6 +46,19 @@ export const getWorkflowProcesses = async (workflowId: string) => {
       id: true,
       name: true,
       description: true,
+      information: true,
+      editWorkflowPermissions: true,
+      submitProcessPermissions: true,
+      responsibleTeam: {
+        select: {
+          name: true,
+        },
+      },
+      teams: {
+        select: {
+          name: true,
+        },
+      },
       processes: {
         select: {
           id: true,
@@ -50,6 +69,10 @@ export const getWorkflowProcesses = async (workflowId: string) => {
           isCategory: true,
           schema: true,
           theme: true,
+          editProcessPermissions: true,
+          submitProcessPermissions: true,
+          viewProcessPermissions: true,
+          resetProcessPermissions: true,
           dependencies: {
             select: {
               id: true,
@@ -70,8 +93,54 @@ export const getWorkflowProcesses = async (workflowId: string) => {
           },
         },
       },
+      runs: {
+        take: 1,
+        orderBy: { startedAt: "asc" },
+        select: {
+          id: true,
+          processes: {
+            select: {
+              id: true,
+              data: true,
+              process: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
+
+  if (!workflow) {
+    throw new Error("Workflow nicht gefunden");
+  }
+
+  if (user.role !== "admin") {
+    const context = {
+      user: {
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        id: user.id,
+        teams: user.teams?.map((t) => t.name) ?? [],
+      },
+      workflow: {
+        responsibleTeam: workflow.responsibleTeam?.name,
+        teams: workflow.teams?.map((t) => t.name) ?? [],
+      },
+    };
+
+    const rules = JSON.parse(workflow.editWorkflowPermissions || "{}");
+    const hasPermission = jsonLogic.apply(rules, context);
+
+    if (hasPermission !== true) {
+      forbidden();
+    }
+  }
 
   return workflow;
 };
@@ -482,5 +551,42 @@ export const updateProcess = authActionClient
 
     return {
       message: "Prozess aktualisiert",
+    };
+  });
+
+/**
+ * Updates process permissions
+ */
+export const updateProcessPermissions = authActionClient
+  .schema(updateProcessPermissionsSchema)
+  .metadata({
+    event: "updateProcessPermissionsAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const {
+      id,
+      editProcessPermissions,
+      submitProcessPermissions,
+      viewProcessPermissions,
+      resetProcessPermissions,
+    } = parsedInput;
+
+    try {
+      await prisma.process.update({
+        where: { id },
+        data: {
+          editProcessPermissions,
+          submitProcessPermissions,
+          viewProcessPermissions,
+          resetProcessPermissions,
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/workflows/${id}/designer`);
+    return {
+      message: "Prozess Berechtigungen aktualisiert",
     };
   });

@@ -1,6 +1,6 @@
 import { workflowStatus } from "@/constants/workflow-status";
 import { Badge } from "@mantine/core";
-import { WorkflowStatus } from "@prisma/client";
+import { WorkflowStatus } from "@prisma-client/client";
 
 import React from "react";
 

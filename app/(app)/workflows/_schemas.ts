@@ -2,6 +2,15 @@ import { requiredFieldMessage } from "@/constants/required-field-message";
 import { idSchema } from "@/schemas/id-schema";
 import { z } from "zod";
 
+export const workflowInformationSchema = z.object({
+  fields: z.array(
+    z.object({
+      label: z.string().min(1),
+      fieldKey: z.string().min(1),
+    })
+  ),
+});
+
 export const workflowSchema = z.object({
   name: z.string().min(1, {
     message: requiredFieldMessage,
@@ -11,12 +20,21 @@ export const workflowSchema = z.object({
   }),
   isPublic: z.boolean().default(false),
   isActive: z.boolean().default(true),
+  showInitializeForm: z.boolean().default(false),
   editWorkflowPermissions: z.string().optional(),
   submitProcessPermissions: z.string().optional(),
+  information: workflowInformationSchema.optional(),
+  initializeProcess: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+    })
+    .optional()
+    .nullable(),
   responsibleTeam: z
     .object({
-      id: z.string().optional().nullable(),
-      name: z.string().optional().nullable(),
+      id: z.string(),
+      name: z.string(),
     })
     .optional()
     .nullable(),

@@ -36,10 +36,17 @@ export const WorkflowCard = ({ workflow }: { workflow: WorkflowProps[0] }) => {
     <Card key={workflow.id} padding="lg" withBorder w={300}>
       <Title order={2}>{workflow.name}</Title>
       <Text c="dimmed">{workflow.description}</Text>
-      <Badge color="gray">{workflow.isPublic ? "Öffentlich" : "Privat"}</Badge>
-      <Badge color={workflow.isActive ? "green" : "red"}>
-        {workflow.isActive ? "Aktiv" : "Inaktiv"}
-      </Badge>
+      <Group gap="xs">
+        <Badge color="gray">
+          {workflow.isPublic ? "Öffentlich" : "Privat"}
+        </Badge>
+        <Badge color={workflow.isActive ? "green" : "red"}>
+          {workflow.isActive ? "Aktiv" : "Inaktiv"}
+        </Badge>
+        {workflow.initializeProcess && (
+          <Badge color="gray">Initialisierungsformular</Badge>
+        )}
+      </Group>
       {workflow.responsibleTeam && (
         <Text>Verantwortlicher Bereich: {workflow.responsibleTeam?.name}</Text>
       )}

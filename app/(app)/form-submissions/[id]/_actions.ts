@@ -12,6 +12,8 @@ import { revalidatePath } from "next/cache";
 import { idSchema } from "@/schemas/id-schema";
 import { forbidden, notFound, redirect } from "next/navigation";
 import jsonLogic from "json-logic-js";
+import z from "zod";
+import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
 
 /**
  * Retrieves forms from the database based on user's role and access permissions.
@@ -55,9 +57,10 @@ export const getFormSubmission = async (id: string) => {
         rejectedNotes: true,
         completedNotes: true,
         archivedNotes: true,
+        submittedNotes: true,
+        isArchived: true,
         status: true,
         data: true,
-        isExample: true,
       },
     });
   }
@@ -88,10 +91,11 @@ export const getFormSubmission = async (id: string) => {
       rejectedNotes: true,
       completedNotes: true,
       archivedNotes: true,
+      submittedNotes: true,
+      isArchived: true,
       status: true,
       data: true,
       submittedById: true,
-      isExample: true,
     },
   });
 
@@ -111,7 +115,7 @@ export const getFormSubmission = async (id: string) => {
     };
 
     const rules = await JSON.parse(form.form.reviewFormPermissions || "{}");
-    
+
     const hasPermission = await jsonLogic.apply(rules, submissionContext);
 
     if (!hasPermission) {
@@ -150,6 +154,7 @@ export const updateFormSubmission = authActionClient
             select: {
               id: true,
               title: true,
+              description: true,
               schema: true,
               teams: {
                 select: {
@@ -181,27 +186,16 @@ export const updateFormSubmission = authActionClient
         form: {
           responsibleTeam: submission.form.responsibleTeam?.name,
           teams: submission.form.teams?.map((t) => t.name) ?? [],
+          title: submission.form.title,
+          description: submission.form.description,
         },
         data: submission.data,
       };
 
-      const webhookPromises = submission.form.saveWorkflows.map((workflow) =>
-        fetch(
-          `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
-            },
-            body: JSON.stringify({
-              submissionContext,
-            }),
-          }
-        )
+      await triggerN8nWebhooks(
+        submission.form.saveWorkflows.map((w) => w.workflowId),
+        submissionContext
       );
-
-      await Promise.all(webhookPromises);
     } catch (error) {
       throw formatError(error);
     }
@@ -267,23 +261,10 @@ export const withdrawFormSubmission = authActionClient
         data: submission.data,
       };
 
-      const webhookPromises = submission.form.revokeWorkflows.map((workflow) =>
-        fetch(
-          `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
-            },
-            body: JSON.stringify({
-              submissionContext,
-            }),
-          }
-        )
+      await triggerN8nWebhooks(
+        submission.form.revokeWorkflows.map((w) => w.workflowId),
+        submissionContext
       );
-
-      await Promise.all(webhookPromises);
     } catch (error) {
       throw formatError(error);
     }
@@ -308,6 +289,7 @@ export const updateFormSubmissionStatus = authActionClient
             select: {
               id: true,
               title: true,
+              description: true,
               schema: true,
               reviewFormPermissions: true,
               responsibleTeam: {
@@ -384,31 +366,22 @@ export const updateFormSubmissionStatus = authActionClient
         const submissionContext = {
           user: {
             ...ctx.session.user,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-          responsibleTeam: submission.form.responsibleTeam,
+          form: {
+            responsibleTeam: form.form.responsibleTeam,
+            teams: form.form.teams?.map((t) => t.name) ?? [],
+            title: form.form.title,
+            description: form.form.description,
+          },
           message,
           data: submission.data,
         };
 
-        const webhookPromises = submission.form.reUpdateWorkflows.map(
-          (workflow) =>
-            fetch(
-              `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
-                },
-                body: JSON.stringify({
-                  submissionContext,
-                }),
-              }
-            )
+        await triggerN8nWebhooks(
+          submission.form.reUpdateWorkflows.map((w) => w.workflowId),
+          submissionContext
         );
-
-        await Promise.all(webhookPromises);
       }
 
       if (status === "rejected") {
@@ -445,31 +418,22 @@ export const updateFormSubmissionStatus = authActionClient
         const submissionContext = {
           user: {
             ...ctx.session.user,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-          responsibleTeam: submission.form.responsibleTeam,
+          form: {
+            responsibleTeam: form.form.responsibleTeam,
+            teams: form.form.teams?.map((t) => t.name) ?? [],
+            title: form.form.title,
+            description: form.form.description,
+          },
           message,
           data: submission.data,
         };
 
-        const webhookPromises = submission.form.rejectWorkflows.map(
-          (workflow) =>
-            fetch(
-              `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
-                },
-                body: JSON.stringify({
-                  submissionContext,
-                }),
-              }
-            )
+        await triggerN8nWebhooks(
+          submission.form.rejectWorkflows.map((w) => w.workflowId),
+          submissionContext
         );
-
-        await Promise.all(webhookPromises);
       }
 
       if (status === "completed") {
@@ -506,92 +470,22 @@ export const updateFormSubmissionStatus = authActionClient
         const submissionContext = {
           user: {
             ...ctx.session.user,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
           },
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-          responsibleTeam: submission.form.responsibleTeam,
+          form: {
+            responsibleTeam: form.form.responsibleTeam,
+            teams: form.form.teams?.map((t) => t.name) ?? [],
+            title: form.form.title,
+            description: form.form.description,
+          },
           message,
           data: submission.data,
         };
 
-        const webhookPromises = submission.form.completeWorkflows.map(
-          (workflow) =>
-            fetch(
-              `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
-                },
-                body: JSON.stringify({
-                  submissionContext,
-                }),
-              }
-            )
+        await triggerN8nWebhooks(
+          submission.form.completeWorkflows.map((w) => w.workflowId),
+          submissionContext
         );
-
-        await Promise.all(webhookPromises);
-      }
-
-      if (status === "archived") {
-        const submission = await prisma.formSubmission.update({
-          where: {
-            id,
-            status: "inReview",
-          },
-          data: {
-            status,
-            archivedNotes: message,
-          },
-          select: {
-            data: true,
-            form: {
-              select: {
-                responsibleTeam: {
-                  select: {
-                    name: true,
-                    id: true,
-                    contactEmail: true,
-                  },
-                },
-                archiveWorkflows: {
-                  select: {
-                    workflowId: true,
-                  },
-                },
-              },
-            },
-          },
-        });
-
-        const submissionContext = {
-          user: {
-            ...ctx.session.user,
-          },
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-          responsibleTeam: submission.form.responsibleTeam,
-          message,
-          data: submission.data,
-        };
-
-        const webhookPromises = submission.form.archiveWorkflows.map(
-          (workflow) =>
-            fetch(
-              `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
-                },
-                body: JSON.stringify({
-                  submissionContext,
-                }),
-              }
-            )
-        );
-
-        await Promise.all(webhookPromises);
       }
     } catch (error) {
       throw formatError(error);
@@ -605,12 +499,12 @@ export const updateFormSubmissionStatus = authActionClient
   });
 
 export const submitFormSubmission = authActionClient
-  .schema(updateFormSubmissionSchema)
+  .schema(updateFormSubmissionSchema.extend({ message: z.string().optional() }))
   .metadata({
     event: "submitFormSubmissionAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { id, data } = parsedInput;
+    const { id, data, message } = parsedInput;
 
     try {
       const submission = await prisma.formSubmission.update({
@@ -624,17 +518,25 @@ export const submitFormSubmission = authActionClient
         data: {
           status: "submitted",
           data,
+          submittedNotes: message,
           reviewNotes: null,
         },
         select: {
           data: true,
           form: {
             select: {
+              title: true,
+              description: true,
               responsibleTeam: {
                 select: {
                   name: true,
                   id: true,
                   contactEmail: true,
+                },
+              },
+              teams: {
+                select: {
+                  name: true,
                 },
               },
               submitWorkflows: {
@@ -650,30 +552,22 @@ export const submitFormSubmission = authActionClient
       const submissionContext = {
         user: {
           ...ctx.session.user,
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
         },
-        teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-        responsibleTeam: submission.form.responsibleTeam,
-
+        form: {
+          responsibleTeam: submission.form.responsibleTeam,
+          teams: submission.form.teams?.map((t) => t.name) ?? [],
+          title: submission.form.title,
+          description: submission.form.description,
+        },
         data: submission.data,
+        message,
       };
 
-      const webhookPromises = submission.form.submitWorkflows.map((workflow) =>
-        fetch(
-          `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
-            },
-            body: JSON.stringify({
-              submissionContext,
-            }),
-          }
-        )
+      await triggerN8nWebhooks(
+        submission.form.submitWorkflows.map((w) => w.workflowId),
+        submissionContext
       );
-
-      await Promise.all(webhookPromises);
     } catch (error) {
       throw formatError(error);
     }
@@ -702,6 +596,7 @@ export const reviewFormSubmission = authActionClient
             select: {
               id: true,
               title: true,
+              description: true,
               schema: true,
               reviewFormPermissions: true,
               responsibleTeam: {
@@ -732,6 +627,8 @@ export const reviewFormSubmission = authActionClient
           form: {
             responsibleTeam: form.form.responsibleTeam?.name,
             teams: form.form.teams?.map((t) => t.name) ?? [],
+            title: form.form.title,
+            description: form.form.description,
           },
           data: form.data,
         };
@@ -750,6 +647,7 @@ export const reviewFormSubmission = authActionClient
         },
         data: {
           status: "inReview",
+          submittedNotes: null,
         },
         select: {
           data: true,
@@ -775,30 +673,19 @@ export const reviewFormSubmission = authActionClient
       const submissionContext = {
         user: {
           ...ctx.session.user,
+          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
         },
-        teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
-        responsibleTeam: submission.form.responsibleTeam,
-
+        form: {
+          responsibleTeam: form.form.responsibleTeam,
+          teams: form.form.teams?.map((t) => t.name) ?? [],
+        },
         data: submission.data,
       };
 
-      const webhookPromises = submission.form.reviewWorkflows.map((workflow) =>
-        fetch(
-          `${process.env.NEXT_PUBLIC_N8N_URL}/webhook/${workflow.workflowId}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "n8n-webhook-api-key": process.env.N8N_WEBHOOK_API_KEY!,
-            },
-            body: JSON.stringify({
-              submissionContext,
-            }),
-          }
-        )
+      await triggerN8nWebhooks(
+        submission.form.reviewWorkflows.map((w) => w.workflowId),
+        submissionContext
       );
-
-      await Promise.all(webhookPromises);
     } catch (error) {
       throw formatError(error);
     }
