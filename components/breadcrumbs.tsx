@@ -79,7 +79,7 @@ export const Breadcrumbs = () => {
           width: "fit-content",
         },
       }}
-      p="sm"
+      p="xs"
       bg="transparent"
       separator={<IconChevronRight size={16} stroke={1.5} color="#868e96" />}
       separatorMargin={rem(4)}

@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { baseIconStyles } from "@/constants/base-icon-styles";
 import { Breadcrumbs } from "./breadcrumbs";
+import { BackButton } from "./back-button";
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
@@ -82,6 +83,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       </AppShell.Navbar>
       <AppShell.Main>
         <Stack gap="md">
+          <BackButton variant="light" />
           <Breadcrumbs />
           {children}
         </Stack>
