@@ -7,6 +7,7 @@ import { adminQuery } from "@/server/utils/admin-query";
 import { formatError } from "@/utils/format-error";
 import { idSchema } from "@/schemas/id-schema";
 import { createWorkflowSchema } from "./_schemas";
+import https from "https";
 
 /**
  * Updates a user's role and name in the database.
@@ -108,6 +109,7 @@ type N8nWorkflow = {
 export const getN8nWorkflows = async () => {
   const n8nUrl = process.env.NEXT_PUBLIC_N8N_URL;
   const apiKey = process.env.N8N_API_KEY;
+  const agent = new https.Agent({ rejectUnauthorized: false });
 
   if (!n8nUrl || !apiKey) {
     throw new Error("N8N configuration missing");
@@ -118,10 +120,8 @@ export const getN8nWorkflows = async () => {
       headers: {
         "X-N8N-API-KEY": apiKey,
       },
-      // In Node.js environment (server-side), configure SSL/TLS
-      ...(typeof window === "undefined" && {
-        rejectUnauthorized: false, // Only use this if you trust the certificate
-      }),
+      // @ts-expect-error - Node.js specific option
+      agent: agent,
     });
 
     if (!response.ok) {
