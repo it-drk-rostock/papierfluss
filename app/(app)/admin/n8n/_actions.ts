@@ -7,7 +7,6 @@ import { adminQuery } from "@/server/utils/admin-query";
 import { formatError } from "@/utils/format-error";
 import { idSchema } from "@/schemas/id-schema";
 import { createWorkflowSchema } from "./_schemas";
-import https from "https";
 
 /**
  * Updates a user's role and name in the database.
@@ -114,19 +113,30 @@ export const getN8nWorkflows = async () => {
     throw new Error("N8N configuration missing");
   }
 
-  const response = await fetch(`${n8nUrl}/api/v1/workflows?active=true`, {
-    headers: {
-      "X-N8N-API-KEY": apiKey,
-    },
-  });
+  try {
+    const response = await fetch(`${n8nUrl}/api/v1/workflows?active=true`, {
+      headers: {
+        "X-N8N-API-KEY": apiKey,
+      },
+      // In Node.js environment (server-side), configure SSL/TLS
+      ...(typeof window === "undefined" && {
+        rejectUnauthorized: false, // Only use this if you trust the certificate
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch N8N workflows");
+    if (!response.ok) {
+      throw new Error("Failed to fetch N8N workflows");
+    }
+
+    const data = (await response.json()) as { data: N8nWorkflow[] };
+    return data.data.map((workflow) => ({
+      id: workflow.id.toString(),
+      name: workflow.name,
+    }));
+  } catch (error) {
+    console.error("Error fetching N8N workflows:", error);
+    throw new Error(
+      "Failed to fetch N8N workflows. Please check the server configuration."
+    );
   }
-
-  const data = (await response.json()) as { data: N8nWorkflow[] };
-  return data.data.map((workflow) => ({
-    id: workflow.id.toString(),
-    name: workflow.name,
-  }));
 };
