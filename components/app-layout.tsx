@@ -12,7 +12,6 @@ import {
   IconUserShield,
 } from "@tabler/icons-react";
 import Link from "next/link";
-
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { baseIconStyles } from "@/constants/base-icon-styles";
 import { Breadcrumbs } from "./breadcrumbs";
@@ -73,6 +72,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           />
           {hasAccess("admin") && (
             <NavLink
+              component={Link}
               href="/admin"
               label="Admin"
               leftSection={<IconUserShield size={16} stroke={1.5} />}
