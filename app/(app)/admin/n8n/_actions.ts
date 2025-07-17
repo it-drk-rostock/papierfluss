@@ -128,8 +128,19 @@ export const getN8nWorkflows = async () => {
   try {
     // Log request details (remove in production)
     console.log("Attempting to fetch N8N workflows from:", n8nUrl);
-    console.log("Using API key starting with:", apiKey.substring(0, 4) + "...");
+    console.log("API URL:", `${n8nUrl}/api/v1/workflows`);
 
+    // Try to make a test request first
+    const testResponse = await axios.get(`${n8nUrl}/healthz`, {
+      httpsAgent,
+      proxy: false,
+      timeout: 5000,
+      validateStatus: null,
+    });
+    console.log("N8N Health Check Status:", testResponse.status);
+    console.log("N8N Health Check Headers:", testResponse.headers);
+
+    // Main request
     const response = await axios.get<N8nWorkflowResponse>(
       `${n8nUrl}/api/v1/workflows`,
       {
@@ -140,19 +151,22 @@ export const getN8nWorkflows = async () => {
           "X-N8N-API-KEY": apiKey,
           Accept: "application/json",
           "Content-Type": "application/json",
+          // Try adding authorization header as well
+          Authorization: `Bearer ${apiKey}`,
         },
         httpsAgent,
         proxy: false,
-        // Add timeout
         timeout: 5000,
-        // Add additional debugging
-        validateStatus: null, // Don't throw on any status
+        validateStatus: null,
       }
     );
 
-    // Log response status and headers (remove in production)
+    // Log response details
     console.log("N8N Response Status:", response.status);
     console.log("N8N Response Headers:", response.headers);
+    if (response.status !== 200) {
+      console.log("N8N Error Response:", response.data);
+    }
 
     if (response.status === 403) {
       throw new Error(
@@ -166,8 +180,15 @@ export const getN8nWorkflows = async () => {
       );
     }
 
-    if (!response.data || !Array.isArray(response.data.data)) {
-      throw new Error("Invalid response format from N8N API");
+    // Validate response format
+    if (!response.data) {
+      console.log("Invalid response format - no data:", response.data);
+      throw new Error("Invalid response format from N8N API - no data");
+    }
+
+    if (!Array.isArray(response.data.data)) {
+      console.log("Invalid response format - data not array:", response.data);
+      throw new Error("Invalid response format from N8N API - data not array");
     }
 
     return response.data.data.map((workflow: N8nWorkflow) => ({
@@ -175,24 +196,28 @@ export const getN8nWorkflows = async () => {
       name: workflow.name,
     }));
   } catch (error) {
-    // Enhanced error handling
     if (error instanceof AxiosError) {
-      console.error("N8N API Error:", {
+      console.error("N8N API Error Details:", {
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
         headers: error.response?.headers,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers,
+        },
       });
 
       if (error.response?.status === 403) {
         throw new Error(
-          "Authentication failed - Please check your N8N API key"
+          "Authentication failed - Please check your N8N API key format and permissions"
         );
       }
 
       if (error.code === "ECONNREFUSED") {
         throw new Error(
-          "Could not connect to N8N - Please check if the service is running"
+          "Could not connect to N8N - Please check if the service is running and the URL is correct"
         );
       }
 
@@ -202,8 +227,6 @@ export const getN8nWorkflows = async () => {
     }
 
     console.error("Unexpected error fetching N8N workflows:", error);
-    throw new Error(
-      "Failed to fetch N8N workflows. Please check the server configuration."
-    );
+    throw error;
   }
 };
