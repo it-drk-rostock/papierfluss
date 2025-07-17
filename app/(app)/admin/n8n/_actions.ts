@@ -7,7 +7,6 @@ import { adminQuery } from "@/server/utils/admin-query";
 import { formatError } from "@/utils/format-error";
 import { idSchema } from "@/schemas/id-schema";
 import { createWorkflowSchema } from "./_schemas";
-import { format } from "path";
 
 /**
  * Updates a user's role and name in the database.
@@ -114,26 +113,26 @@ export const getN8nWorkflows = async () => {
     throw new Error("N8N configuration missing");
   }
 
-  try {
-    const fullUrl = `${n8nUrl}/api/v1/workflows?active=true`;
+  const fullUrl = `${n8nUrl}/api/v1/workflows?active=true`;
 
-    const response = await fetch(fullUrl, {
-      headers: {
-        "X-N8N-API-KEY": apiKey,
-      },
-    });
+  const response = await fetch(fullUrl, {
+    headers: {
+      "X-N8N-API-KEY": apiKey,
+    },
+  });
 
-    const data = (await response.json()) as { data: N8nWorkflow[] };
-    console.log(data);
-    // Debug successful response
-    console.log("Successfully fetched workflows:", data.data.length);
-
-    return data.data.map((workflow) => ({
-      id: workflow.id.toString(),
-      name: workflow.name,
-    }));
-  } catch (error) {
-    console.log(error);
-    throw formatError(error);
+  if (!response.ok) {
+    const text = await response.text(); // HTML-Fehlertext lesen
+    throw new Error(`N8N API Error: ${response.status} - ${text}`);
   }
+
+  const data = (await response.json()) as { data: N8nWorkflow[] };
+  console.log(data);
+  // Debug successful response
+  console.log("Successfully fetched workflows:", data.data.length);
+
+  return data.data.map((workflow) => ({
+    id: workflow.id.toString(),
+    name: workflow.name,
+  }));
 };
