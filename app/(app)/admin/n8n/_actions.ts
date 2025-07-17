@@ -7,18 +7,7 @@ import { adminQuery } from "@/server/utils/admin-query";
 import { formatError } from "@/utils/format-error";
 import { idSchema } from "@/schemas/id-schema";
 import { createWorkflowSchema } from "./_schemas";
-import axios, { AxiosError } from "axios";
 import https from "https";
-
-interface N8nWorkflow {
-  id: number;
-  name: string;
-  [key: string]: unknown;
-}
-
-interface N8nWorkflowResponse {
-  data: N8nWorkflow[];
-}
 
 /**
  * Updates a user's role and name in the database.
@@ -110,123 +99,41 @@ export const getWorkflows = async () => {
 
 export type WorkflowProps = Awaited<ReturnType<typeof getWorkflows>>;
 
+type N8nWorkflow = {
+  id: number;
+  name: string;
+  active: boolean;
+  // Add other properties if needed, but these are the ones we're using
+};
+
 export const getN8nWorkflows = async () => {
   const n8nUrl = process.env.NEXT_PUBLIC_N8N_URL;
   const apiKey = process.env.N8N_API_KEY;
 
   if (!n8nUrl || !apiKey) {
-    throw new Error(
-      "N8N configuration missing - Please check NEXT_PUBLIC_N8N_URL and N8N_API_KEY environment variables"
-    );
+    throw new Error("N8N configuration missing");
   }
 
-  // Create a custom HTTPS agent that ignores SSL certificate issues
-  const httpsAgent = new https.Agent({
-    rejectUnauthorized: false,
-  });
-
   try {
-    // Log request details (remove in production)
-    console.log("Attempting to fetch N8N workflows from:", n8nUrl);
-    console.log("API URL:", `${n8nUrl}/api/v1/workflows`);
-
-    // Try to make a test request first
-    const testResponse = await axios.get(`${n8nUrl}/healthz`, {
-      httpsAgent,
-      proxy: false,
-      timeout: 5000,
-      validateStatus: null,
+    const response = await fetch(`${n8nUrl}/api/v1/workflows?active=true`, {
+      headers: {
+        "X-N8N-API-KEY": apiKey,
+      },
     });
-    console.log("N8N Health Check Status:", testResponse.status);
-    console.log("N8N Health Check Headers:", testResponse.headers);
 
-    // Main request
-    const response = await axios.get<N8nWorkflowResponse>(
-      `${n8nUrl}/api/v1/workflows`,
-      {
-        params: {
-          active: true,
-        },
-        headers: {
-          "X-N8N-API-KEY": apiKey,
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          // Try adding authorization header as well
-          Authorization: `Bearer ${apiKey}`,
-        },
-        httpsAgent,
-        proxy: false,
-        timeout: 5000,
-        validateStatus: null,
-      }
-    );
-
-    // Log response details
-    console.log("N8N Response Status:", response.status);
-    console.log("N8N Response Headers:", response.headers);
-    if (response.status !== 200) {
-      console.log("N8N Error Response:", response.data);
+    if (!response.ok) {
+      throw formatError(response.statusText);
     }
 
-    if (response.status === 403) {
-      throw new Error(
-        "Authentication failed - Invalid API key or insufficient permissions"
-      );
-    }
-
-    if (response.status !== 200) {
-      throw new Error(
-        `N8N API returned status ${response.status}: ${response.statusText}`
-      );
-    }
-
-    // Validate response format
-    if (!response.data) {
-      console.log("Invalid response format - no data:", response.data);
-      throw new Error("Invalid response format from N8N API - no data");
-    }
-
-    if (!Array.isArray(response.data.data)) {
-      console.log("Invalid response format - data not array:", response.data);
-      throw new Error("Invalid response format from N8N API - data not array");
-    }
-
-    return response.data.data.map((workflow: N8nWorkflow) => ({
+    const data = (await response.json()) as { data: N8nWorkflow[] };
+    return data.data.map((workflow) => ({
       id: workflow.id.toString(),
       name: workflow.name,
     }));
   } catch (error) {
-    if (error instanceof AxiosError) {
-      console.error("N8N API Error Details:", {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers,
-        },
-      });
-
-      if (error.response?.status === 403) {
-        throw new Error(
-          "Authentication failed - Please check your N8N API key format and permissions"
-        );
-      }
-
-      if (error.code === "ECONNREFUSED") {
-        throw new Error(
-          "Could not connect to N8N - Please check if the service is running and the URL is correct"
-        );
-      }
-
-      throw new Error(
-        `N8N API Error: ${error.response?.statusText || error.message}`
-      );
-    }
-
-    console.error("Unexpected error fetching N8N workflows:", error);
-    throw error;
+    console.error("Error fetching N8N workflows:", error);
+    throw new Error(
+      "Failed to fetch N8N workflows. Please check the server configuration."
+    );
   }
 };
