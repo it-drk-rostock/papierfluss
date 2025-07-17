@@ -7,7 +7,18 @@ import { adminQuery } from "@/server/utils/admin-query";
 import { formatError } from "@/utils/format-error";
 import { idSchema } from "@/schemas/id-schema";
 import { createWorkflowSchema } from "./_schemas";
+import axios from "axios";
 import https from "https";
+
+interface N8nWorkflow {
+  id: number;
+  name: string;
+  [key: string]: unknown;
+}
+
+interface N8nWorkflowResponse {
+  data: N8nWorkflow[];
+}
 
 /**
  * Updates a user's role and name in the database.
@@ -99,37 +110,36 @@ export const getWorkflows = async () => {
 
 export type WorkflowProps = Awaited<ReturnType<typeof getWorkflows>>;
 
-type N8nWorkflow = {
-  id: number;
-  name: string;
-  active: boolean;
-  // Add other properties if needed, but these are the ones we're using
-};
-
 export const getN8nWorkflows = async () => {
   const n8nUrl = process.env.NEXT_PUBLIC_N8N_URL;
   const apiKey = process.env.N8N_API_KEY;
-  const agent = new https.Agent({ rejectUnauthorized: false });
 
   if (!n8nUrl || !apiKey) {
     throw new Error("N8N configuration missing");
   }
 
+  // Create a custom HTTPS agent that ignores SSL certificate issues
+  const httpsAgent = new https.Agent({
+    rejectUnauthorized: false,
+  });
+
   try {
-    const response = await fetch(`${n8nUrl}/api/v1/workflows?active=true`, {
-      headers: {
-        "X-N8N-API-KEY": apiKey,
-      },
-      // @ts-expect-error - Node.js specific option
-      agent: agent,
-    });
+    const response = await axios.get<N8nWorkflowResponse>(
+      `${n8nUrl}/api/v1/workflows`,
+      {
+        params: {
+          active: true,
+        },
+        headers: {
+          "X-N8N-API-KEY": apiKey,
+        },
+        httpsAgent, // Use the custom HTTPS agent
+        // Ensure we're using HTTPS
+        proxy: false, // Disable any proxy settings that might interfere
+      }
+    );
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch N8N workflows");
-    }
-
-    const data = (await response.json()) as { data: N8nWorkflow[] };
-    return data.data.map((workflow) => ({
+    return response.data.data.map((workflow: N8nWorkflow) => ({
       id: workflow.id.toString(),
       name: workflow.name,
     }));
