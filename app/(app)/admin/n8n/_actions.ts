@@ -7,7 +7,6 @@ import { adminQuery } from "@/server/utils/admin-query";
 import { formatError } from "@/utils/format-error";
 import { idSchema } from "@/schemas/id-schema";
 import { createWorkflowSchema } from "./_schemas";
-import https from "https";
 
 /**
  * Updates a user's role and name in the database.
@@ -115,23 +114,66 @@ export const getN8nWorkflows = async () => {
   }
 
   try {
-    const response = await fetch(`${n8nUrl}/api/v1/workflows?active=true`, {
+    // Ensure URL ends with no trailing slash
+    const baseUrl = n8nUrl.endsWith("/") ? n8nUrl.slice(0, -1) : n8nUrl;
+    const fullUrl = `${baseUrl}/api/v1/workflows?active=true`;
+
+    // Debug URL and headers
+    console.log("Attempting to fetch from URL:", fullUrl);
+    console.log("Headers:", {
+      "X-N8N-API-KEY": apiKey.substring(0, 4) + "...",
+    });
+
+    const response = await fetch(fullUrl, {
       headers: {
         "X-N8N-API-KEY": apiKey,
       },
+      // Add credentials and mode for cross-origin requests
+      credentials: "omit",
+      mode: "cors",
     });
 
+    // Debug response
+    console.log("Response status:", response.status);
+    console.log("Response status text:", response.statusText);
+
     if (!response.ok) {
-      throw formatError(response.statusText);
+      // Try to get more error details
+      let errorDetail = response.statusText;
+      try {
+        const errorBody = await response.text();
+        console.log("Error response body:", errorBody);
+        errorDetail = errorBody || errorDetail;
+      } catch {
+        console.log("Could not read error body");
+      }
+
+      throw new Error(`N8N API Error: ${response.status} - ${errorDetail}`);
     }
 
     const data = (await response.json()) as { data: N8nWorkflow[] };
+
+    // Debug successful response
+    console.log("Successfully fetched workflows:", data.data.length);
+
     return data.data.map((workflow) => ({
       id: workflow.id.toString(),
       name: workflow.name,
     }));
   } catch (error) {
     console.error("Error fetching N8N workflows:", error);
+
+    // Provide more specific error messages
+    if (error instanceof TypeError && error.message.includes("fetch failed")) {
+      throw new Error(
+        "Network error - Could not connect to N8N. Check the URL and network connection."
+      );
+    }
+
+    if (error instanceof Error && error.message.includes("N8N API Error")) {
+      throw error; // Pass through our custom error
+    }
+
     throw new Error(
       "Failed to fetch N8N workflows. Please check the server configuration."
     );
