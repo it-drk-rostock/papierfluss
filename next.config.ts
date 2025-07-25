@@ -2,8 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    dynamicIO: true,
-    nodeMiddleware: true,
+    cacheComponents: true,
     authInterrupts: true,
   },
   typescript: {
