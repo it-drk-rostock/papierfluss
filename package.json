@@ -48,7 +48,7 @@
     "jspdf-autotable": "^5.0.2",
     "mantine-datatable": "^8.1.2",
     "mantine-form-zod-resolver": "^1.3.0",
-    "next": "^15.4.2-canary.18",
+    "next": "15.4.2-canary.18",
     "next-safe-action": "^7.10.5",
     "nuqs": "^2.4.3",
     "prisma": "^6.11.1",
