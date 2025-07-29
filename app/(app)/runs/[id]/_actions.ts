@@ -380,6 +380,7 @@ export const resetProcessRun = authActionClient
           process: {
             select: {
               resetProcessPermissions: true,
+              name: true,
             },
           },
           workflowRunId: true,
@@ -530,6 +531,7 @@ export const resetProcessRun = authActionClient
           responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
           teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
         },
+        activeProcess: processRun.process.name,
         process: {
           ...processRun.process,
         },
@@ -823,6 +825,7 @@ export const completeProcessRun = authActionClient
             currentProcessRun.workflowRun.workflow.teams?.map((t) => t.name) ??
             [],
         },
+        activeProcess: processRun.process.name,
         process: {
           ...processRun.process,
         },
@@ -1091,6 +1094,7 @@ export const saveProcessRun = authActionClient
             currentProcessRun.workflowRun.workflow.teams?.map((t) => t.name) ??
             [],
         },
+        activeProcess: processRun.process.name,
         process: {
           ...processRun.process,
         },

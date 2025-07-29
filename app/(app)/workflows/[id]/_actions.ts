@@ -328,6 +328,7 @@ export const initializeWorkflowRunForm = authActionClient
           initializeProcess: {
             select: {
               id: true,
+              name: true,
             },
           },
           processes: {
@@ -417,6 +418,7 @@ export const initializeWorkflowRunForm = authActionClient
             name: workflow.responsibleTeam?.name,
             contactEmail: workflow.responsibleTeam?.contactEmail,
           },
+          activeProcess: workflow.initializeProcess.name,
           data: data,
         },
       };
