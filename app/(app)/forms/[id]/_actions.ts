@@ -43,8 +43,36 @@ import { z } from "zod";
  * }>>} For regular users: Returns an array of accessible forms
  * @throws {Error} If the query fails or if the user is not authorized
  */
-export const getForm = async (id: string) => {
+export const getForm = async (
+  id: string,
+  search?: string | Record<string, string>
+) => {
   const { user } = await authQuery();
+
+  // Get the form data first to access information for search
+  const form = await prisma.form.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      information: true,
+      teams: {
+        select: {
+          name: true,
+        },
+      },
+      responsibleTeam: {
+        select: {
+          name: true,
+        },
+      },
+      schema: true,
+      reviewFormPermissions: true,
+    },
+  });
+
+  if (!form) return notFound();
 
   if (user.role === "admin") {
     return prisma.form.findUnique({
@@ -68,12 +96,20 @@ export const getForm = async (id: string) => {
         submissions: {
           where: {
             isArchived: false,
+            ...(search &&
+              form.information && {
+                data: {
+                  path: (
+                    form.information as { fields: { fieldKey: string }[] }
+                  ).fields.map((field) => field.fieldKey),
+                  string_contains: search as string,
+                },
+              }),
           },
           select: {
             id: true,
             data: true,
             status: true,
-
             submittedBy: {
               select: {
                 id: true,
@@ -86,7 +122,8 @@ export const getForm = async (id: string) => {
     });
   }
 
-  const form = await prisma.form.findUnique({
+  // For non-admin users, get the form with submissions and apply permissions
+  const formWithSubmissions = await prisma.form.findUnique({
     where: {
       id,
     },
@@ -110,12 +147,20 @@ export const getForm = async (id: string) => {
       submissions: {
         where: {
           isArchived: false,
+          ...(search &&
+            form.information && {
+              data: {
+                path: (
+                  form.information as { fields: { fieldKey: string }[] }
+                ).fields.map((field) => field.fieldKey),
+                string_contains: search as string,
+              },
+            }),
         },
         select: {
           id: true,
           status: true,
           data: true,
-
           submittedBy: {
             select: {
               id: true,
@@ -127,24 +172,26 @@ export const getForm = async (id: string) => {
     },
   });
 
-  if (!form) return notFound();
+  if (!formWithSubmissions) return notFound();
 
-  const filteredSubmissions = form.submissions
+  const filteredSubmissions = formWithSubmissions.submissions
     ? await Promise.all(
-        form.submissions.map(async (submission) => {
+        formWithSubmissions.submissions.map(async (submission) => {
           const submissionContext = {
             user: {
               ...user,
               teams: user.teams?.map((t) => t.name) ?? [],
             },
             form: {
-              responsibleTeam: form.responsibleTeam?.name,
-              teams: form.teams?.map((t) => t.name) ?? [],
+              responsibleTeam: formWithSubmissions.responsibleTeam?.name,
+              teams: formWithSubmissions.teams?.map((t) => t.name) ?? [],
             },
             data: submission.data,
           };
 
-          const rules = await JSON.parse(form.reviewFormPermissions || "{}");
+          const rules = await JSON.parse(
+            formWithSubmissions.reviewFormPermissions || "{}"
+          );
 
           const result = await jsonLogic.apply(rules, submissionContext);
 
@@ -153,7 +200,7 @@ export const getForm = async (id: string) => {
       ).then((results) => results.filter(Boolean))
     : [];
 
-  return { ...form, submissions: filteredSubmissions };
+  return { ...formWithSubmissions, submissions: filteredSubmissions };
 };
 
 export type FormProps = NonNullable<Awaited<ReturnType<typeof getForm>>>;
@@ -263,7 +310,7 @@ export const archiveFormSubmission = authActionClient
 
     try {
       const formSubmission = await prisma.formSubmission.findUnique({
-        where: { id },
+        where: { id, isArchived: false },
         select: {
           form: {
             select: {
