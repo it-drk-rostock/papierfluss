@@ -1,11 +1,10 @@
 import React from "react";
 import { Stack, Title, Text, Group } from "@mantine/core";
-import { getForm } from "../_actions";
+import { FormSearchParams, getForm } from "../_actions";
 import { notFound } from "next/navigation";
 import { FormSubmissionsTable } from "./form-submissions-table";
 import { ButtonLink } from "@/components/button-link";
 import { IconArchive } from "@tabler/icons-react";
-import { SearchParams } from "@/utils/searchparams";
 import { QuickSearchAdd } from "@/components/quick-search-add";
 
 export const Form = async ({
@@ -13,11 +12,11 @@ export const Form = async ({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<FormSearchParams>;
 }) => {
   const formId = (await params).id;
-  const { search } = await searchParams;
-  const form = await getForm(formId, search);
+  const { search, status } = await searchParams;
+  const form = await getForm(formId, { search, status });
 
   if (!form) {
     notFound();

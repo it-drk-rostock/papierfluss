@@ -8,16 +8,13 @@ export default function Page({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: WorkflowRunsSearchParams;
+  searchParams: Promise<WorkflowRunsSearchParams>;
 }) {
   const searchParamsPromise = workflowRunsSearchParamsLoader(searchParams);
   return (
     <>
       <Suspense fallback={<div>Loading...</div>}>
-        <WorkflowRuns
-          params={params}
-          searchParams={Promise.resolve(searchParamsPromise)}
-        />
+        <WorkflowRuns params={params} searchParams={searchParamsPromise} />
       </Suspense>
     </>
   );

@@ -21,8 +21,8 @@ export const WorkflowRuns = async ({
   searchParams: Promise<WorkflowRunsSearchParams>;
 }) => {
   const workflowId = (await params).id;
-  const { search } = await searchParams;
-  const workflowData = await getWorkflowRuns(workflowId, search);
+  const { search, status } = await searchParams;
+  const workflowData = await getWorkflowRuns(workflowId, { search, status });
 
   if (!workflowData) {
     return notFound();

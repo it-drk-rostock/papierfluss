@@ -10,7 +10,7 @@ import {
   updateFormInformationSchema,
 } from "./_schemas";
 import prisma from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma, SubmissionStatus } from "@prisma/client";
 import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
@@ -406,7 +406,7 @@ export const getForms = async (search?: string) => {
 export type FormProps = Awaited<ReturnType<typeof getForms>>;
 
 export type FormsSearchParams = {
-  search: string;
+  search?: string;
 };
 
 export const removeTeam = authActionClient

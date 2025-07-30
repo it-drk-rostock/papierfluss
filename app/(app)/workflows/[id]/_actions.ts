@@ -11,10 +11,11 @@ import jsonLogic from "json-logic-js";
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { WorkflowStatus } from "@/generated/prisma/client";
 
 export const getWorkflowRuns = async (
   workflowId: string,
-  search?: string | Record<string, string>
+  { search, status }: { search?: string; status?: WorkflowStatus }
 ) => {
   const { user } = await authQuery();
 
@@ -55,6 +56,7 @@ export const getWorkflowRuns = async (
     where: {
       workflowId: workflowId,
       isArchived: false,
+      ...(status && { status }),
       ...(search &&
         workflow.information && {
           processes: {
@@ -169,7 +171,8 @@ export const getWorkflowRuns = async (
 export type WorkflowRunsProps = Awaited<ReturnType<typeof getWorkflowRuns>>;
 
 export type WorkflowRunsSearchParams = {
-  search: string;
+  search?: string;
+  status?: WorkflowStatus;
 };
 
 /**

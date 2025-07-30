@@ -16,8 +16,11 @@ export const ArchivedWorkflowRuns = async ({
   searchParams: Promise<WorkflowRunsSearchParams>;
 }) => {
   const workflowId = (await params).id;
-  const { search } = await searchParams;
-  const workflowData = await getArchivedWorkflowRuns(workflowId, search);
+  const { search, status } = await searchParams;
+  const workflowData = await getArchivedWorkflowRuns(workflowId, {
+    search,
+    status,
+  });
 
   if (!workflowData) {
     return notFound();

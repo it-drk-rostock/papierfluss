@@ -12,6 +12,8 @@ import { MantineTable } from "@/components/mantine-table";
 import { DataTableColumn } from "mantine-datatable";
 import { SubmissionStatus } from "@prisma-client/client";
 import { FormSubmissionArchiveForm } from "@/app/(app)/form-submissions/[id]/_components/form-submission-archive-form";
+import { FilterSelectInput } from "@/components/filter-select-input";
+import { formStatusFilter } from "@/constants/form-status";
 
 interface FormSubmissionData {
   id: string;
@@ -88,6 +90,7 @@ export const FormSubmissionsTable = ({ form }: FormSubmissionsTableProps) => {
     {
       accessor: "status",
       title: "Status",
+      filter: <FilterSelectInput field="status" data={formStatusFilter} />,
       render: (record: TransformedSubmission) => (
         <FormSubmissionStatusBadge status={record.status} />
       ),

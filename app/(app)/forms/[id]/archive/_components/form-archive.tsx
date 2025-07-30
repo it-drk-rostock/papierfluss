@@ -6,18 +6,19 @@ import { ButtonLink } from "@/components/button-link";
 import { IconArchive } from "@tabler/icons-react";
 import { getFormArchive } from "../_actions";
 import { QuickSearchAdd } from "@/components/quick-search-add";
-import { SearchParams } from "@/utils/searchparams";
+
+import { FormSearchParams } from "../../_actions";
 
 export const FormArchive = async ({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<FormSearchParams>;
 }) => {
   const formId = (await params).id;
-  const { search } = await searchParams;
-  const form = await getFormArchive(formId, search);
+  const { search, status } = await searchParams;
+  const form = await getFormArchive(formId, { search, status });
 
   if (!form) {
     notFound();

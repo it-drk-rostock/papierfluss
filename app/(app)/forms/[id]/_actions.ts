@@ -10,6 +10,7 @@ import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
 import { authActionClient } from "@/server/utils/action-clients";
 import { idSchema } from "@/schemas/id-schema";
 import { z } from "zod";
+import { SubmissionStatus } from "@/generated/prisma";
 
 /**
  * Retrieves a form from the database based on user's role and access permissions.
@@ -45,7 +46,7 @@ import { z } from "zod";
  */
 export const getForm = async (
   id: string,
-  search?: string | Record<string, string>
+  { search, status }: { search: string; status: SubmissionStatus }
 ) => {
   const { user } = await authQuery();
 
@@ -96,6 +97,7 @@ export const getForm = async (
         submissions: {
           where: {
             isArchived: false,
+            ...(status && { status }),
             ...(search &&
               form.information && {
                 data: {
@@ -147,6 +149,7 @@ export const getForm = async (
       submissions: {
         where: {
           isArchived: false,
+          ...(status && { status }),
           ...(search &&
             form.information && {
               data: {
@@ -204,6 +207,11 @@ export const getForm = async (
 };
 
 export type FormProps = NonNullable<Awaited<ReturnType<typeof getForm>>>;
+
+export type FormSearchParams = {
+  search: string;
+  status: SubmissionStatus;
+};
 
 /**
  * Deletes a form

@@ -8,11 +8,11 @@ export default function Page() {
     <>
       <Title order={1}>Übersicht</Title>
       <Divider />
-      <Title order={2}>Bereiche</Title>
+      <Title order={2}>Meine Bereiche</Title>
       <Suspense fallback={<Loader />}>
         <Teams />
       </Suspense>
-      <Title order={2}>Formular Einreichungen</Title>
+      <Title order={2}>Meine Formulare</Title>
       <Suspense fallback={<Loader />}>
         <FormSubmissions />
       </Suspense>

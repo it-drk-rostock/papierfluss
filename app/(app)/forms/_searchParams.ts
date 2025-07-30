@@ -4,6 +4,4 @@ export const formsSearchParams = {
   search: parseAsString.withDefault(""),
 };
 
-export const formsSearchParamsLoader = createLoader(
-  formsSearchParams
-);
+export const formsSearchParamsLoader = createLoader(formsSearchParams);

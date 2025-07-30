@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { authQuery } from "@/server/utils/auth-query";
 import { notFound } from "next/navigation";
 import jsonLogic from "json-logic-js";
+import { SubmissionStatus } from "@/generated/prisma";
 
 /**
  * Retrieves a form from the database based on user's role and access permissions.
@@ -39,7 +40,7 @@ import jsonLogic from "json-logic-js";
  */
 export const getFormArchive = async (
   id: string,
-  search?: string | Record<string, string>
+  { search, status }: { search: string; status: SubmissionStatus }
 ) => {
   const { user } = await authQuery();
 
@@ -90,6 +91,7 @@ export const getFormArchive = async (
         submissions: {
           where: {
             isArchived: true,
+            ...(status && { status }),
             ...(search &&
               form.information && {
                 data: {
@@ -141,6 +143,7 @@ export const getFormArchive = async (
       submissions: {
         where: {
           isArchived: true,
+          ...(status && { status }),
           ...(search &&
             form.information && {
               data: {

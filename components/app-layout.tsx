@@ -1,5 +1,12 @@
 "use client";
-import { AppShell, NavLink, Stack, Group, ActionIcon, Loader } from "@mantine/core";
+import {
+  AppShell,
+  NavLink,
+  Stack,
+  Group,
+  ActionIcon,
+  Loader,
+} from "@mantine/core";
 import React, { Suspense } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { Branding } from "./branding";
@@ -84,8 +91,10 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <AppShell.Main>
         <Stack gap="md">
           <Suspense fallback={<Loader />}>
-            <BackButton variant="light" />
-            <Breadcrumbs />
+            <Group gap="xs">
+              <BackButton variant="light" />
+              <Breadcrumbs />
+            </Group>
           </Suspense>
           {children}
         </Stack>

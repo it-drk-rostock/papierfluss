@@ -8,10 +8,12 @@ import { MenuItemLink } from "@/components/link-menu-item";
 import { ModalMenuItem } from "@/components/modal-menu-item";
 import { IconArchive, IconTrash } from "@tabler/icons-react";
 import { ButtonAction } from "@/components/button-action";
-import { archiveWorkflowRun, deleteWorkflowRun } from "../_actions";
+import { deleteWorkflowRun } from "../_actions";
 import { MantineTable } from "@/components/mantine-table";
 import { DataTableColumn } from "mantine-datatable";
 import { WorkflowRunArchiveForm } from "./workflow-run-archive-form";
+import { FilterSelectInput } from "@/components/filter-select-input";
+import { workflowStatusFilter } from "@/constants/workflow-status";
 
 interface ProcessRunData {
   id: string;
@@ -134,7 +136,7 @@ export const WorkflowRunsTable = ({
     {
       accessor: "status",
       title: "Status",
-
+      filter: <FilterSelectInput field="status" data={workflowStatusFilter} />,
       render: ({ status }) => <WorkflowStatusBadge status={status} />,
     },
     {

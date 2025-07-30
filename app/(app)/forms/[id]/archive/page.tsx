@@ -1,16 +1,17 @@
 import { Suspense } from "react";
 import { FormArchive } from "./_components/form-archive";
 import { Loader } from "@mantine/core";
-import { SearchParams, searchParamsLoader } from "@/utils/searchparams";
+import { FormSearchParams } from "../_actions";
+import { formsSearchParamsLoader } from "../_searchParams";
 
 export default function Page({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: SearchParams;
+  searchParams: FormSearchParams;
 }) {
-  const searchParamsPromise = searchParamsLoader(searchParams);
+  const searchParamsPromise = formsSearchParamsLoader(searchParams);
 
   return (
     <>
