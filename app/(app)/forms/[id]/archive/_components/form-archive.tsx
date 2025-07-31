@@ -3,7 +3,7 @@ import { Stack, Title, Text, Group } from "@mantine/core";
 import { notFound } from "next/navigation";
 import { FormSubmissionsTable } from "../../_components/form-submissions-table";
 import { ButtonLink } from "@/components/button-link";
-import { IconArchive } from "@tabler/icons-react";
+import { IconArchive, IconList } from "@tabler/icons-react";
 import { getFormArchive } from "../_actions";
 import { QuickSearchAdd } from "@/components/quick-search-add";
 
@@ -32,7 +32,7 @@ export const FormArchive = async ({
           <Text c="dimmed">{form.description}</Text>
         </Stack>
         <ButtonLink
-          leftSection={<IconArchive size={14} stroke={1.5} />}
+          leftSection={<IconList size={14} stroke={1.5} />}
           variant="outline"
           title="Übersicht anzeigen"
           href={`/forms/${formId}`}

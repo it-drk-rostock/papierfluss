@@ -19,6 +19,10 @@ interface FormSubmissionData {
   id: string;
   status: SubmissionStatus;
   data: Record<string, unknown> | null;
+  submittedBy?: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 interface FormData {
@@ -41,6 +45,10 @@ interface FormSubmissionsTableProps {
 interface TransformedSubmission {
   id: string;
   status: SubmissionStatus;
+  submittedBy?: {
+    id: string;
+    name: string;
+  } | null;
   [key: string]: unknown;
 }
 
@@ -54,6 +62,7 @@ export const FormSubmissionsTable = ({ form }: FormSubmissionsTableProps) => {
       const baseData = {
         id: submission.id,
         status: submission.status,
+        submittedBy: submission.submittedBy,
       };
 
       // Add information fields
@@ -87,6 +96,12 @@ export const FormSubmissionsTable = ({ form }: FormSubmissionsTableProps) => {
         render: (record: TransformedSubmission) =>
           String(record[field.fieldKey] || "-"),
       })),
+    {
+      accessor: "submittedBy",
+      title: "Eingereicht von",
+      render: (record: TransformedSubmission) =>
+        record.submittedBy?.name || "-",
+    },
     {
       accessor: "status",
       title: "Status",
