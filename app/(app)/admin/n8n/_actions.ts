@@ -98,11 +98,10 @@ export const getWorkflows = async () => {
 
 export type WorkflowProps = Awaited<ReturnType<typeof getWorkflows>>;
 
-type N8nWorkflow = {
+export type N8nWorkflow = {
   id: number;
   name: string;
   active: boolean;
-  // Add other properties if needed, but these are the ones we're using
 };
 
 export const getN8nWorkflows = async () => {
@@ -113,48 +112,22 @@ export const getN8nWorkflows = async () => {
     throw new Error("N8N configuration missing");
   }
 
-  const fullUrl = `${n8nUrl}/api/v1/workflows?active=true`;
-
-  // Debug request details
-  console.log("Making request to:", fullUrl);
-  console.log("API Key (first 4 chars):", apiKey.substring(0, 4));
+  const fullUrl = `${n8nUrl}/api/v1/workflows?active=true&tags=fms`;
 
   const response = await fetch(fullUrl, {
     headers: {
-      Host: new URL(n8nUrl).host,
-      "User-Agent": "curl/8.13.0",
-      Accept: "*/*",
       "X-N8N-API-KEY": apiKey,
     },
-    // Explicitly set method
     method: "GET",
-    // Disable automatic redirects
-    redirect: "manual",
   });
-
-  console.log(
-    "Response headers:",
-    Object.fromEntries(response.headers.entries())
-  );
-  console.log("Response status:", response.status);
-  console.log("Response status text:", response.statusText);
 
   if (!response.ok) {
     const text = await response.text();
-    console.log("Error response body:", text);
-    console.log("Full response object:", {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries(response.headers.entries()),
-      url: response.url,
-    });
 
     throw new Error(`N8N API Error: ${response.status} - ${text}`);
   }
 
   const data = (await response.json()) as { data: N8nWorkflow[] };
-  console.log("Response data:", data);
-  console.log("Successfully fetched workflows:", data.data.length);
 
   return data.data.map((workflow) => ({
     id: workflow.id.toString(),
