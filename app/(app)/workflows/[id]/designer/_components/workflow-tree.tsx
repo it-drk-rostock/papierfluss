@@ -37,6 +37,7 @@ import { deleteProcess, moveProcess } from "../_actions";
 import { ProcessForm } from "./process-form";
 import { ModalButton } from "@/components/modal-button";
 import { ManageDependenciesForm } from "./manage-dependencies-form";
+import { ManageSkippableProcessesForm } from "./manage-skippable-processes-form";
 import { ActionIconAction } from "@/components/action-icon-action";
 import { ProcessN8nWorkflows } from "./process-n8n-workflows";
 import { WorkflowInformationForm } from "./workflow-information-form";
@@ -58,6 +59,8 @@ interface Process {
   isCategory: boolean;
   dependencies: Array<{ id: string; name: string }>;
   dependentProcesses: Array<{ id: string; name: string }>;
+  skippableProcesses: Array<{ id: string; name: string }>;
+  skippedByProcesses: Array<{ id: string; name: string }>;
   children: Array<{ id: string; name: string }>;
   schema: object | undefined;
   theme: object | undefined;
@@ -103,6 +106,8 @@ export function WorkflowTree({
     const isLast = siblings[siblings.length - 1]?.id === process.id;
     const hasDependencies =
       !process.isCategory && process.dependencies.length > 0;
+    const hasSkippableProcesses =
+      !process.isCategory && process.skippableProcesses.length > 0;
 
     const groupProps: GroupProps = {
       ...elementProps,
@@ -199,6 +204,22 @@ export function WorkflowTree({
                 </ModalButton>
               )}
               {!process.isCategory && (
+                <ModalButton
+                  variant="subtle"
+                  size="compact-sm"
+                  color={hasSkippableProcesses ? "red" : "gray"}
+                  title="Überspringbare Prozesse"
+                  content={
+                    <ManageSkippableProcessesForm
+                      processId={process.id}
+                      currentSkippableProcesses={process.skippableProcesses}
+                    />
+                  }
+                >
+                  Überspringen
+                </ModalButton>
+              )}
+              {!process.isCategory && (
                 <Tooltip color="red" label="Prozess Formular Designer">
                   <ModalActionIcon
                     variant="subtle"
@@ -276,28 +297,30 @@ export function WorkflowTree({
                   </ModalActionIcon>
                 </Tooltip>
               )}
-               {!process.isCategory && (
-              <Tooltip color="red" label="Berechtigungen">
-                <ModalActionIcon
-                  title="Prozess Berechtigungen"
-                  variant="subtle"
-                  content={
-                    <ProcessPermissionForm
-                      workflowId={workflowId}
-                      processId={process.id}
-                      editProcessPermissions={process.editProcessPermissions}
-                      submitProcessPermissions={
-                        process.submitProcessPermissions
-                      }
-                      viewProcessPermissions={process.viewProcessPermissions}
-                      resetProcessPermissions={process.resetProcessPermissions}
-                      formActionName="process-permissions"
-                    />
-                  }
-                >
-                  <IconShieldLock style={baseIconStyles} />
-                </ModalActionIcon>
-              </Tooltip>
+              {!process.isCategory && (
+                <Tooltip color="red" label="Berechtigungen">
+                  <ModalActionIcon
+                    title="Prozess Berechtigungen"
+                    variant="subtle"
+                    content={
+                      <ProcessPermissionForm
+                        workflowId={workflowId}
+                        processId={process.id}
+                        editProcessPermissions={process.editProcessPermissions}
+                        submitProcessPermissions={
+                          process.submitProcessPermissions
+                        }
+                        viewProcessPermissions={process.viewProcessPermissions}
+                        resetProcessPermissions={
+                          process.resetProcessPermissions
+                        }
+                        formActionName="process-permissions"
+                      />
+                    }
+                  >
+                    <IconShieldLock style={baseIconStyles} />
+                  </ModalActionIcon>
+                </Tooltip>
               )}
               <Tooltip color="red" label="Löschen">
                 <ModalActionIcon

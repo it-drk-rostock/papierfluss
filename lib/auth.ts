@@ -10,11 +10,7 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
-  trustedOrigins: [
-    "http://localhost:3000",
-    "https://fms.drk-rostock.de",
-    "https://fms-app.drk-rostock.de",
-  ],
+  trustedOrigins: ["http://localhost:3000", "https://fms.drk-rostock.de"],
   plugins: [
     nextCookies(),
     customSession(async ({ user, session }) => {

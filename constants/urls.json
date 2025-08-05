@@ -9,5 +9,6 @@
   "forms": "Formulare",
   "form-submissions": "Formulareingaben",
   "admin": "Admin",
-  "archive": "Archiv"
+  "archive": "Archiv",
+  "cronjobs": "Cronjobs"
 }

@@ -7,7 +7,7 @@ export const AdminLinks = async () => {
   await adminQuery();
 
   return (
-    <Group justify="center" gap="xl">
+    <Group justify="center" gap="md">
       <Card
         padding="lg"
         component={Link}
@@ -34,6 +34,16 @@ export const AdminLinks = async () => {
       <Card padding="lg" withBorder component={Link} href="/admin/n8n" w={300}>
         <Title order={2}>n8n Workflows</Title>
         <Text c="dimmed">Verwalten Sie n8n-Workflows.</Text>
+      </Card>
+      <Card
+        padding="lg"
+        component={Link}
+        href="/admin/cronjobs"
+        withBorder
+        w={300}
+      >
+        <Title order={2}>Cronjobs</Title>
+        <Text c="dimmed">Verwalten Sie Cronjobs.</Text>
       </Card>
     </Group>
   );

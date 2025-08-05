@@ -37,6 +37,7 @@ model Process {
     submitProcessPermissions String?
     viewProcessPermissions   String?
     resetProcessPermissions  String?
+    skippablePermissions     String?
     reactivateNotes          String?
     teams                    Team[]
     responsibleTeamId        String?
@@ -57,6 +58,9 @@ model Process {
     dependencies       Process[] @relation("ProcessDependencies")
     dependentProcesses Process[] @relation("ProcessDependencies")
     initializeWorkflow Workflow? @relation("InitializeProcess")
+
+    skippableProcesses Process[] @relation("ProcessSkipping")
+    skippedByProcesses Process[] @relation("ProcessSkipping")
 
     @@index([workflowId])
     @@index([parentId])

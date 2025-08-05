@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Title } from "@mantine/core";
+import { Loader, Title } from "@mantine/core";
 import { Users } from "./_components/users";
 import { userSearchParamsLoader } from "./_searchParams";
 import { UserSearchParams } from "./_actions";
@@ -13,8 +13,8 @@ export default function Page({
 
   return (
     <>
-      <Title order={1}>Users</Title>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Title order={1}>Benutzer</Title>
+      <Suspense fallback={<Loader />}>
         <Users params={Promise.resolve(paramsPromise)} />
       </Suspense>
     </>

@@ -7,6 +7,7 @@ import { formatError } from "@/utils/format-error";
 import { revalidatePath } from "next/cache";
 import {
   manageDependenciesSchema,
+  manageSkippableProcessesSchema,
   processSchema,
   removeDependencySchema,
   updateProcessFormSchema,
@@ -27,6 +28,8 @@ export interface Process {
   isCategory: boolean;
   dependencies: Array<{ id: string; name: string }>;
   dependentProcesses: Array<{ id: string; name: string }>;
+  skippableProcesses: Array<{ id: string; name: string }>;
+  skippedByProcesses: Array<{ id: string; name: string }>;
   children: Array<{ id: string; name: string }>;
 }
 
@@ -80,6 +83,18 @@ export const getWorkflowProcesses = async (workflowId: string) => {
             },
           },
           dependentProcesses: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          skippableProcesses: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          skippedByProcesses: {
             select: {
               id: true,
               name: true,
@@ -281,6 +296,48 @@ export const getAvailableDependencies = async (processId: string) => {
 };
 
 /**
+ * Gets all available processes that can be skipped by a given process
+ */
+export const getAvailableSkippableProcesses = async (processId: string) => {
+  await authQuery();
+
+  const process = await prisma.process.findUnique({
+    where: { id: processId },
+    select: {
+      workflowId: true,
+      skippableProcesses: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (!process) {
+    throw new Error("Process not found");
+  }
+
+  // Get all processes in the workflow except the current one and its existing skippable processes
+  const availableProcesses = await prisma.process.findMany({
+    where: {
+      workflowId: process.workflowId,
+      id: {
+        not: processId,
+        notIn: process.skippableProcesses.map((s) => s.id),
+      },
+      isCategory: false,
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return availableProcesses;
+};
+
+/**
  * Updates the dependencies of a process
  */
 export const manageDependencies = authActionClient
@@ -317,6 +374,46 @@ export const manageDependencies = authActionClient
 
     return {
       message: "Abhängigkeiten aktualisiert",
+    };
+  });
+
+/**
+ * Updates the skippable processes of a process
+ */
+export const manageSkippableProcesses = authActionClient
+  .schema(manageSkippableProcessesSchema)
+  .metadata({
+    event: "manageSkippableProcessesAction",
+  })
+  .stateAction(async ({ parsedInput }) => {
+    const { processId, skippableProcesses } = parsedInput;
+
+    try {
+      const process = await prisma.process.findUnique({
+        where: { id: processId },
+        select: { workflowId: true },
+      });
+
+      if (!process) {
+        throw new Error("Process not found");
+      }
+
+      await prisma.process.update({
+        where: { id: processId },
+        data: {
+          skippableProcesses: {
+            set: skippableProcesses.map((skip) => ({ id: skip.id })),
+          },
+        },
+      });
+
+      revalidatePath(`/workflows/${process.workflowId}/designer`);
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    return {
+      message: "Überspringbare Prozesse aktualisiert",
     };
   });
 
@@ -569,6 +666,7 @@ export const updateProcessPermissions = authActionClient
       submitProcessPermissions,
       viewProcessPermissions,
       resetProcessPermissions,
+      skippablePermissions,
     } = parsedInput;
 
     try {
@@ -579,6 +677,7 @@ export const updateProcessPermissions = authActionClient
           submitProcessPermissions,
           viewProcessPermissions,
           resetProcessPermissions,
+          skippablePermissions,
         },
       });
     } catch (error) {

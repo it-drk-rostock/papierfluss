@@ -1,21 +1,29 @@
 import React from "react";
 import { Stack, Title, Text, Group } from "@mantine/core";
-import { getForm } from "../_actions";
+import { FormSearchParams, getForm } from "../_actions";
 import { notFound } from "next/navigation";
 import { FormSubmissionsTable } from "./form-submissions-table";
 import { ButtonLink } from "@/components/button-link";
 import { IconArchive } from "@tabler/icons-react";
+import { QuickSearchAdd } from "@/components/quick-search-add";
 
-export const Form = async ({ params }: { params: Promise<{ id: string }> }) => {
+export const Form = async ({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<FormSearchParams>;
+}) => {
   const formId = (await params).id;
-  const form = await getForm(formId);
+  const { search, status } = await searchParams;
+  const form = await getForm(formId, { search, status });
 
   if (!form) {
     notFound();
   }
 
   return (
-    <Stack gap="xl">
+    <Stack gap="md">
       <Group justify="space-between" align="flex-start">
         <Stack gap="0">
           <Title order={1}>{form.title} - Übersicht</Title>
@@ -28,6 +36,7 @@ export const Form = async ({ params }: { params: Promise<{ id: string }> }) => {
           href={`/forms/${formId}/archive`}
         />
       </Group>
+      <QuickSearchAdd />
       <FormSubmissionsTable form={form} />
     </Stack>
   );

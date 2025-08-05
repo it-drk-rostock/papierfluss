@@ -1,14 +1,13 @@
 "use server";
 
+import { WorkflowStatus } from "@/generated/prisma";
 import prisma from "@/lib/prisma";
 import { authQuery } from "@/server/utils/auth-query";
 import jsonLogic from "json-logic-js";
 
-
-
 export const getArchivedWorkflowRuns = async (
   workflowId: string,
-  search?: string | Record<string, string>
+  { search, status }: { search?: string; status?: WorkflowStatus }
 ) => {
   const { user } = await authQuery();
 
@@ -49,6 +48,7 @@ export const getArchivedWorkflowRuns = async (
     where: {
       workflowId: workflowId,
       isArchived: true,
+      ...(status && { status }),
       ...(search &&
         workflow.information && {
           processes: {
@@ -160,8 +160,6 @@ export const getArchivedWorkflowRuns = async (
  * Type representing the return value of the getWorkflowRuns function
  * @type {WorkflowRun[]}
  */
-export type ArchivedWorkflowRunsProps = Awaited<ReturnType<typeof getArchivedWorkflowRuns>>;
-
-
-
-
+export type ArchivedWorkflowRunsProps = Awaited<
+  ReturnType<typeof getArchivedWorkflowRuns>
+>;

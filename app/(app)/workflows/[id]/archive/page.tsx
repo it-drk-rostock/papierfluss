@@ -15,7 +15,7 @@ export default function Page({
   const searchParamsPromise = workflowRunsSearchParamsLoader(searchParams);
   return (
     <>
-      <Suspense fallback={<Loader size="xl" />}>
+      <Suspense fallback={<Loader />}>
         <ArchivedWorkflowRuns
           params={params}
           searchParams={Promise.resolve(searchParamsPromise)}
