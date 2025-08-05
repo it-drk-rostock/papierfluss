@@ -90,7 +90,9 @@ export const SurveyDesignerForm = (props: {
     // Set initial properties
     newCreator.isAutoSave = false;
     newCreator.locale = "de";
-    newCreator.applyCreatorTheme(props.theme);
+    if (props.theme) {
+      newCreator.applyCreatorTheme(props.theme);
+    }
 
     // Update file upload handler to use mutation
     newCreator.onUploadFile.add(async (_, options) => {
@@ -120,7 +122,7 @@ export const SurveyDesignerForm = (props: {
 
         showNotification("Datei hochgeladen", "success");
         options.callback("success", uploadData.files[0].fileUrl);
-      } catch (error) {
+      } catch {
         showNotification("Datei hochladen fehlgeschlagen", "error");
         options.callback("error");
       }
@@ -143,7 +145,7 @@ export const SurveyDesignerForm = (props: {
   });
 
   // Simplify completion hook without complex types
-  const { completion, isLoading, complete } = useCompletion({
+  const { isLoading, complete, completion } = useCompletion({
     api: "/api/ai/form",
 
     body: {
@@ -151,19 +153,31 @@ export const SurveyDesignerForm = (props: {
     },
 
     onFinish: (prompt, completion) => {
-      console.log(prompt, completion);
+      console.log("AI Response finished:", { prompt, completion });
+
+      if (!completion || completion.trim() === "") {
+        console.error("Empty completion received");
+        showNotification("Keine Antwort vom KI-Service erhalten", "error");
+        return;
+      }
+
       try {
         const surveyJSON = JSON.parse(completion);
         if (creator) {
           creator.JSON = surveyJSON;
         }
+
+        showNotification("Formular erfolgreich generiert", "success");
       } catch (e) {
-        console.error("Failed to parse AI generated survey:", e);
+        showNotification("Fehler beim Verarbeiten der KI-Antwort", "error");
       }
     },
-  });
 
-  console.log(completion, complete);
+    onError: (error) => {
+      console.error("AI Completion error:", error);
+      showNotification("Fehler beim KI-Service", "error");
+    },
+  });
 
   // Create a wrapped submit handler using Mantine form
   const handleFormSubmit = form.onSubmit((values) => {
@@ -207,7 +221,7 @@ export const SurveyDesignerForm = (props: {
               mb="sm"
             />
             <Button type="submit" loading={isLoading} fullWidth>
-              Generieren
+              {isLoading ? "Generiere..." : "Generieren"}
             </Button>
           </form>
         </Stack>

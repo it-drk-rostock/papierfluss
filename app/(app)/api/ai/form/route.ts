@@ -1,6 +1,6 @@
-import { generateText, streamText } from "ai";
+import { streamText } from "ai";
+import { openai } from "@ai-sdk/openai";
 import { authQuery } from "@/server/utils/auth-query";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 
 export async function POST(req: Request) {
   await authQuery();
@@ -16,45 +16,47 @@ export async function POST(req: Request) {
     : `Create a new form with these requirements: ${prompt}`;
 
   try {
-    // Create OpenAI compatible client
-    const model = createOpenAICompatible({
-      baseURL: "https://openai.inference.de-txl.ionos.com/v1/chat/completions",
-      name: "meta-llama/CodeLlama-13b-Instruct-hf",
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-
-    const response = streamText({
-      model: model.chatModel("meta-llama/CodeLlama-13b-Instruct-hf"),
-      /* system: `You are an expert SurveyJS form builder assistant. Your role is to analyze requests and output ONLY valid SurveyJS JSON configurations.
+    const result = streamText({
+      model: openai("gpt-4.1-mini-2025-04-14"),
+      system: `You are an expert SurveyJS form builder assistant. Your role is to analyze requests and output ONLY valid SurveyJS JSON configurations.
 
 Rules:
 1. If input contains existing form JSON:
-   - Analyze the current structure
-   - Apply requested modifications while preserving existing functionality
+   - Carefully analyze the current structure
+   - Apply ONLY the requested modifications
+   - Preserve all other existing questions, settings, validations, and texts exactly as they are unless the request explicitly says to change them
    - Return the complete modified JSON
 
 2. If no existing form JSON:
    - Create a new form structure based on the description
-   - Include appropriate question types, validation rules, and layout
-   - Return complete SurveyJS JSON
+   - Enforce all user requirements exactly as described
+   - Use a variety of appropriate question types (e.g., text, comment, checkbox, radiogroup, dropdown, rating, file, boolean, matrix, multipletext)
+   - Apply dynamic features where useful (e.g., conditional logic with visibleIf, enableIf, requiredIf, calculated values, default values)
+   - Include relevant SurveyJS options like placeholders, input masks, validators, and hints
+   - Return the complete SurveyJS JSON
 
 3. Always ensure output is:
-   - Valid JSON format
-   - Compatible with SurveyJS specification
+   - Strictly valid JSON (no comments, no trailing commas)
+   - 100% compatible with SurveyJS specification
+   - Includes a "pages" array with at least one page, each containing "elements"
    - Contains proper question types, validation rules, and settings
-   - Uses German language for all labels and text
-   - Includes proper page organization and layout
+   - All labels, titles, descriptions, placeholders, and choice texts in German
+   - Well‑structured with logical page and section organization
+   - User‑friendly, with varied and rich input types, not only simple text fields
 
-DO NOT include any explanations or text outside the JSON structure. Return ONLY the valid SurveyJS JSON object.`, */
+4. Enforce user wishes with high priority:
+   - Do not override specific texts, settings, or structure unless explicitly requested
+   - If the request is ambiguous, prefer minimal changes that respect existing content
+
+5. Do not include explanations, comments, or markdown formatting.
+6. Start the response with { and end with }.
+7. Return ONLY the valid SurveyJS JSON object.
+`,
       prompt: contextPrompt,
-      temperature: 0.7, // Add some creativity while keeping responses focused
+      temperature: 0.7,
     });
 
-    if (!response || !response.text) {
-      throw new Error("No response received from AI service");
-    }
-
-    return response.toDataStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error("AI Service Error:", error);
 
