@@ -632,6 +632,7 @@ export const completeProcessRun = authActionClient
               name: true,
               description: true,
               submitProcessPermissions: true,
+              skippablePermissions: true,
               responsibleTeam: {
                 select: {
                   name: true,
@@ -643,6 +644,12 @@ export const completeProcessRun = authActionClient
                 },
               },
               dependencies: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              skippableProcesses: {
                 select: {
                   id: true,
                   name: true,
@@ -772,6 +779,100 @@ export const completeProcessRun = authActionClient
         },
       });
       workflowRunId = processRun.workflowRunId;
+
+      // Handle skippable processes after completing the current process
+      if (currentProcessRun.process.skippableProcesses.length > 0) {
+        try {
+          const skippableProcessIds =
+            currentProcessRun.process.skippableProcesses.map((p) => p.id);
+
+          // Get skippable process runs that are still open or ongoing
+          const skippableProcessRuns = await prisma.processRun.findMany({
+            where: {
+              workflowRunId: workflowRunId,
+              processId: { in: skippableProcessIds },
+              status: { in: ["open", "ongoing"] },
+            },
+            select: {
+              id: true,
+              status: true,
+              processId: true,
+              process: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          });
+
+          // Only proceed if there are active skippable process runs
+          if (skippableProcessRuns.length > 0) {
+            // Get all current process data for permission evaluation
+            const { processDataMap: allProcessData } =
+              await getAllProcessRunData(workflowRunId);
+
+            // Determine if processes should be skipped based on permissions
+            let shouldSkipAll = true; // Default to skip when no permissions defined
+
+            if (currentProcessRun.process.skippablePermissions) {
+              try {
+                const rules = JSON.parse(
+                  currentProcessRun.process.skippablePermissions
+                );
+                const permissionContext = {
+                  user: {
+                    ...ctx.session.user,
+                    teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+                  },
+                  data: {
+                    ...processRun.data, // Flatten current process data for JsonLogic
+                    currentProcessData: processRun.data,
+                    allProcessData: allProcessData,
+                  },
+                  process: {
+                    responsibleTeam:
+                      currentProcessRun.workflowRun.workflow.responsibleTeam
+                        ?.name,
+                    teams:
+                      currentProcessRun.workflowRun.workflow.teams?.map(
+                        (t) => t.name
+                      ) ?? [],
+                  },
+                  workflow: {
+                    name: currentProcessRun.workflowRun.workflow.name,
+                    description:
+                      currentProcessRun.workflowRun.workflow.description,
+                  },
+                };
+
+                shouldSkipAll =
+                  jsonLogic.apply(rules, permissionContext) === true;
+              } catch (permissionError) {
+                // If permission evaluation fails, default to not skipping
+                shouldSkipAll = false;
+              }
+            }
+
+            // Bulk update all skippable processes to completed if permission check passed
+            if (shouldSkipAll) {
+              const processesToSkip = skippableProcessRuns.map((run) => run.id);
+              await prisma.processRun.updateMany({
+                where: {
+                  id: { in: processesToSkip },
+                  status: { in: ["open", "ongoing"] }, // Safety check
+                },
+                data: {
+                  status: "completed",
+                  resetProcessText: null,
+                },
+              });
+            }
+          }
+        } catch (skippableError) {
+          // Silently continue if skippable logic fails - don't break main flow
+          console.error("Error in skippable processes logic:", skippableError);
+        }
+      }
 
       // Check if all processes in the workflow run are completed
       const allProcessRuns = await prisma.processRun.findMany({

@@ -18,6 +18,7 @@ interface ProcessPermissionFormProps {
   submitProcessPermissions?: string | null;
   viewProcessPermissions?: string | null;
   resetProcessPermissions?: string | null;
+  skippablePermissions?: string | null;
   formActionName: string;
 }
 
@@ -28,6 +29,7 @@ export const ProcessPermissionForm = ({
   submitProcessPermissions,
   viewProcessPermissions,
   resetProcessPermissions,
+  skippablePermissions,
   formActionName,
 }: ProcessPermissionFormProps) => {
   const { data: workflowRuns } = useQuery({
@@ -47,6 +49,7 @@ export const ProcessPermissionForm = ({
       submitProcessPermissions: submitProcessPermissions ?? "",
       viewProcessPermissions: viewProcessPermissions ?? "",
       resetProcessPermissions: resetProcessPermissions ?? "",
+      skippablePermissions: skippablePermissions ?? "",
     },
   });
 
@@ -98,7 +101,6 @@ export const ProcessPermissionForm = ({
             />
 
             <WorkflowPermissionBuilder
-
               label="Prozess Ansicht Berechtigungen"
               initialData={viewProcessPermissions ?? ""}
               formActionName={formActionName}
@@ -112,6 +114,15 @@ export const ProcessPermissionForm = ({
               initialData={resetProcessPermissions ?? ""}
               formActionName={formActionName}
               fieldValue="resetProcessPermissions"
+              workflowRuns={workflowRuns}
+              permissionType="process"
+            />
+
+            <WorkflowPermissionBuilder
+              label="Prozess Überspringen Berechtigungen"
+              initialData={skippablePermissions ?? ""}
+              formActionName={formActionName}
+              fieldValue="skippablePermissions"
               workflowRuns={workflowRuns}
               permissionType="process"
             />

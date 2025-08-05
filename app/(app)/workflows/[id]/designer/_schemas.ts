@@ -25,11 +25,22 @@ export const updateProcessPermissionsSchema = z.object({
   submitProcessPermissions: z.string().optional(),
   viewProcessPermissions: z.string().optional(),
   resetProcessPermissions: z.string().optional(),
+  skippablePermissions: z.string().optional(),
 });
 
 export const manageDependenciesSchema = z.object({
   processId: z.string().min(1),
   dependencies: z.array(
+    z.object({
+      id: z.string().min(1),
+      name: z.string().min(1),
+    })
+  ),
+});
+
+export const manageSkippableProcessesSchema = z.object({
+  processId: z.string().min(1),
+  skippableProcesses: z.array(
     z.object({
       id: z.string().min(1),
       name: z.string().min(1),
