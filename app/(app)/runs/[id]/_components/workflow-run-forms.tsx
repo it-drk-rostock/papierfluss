@@ -31,6 +31,7 @@ interface FormNodeProps {
   expanded: boolean;
   hasChildren: boolean;
   elementProps: React.HTMLProps<HTMLDivElement>;
+  tree: ReturnType<typeof useTree>;
 }
 
 const FormNode = ({
@@ -38,48 +39,64 @@ const FormNode = ({
   expanded,
   hasChildren,
   elementProps,
+  tree,
 }: FormNodeProps) => {
   const process = node.processData;
 
+  const submission = useMemo(() => {
+    if (!process.schema) return null;
+    return {
+      id: process.id,
+      form: {
+        id: process.id,
+        schema: process.schema,
+      },
+      data: process.data,
+      status: process.status,
+    };
+  }, [process.id, process.schema, process.data, process.status]);
+
   return (
-    <Stack gap="md" mb="md">
-      <div {...elementProps}>
-        <Group wrap="nowrap" justify="space-between">
-          <div style={{ flex: 1 }}>
-            <Text fw={500}>{process.name}</Text>
-            {process.description && (
-              <Text size="sm" c="dimmed" fw={400}>
-                {process.description}
-              </Text>
-            )}
-          </div>
-          {(hasChildren || !process.isCategory) && (
-            <ActionIcon variant="light" size="lg" disabled={!process.schema}>
-              {expanded ? (
-                <IconChevronUp size={20} />
-              ) : (
-                <IconChevronDown size={20} />
-              )}
-            </ActionIcon>
+    <Stack gap="md" {...elementProps}>
+      <Group wrap="nowrap" justify="space-between">
+        <div style={{ flex: 1 }}>
+          <Text fw={500}>{process.name}</Text>
+          {process.description && (
+            <Text size="sm" c="dimmed" fw={400}>
+              {process.description}
+            </Text>
           )}
-        </Group>
-      </div>
+        </div>
+        {(hasChildren || !process.isCategory) && (
+          <ActionIcon
+            variant="light"
+            size="lg"
+            disabled={!process.schema}
+            onClick={(e) => {
+              e.stopPropagation();
+              tree.toggleExpanded(node.value);
+            }}
+          >
+            {expanded ? (
+              <IconChevronUp size={20} />
+            ) : (
+              <IconChevronDown size={20} />
+            )}
+          </ActionIcon>
+        )}
+      </Group>
       {expanded && (
         <Stack gap="md" pl="md">
           {!process.isCategory && (
-            <Paper withBorder p="md">
-              {process.schema ? (
-                <WorkflowRunForm
-                  submission={{
-                    id: process.id,
-                    form: {
-                      id: process.id,
-                      schema: process.schema,
-                    },
-                    data: process.data,
-                    status: process.status,
-                  }}
-                />
+            <Paper
+              withBorder
+              p="md"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              {process.schema && submission ? (
+                <WorkflowRunForm submission={submission} />
               ) : (
                 <Text c="dimmed" ta="center" py="xl">
                   Kein Formular verfügbar oder fehlende Berechtigung dieses
@@ -146,14 +163,17 @@ export function WorkflowRunForms({ processes }: WorkflowRunFormsProps) {
   return (
     <Tree
       expandOnSpace={false}
+      expandOnClick={false}
       data={formTreeData}
       tree={tree}
+      className="workflow-run-forms-tree"
       renderNode={({ node, expanded, hasChildren, elementProps }) => (
         <FormNode
           node={node as FormTreeNodeData}
           expanded={expanded}
           hasChildren={hasChildren}
           elementProps={elementProps}
+          tree={tree}
         />
       )}
     />

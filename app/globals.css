@@ -98,3 +98,7 @@ a {
 .archive-form:hover {
   background-color: var(--mantine-color-gray-filled-hover) !important;
 }
+
+.mantine-Tree-node {
+  margin-bottom: var(--mantine-spacing-sm);
+}
