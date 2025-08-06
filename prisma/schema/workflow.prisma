@@ -70,7 +70,9 @@ model WorkflowRun {
     id            String         @id @default(uuid())
     status        WorkflowStatus @default(open)
     startedAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
     completedAt   DateTime?
+    archivedAt    DateTime?
     isArchived    Boolean        @default(false)
     archivedNotes String? // Reason why the workflow run was archived
 
@@ -87,6 +89,7 @@ model ProcessRun {
     data             Json?
     resetProcessText String?
     startedAt        DateTime      @default(now())
+    updatedAt        DateTime      @updatedAt
     completedAt      DateTime?
     workflowRun      WorkflowRun   @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
     workflowRunId    String
