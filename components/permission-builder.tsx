@@ -14,6 +14,7 @@ import { Loader, rem, Stack, Text } from "@mantine/core";
 import { getUserNames } from "@/server/utils/get-usernames";
 import { createFormActions } from "@mantine/form";
 import { getTeamNames } from "@/server/utils/get-teamnames";
+import { arrayContainsOperator } from "@/utils/array-contains-operator";
 
 export const PermissionBuilder = ({
   initialData,
@@ -82,11 +83,16 @@ export const PermissionBuilder = ({
       name: "user.teams",
       label: "Benutzer Bereiche",
       valueEditorType: "multiselect",
-      values: teamNames?.map((team) => ({
-        value: team,
-        label: team,
-      })),
+      values: teamNames?.map((team) => ({ value: team, label: team })),
       defaultOperator: "contains",
+      operators: [
+        {
+          name: "contains",
+          label: "enthält",
+          formatOp: (field, op, valueSource, value) =>
+            arrayContainsOperator(field, value),
+        },
+      ],
     },
     ...submissionFields.map((fieldName) => ({
       name: `data.${fieldName}`,

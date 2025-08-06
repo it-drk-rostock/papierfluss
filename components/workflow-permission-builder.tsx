@@ -14,6 +14,7 @@ import { Loader, rem, Stack, Text } from "@mantine/core";
 import { getUserNames } from "@/server/utils/get-usernames";
 import { createFormActions } from "@mantine/form";
 import { getTeamNames } from "@/server/utils/get-teamnames";
+import { arrayContainsOperator } from "@/utils/array-contains-operator";
 
 export const WorkflowPermissionBuilder = ({
   initialData,
@@ -117,11 +118,16 @@ export const WorkflowPermissionBuilder = ({
       name: "user.teams",
       label: "Benutzer Bereiche",
       valueEditorType: "multiselect",
-      values: teamNames?.map((team) => ({
-        value: team,
-        label: team,
-      })),
+      values: teamNames?.map((team) => ({ value: team, label: team })),
       defaultOperator: "contains",
+      operators: [
+        {
+          name: "contains",
+          label: "enthält",
+          formatOp: (field, op, valueSource, value) =>
+            arrayContainsOperator(field, value),
+        },
+      ],
     },
     // Add workflow-specific fields
     {
@@ -138,11 +144,16 @@ export const WorkflowPermissionBuilder = ({
       name: "workflow.teams",
       label: "Workflow Bereiche",
       valueEditorType: "multiselect" as const,
-      values: teamNames?.map((team) => ({
-        value: team,
-        label: team,
-      })),
+      values: teamNames?.map((team) => ({ value: team, label: team })),
       defaultOperator: "contains",
+      operators: [
+        {
+          name: "contains",
+          label: "enthält",
+          formatOp: (field, op, valueSource, value) =>
+            arrayContainsOperator(field, value),
+        },
+      ],
     },
     // Add process-specific fields if this is for process permissions
     ...(permissionType === "process"
@@ -161,11 +172,16 @@ export const WorkflowPermissionBuilder = ({
             name: "process.teams",
             label: "Prozess Bereiche",
             valueEditorType: "multiselect" as const,
-            values: teamNames?.map((team) => ({
-              value: team,
-              label: team,
-            })),
+            values: teamNames?.map((team) => ({ value: team, label: team })),
             defaultOperator: "contains",
+            operators: [
+              {
+                name: "contains",
+                label: "enthält",
+                formatOp: (field, op, valueSource, value) =>
+                  arrayContainsOperator(field, value),
+              },
+            ],
           },
         ]
       : []),

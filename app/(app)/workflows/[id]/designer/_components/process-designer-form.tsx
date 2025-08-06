@@ -154,14 +154,23 @@ export const ProcessDesignerForm = (props: {
       currentForm: creator?.JSON,
     },
     onFinish: (prompt, completion) => {
+      if (!completion || completion.trim() === "") {
+        showNotification("Keine Antwort vom KI-Service erhalten", "error");
+        return;
+      }
       try {
         const surveyJSON = JSON.parse(completion);
         if (creator) {
           creator.JSON = surveyJSON;
         }
-      } catch (e) {
-        console.error("Failed to parse AI generated survey:", e);
+
+        showNotification("Formular erfolgreich generiert", "success");
+      } catch {
+        showNotification("Fehler beim Verarbeiten der KI-Antwort", "error");
       }
+    },
+    onError: () => {
+      showNotification("Fehler beim KI-Service", "error");
     },
   });
 

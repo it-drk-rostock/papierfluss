@@ -22,6 +22,7 @@ import { useCompletion } from "@ai-sdk/react";
 import { useForm } from "@mantine/form";
 import { useMutation } from "@tanstack/react-query";
 import { showNotification } from "@/utils/notification";
+import { SurveyPreview } from "@/components/survey-preview";
 
 const defaultCreatorOptions: ICreatorOptions = {
   showTranslationTab: true,
@@ -153,10 +154,7 @@ export const SurveyDesignerForm = (props: {
     },
 
     onFinish: (prompt, completion) => {
-      console.log("AI Response finished:", { prompt, completion });
-
       if (!completion || completion.trim() === "") {
-        console.error("Empty completion received");
         showNotification("Keine Antwort vom KI-Service erhalten", "error");
         return;
       }
@@ -168,13 +166,12 @@ export const SurveyDesignerForm = (props: {
         }
 
         showNotification("Formular erfolgreich generiert", "success");
-      } catch (e) {
+      } catch {
         showNotification("Fehler beim Verarbeiten der KI-Antwort", "error");
       }
     },
 
-    onError: (error) => {
-      console.error("AI Completion error:", error);
+    onError: () => {
       showNotification("Fehler beim KI-Service", "error");
     },
   });
@@ -213,7 +210,7 @@ export const SurveyDesignerForm = (props: {
         title="KI Formular Generator"
         padding="md"
       >
-        <Stack>
+        <Stack gap="md">
           <form onSubmit={handleFormSubmit}>
             <Textarea
               {...form.getInputProps("prompt")}
