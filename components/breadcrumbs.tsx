@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Group,
   Breadcrumbs as MantineBreadcrumbs,
   rem,
   useMantineTheme,
@@ -9,6 +10,8 @@ import { IconChevronRight } from "@tabler/icons-react";
 import { ButtonLink } from "./button-link";
 import { usePathname } from "next/navigation";
 import urls from "@/constants/urls.json";
+import { BackButton } from "./back-button";
+import { BackActionIcon } from "./back-action-icon";
 
 interface BreadcrumbItem {
   title: string;
@@ -71,20 +74,21 @@ export const Breadcrumbs = () => {
   });
 
   return (
-    <MantineBreadcrumbs
-      styles={{
-        root: {
-          borderRadius: theme.radius.sm,
-          border: `1px solid ${theme.colors.gray[3]}`,
-          width: "fit-content",
-        },
-      }}
-      p="xs"
-      bg="transparent"
-      separator={<IconChevronRight size={16} stroke={1.5} color="#868e96" />}
-      separatorMargin={rem(4)}
-    >
-      {breadcrumbItems}
-    </MantineBreadcrumbs>
+    <Group gap={rem(4)}>
+      <BackActionIcon />
+      <MantineBreadcrumbs
+        styles={{
+          root: {
+            width: "fit-content",
+          },
+        }}
+        p="xs"
+        bg="transparent"
+        separator={<IconChevronRight size={16} stroke={1.5} color="#868e96" />}
+        separatorMargin={rem(4)}
+      >
+        {breadcrumbItems}
+      </MantineBreadcrumbs>
+    </Group>
   );
 };
