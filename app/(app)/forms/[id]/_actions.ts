@@ -386,6 +386,7 @@ export const archiveFormSubmission = authActionClient
         data: {
           isArchived: true,
           archivedNotes: message,
+          archivedAt: new Date(),
         },
       });
 

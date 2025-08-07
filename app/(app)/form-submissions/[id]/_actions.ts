@@ -391,6 +391,7 @@ export const updateFormSubmissionStatus = authActionClient
             status: "inReview",
           },
           data: {
+            completedAt: new Date(),
             status,
             rejectedNotes: message,
           },
@@ -445,6 +446,7 @@ export const updateFormSubmissionStatus = authActionClient
           data: {
             status,
             completedNotes: message,
+            completedAt: new Date(),
           },
           select: {
             data: true,
