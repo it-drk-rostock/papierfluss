@@ -5,7 +5,7 @@ import { Survey } from "survey-react-ui";
 import "survey-core/survey-core.css";
 import "survey-core/i18n/german";
 import { Box, LoadingOverlay } from "@mantine/core";
-import React from "react";
+import React, { useMemo } from "react";
 import { modals } from "@mantine/modals";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { ButtonAction } from "@/components/button-action";
@@ -77,118 +77,128 @@ export const WorkflowRunForm = ({
     },
   });
 
-  const model = new Model(submission.form.schema);
-  model.locale = "de";
+  // Memoize the SurveyJS Model to prevent recreation on every render
+  const model = useMemo(() => {
+    const surveyModel = new Model(submission.form.schema);
+    surveyModel.locale = "de";
+    surveyModel.data = submission.data;
+    surveyModel.showCompleteButton = false;
+    surveyModel.readOnly = submission.status === "completed";
 
-  model.data = submission.data;
-  model.showCompleteButton = false;
-  model.readOnly = submission.status === "completed";
+    // Handle file uploads
+    surveyModel.onUploadFiles.add(async (_, options) => {
+      try {
+        // 1. Get signed URLs for upload
+        const uploadData = await createSignedUploadUrls(
+          options.files.map((file) => ({
+            fileName: file.name,
+            contentType: file.type,
+          })),
+          submission.form.id
+        );
 
-  // Handle file uploads
-  model.onUploadFiles.add(async (_, options) => {
-    try {
-      // 1. Get signed URLs for upload
-      const uploadData = await createSignedUploadUrls(
-        options.files.map((file) => ({
-          fileName: file.name,
-          contentType: file.type,
-        })),
-        submission.form.id
-      );
+        if (!uploadData.files?.length) {
+          options.callback([], ["Fehler beim Hochladen der Dateien"]);
+          return;
+        }
 
-      if (!uploadData.files?.length) {
-        options.callback([], ["Fehler beim Hochladen der Dateien"]);
-        return;
-      }
+        // 2. Upload files using signed URLs
+        const uploadPromises = options.files.map(async (file, index) => {
+          const fileData = uploadData.files[index];
 
-      // 2. Upload files using signed URLs
-      const uploadPromises = options.files.map(async (file, index) => {
-        const fileData = uploadData.files[index];
+          await fetch(fileData.url, {
+            method: "PUT",
+            body: file,
+            headers: { "Content-Type": file.type },
+          });
 
-        await fetch(fileData.url, {
-          method: "PUT",
-          body: file,
-          headers: { "Content-Type": file.type },
+          // Return in the format SurveyJS expects
+          return {
+            file: file,
+            content: fileData.fileUrl,
+          };
         });
 
-        // Return in the format SurveyJS expects
-        return {
-          file: file,
-          content: fileData.fileUrl,
-        };
-      });
-
-      const results = await Promise.all(uploadPromises);
-      showNotification("Dateien hochgeladen", "success");
-      options.callback(results);
-    } catch {
-      showNotification("Fehler beim Hochladen der Dateien", "error");
-      options.callback([], ["Fehler beim Hochladen der Dateien"]);
-    }
-  });
-
-  // Handle file deletion
-  model.onClearFiles.add(async (_, options) => {
-    try {
-      if (!options.value || options.value.length === 0) {
-        return options.callback("success");
+        const results = await Promise.all(uploadPromises);
+        showNotification("Dateien hochgeladen", "success");
+        options.callback(results);
+      } catch {
+        showNotification("Fehler beim Hochladen der Dateien", "error");
+        options.callback([], ["Fehler beim Hochladen der Dateien"]);
       }
+    });
 
-      const filesToDelete = options.fileName
-        ? options.value.filter(
-            (item: FileItem) => item.name === options.fileName
-          )
-        : options.value;
+    // Handle file deletion
+    surveyModel.onClearFiles.add(async (_, options) => {
+      try {
+        if (!options.value || options.value.length === 0) {
+          return options.callback("success");
+        }
 
-      if (filesToDelete.length === 0) {
-        return options.callback("error");
+        const filesToDelete = options.fileName
+          ? options.value.filter(
+              (item: FileItem) => item.name === options.fileName
+            )
+          : options.value;
+
+        if (filesToDelete.length === 0) {
+          return options.callback("error");
+        }
+
+        const fileUrls = filesToDelete.map((file: FileItem) => file.content);
+        await deleteFiles(fileUrls);
+        showNotification("Dateien gelöscht", "success");
+        options.callback("success");
+      } catch {
+        showNotification("Fehler beim Löschen der Dateien", "error");
+        options.callback("error");
       }
+    });
 
-      const fileUrls = filesToDelete.map((file: FileItem) => file.content);
-      await deleteFiles(fileUrls);
-      showNotification("Dateien gelöscht", "success");
-      options.callback("success");
-    } catch {
-      showNotification("Fehler beim Löschen der Dateien", "error");
-      options.callback("error");
-    }
-  });
+    surveyModel.addNavigationItem({
+      id: "save-process",
+      title: "Speichern",
+      innerCss: "sd-btn save-form",
+      action: () => {
+        const dataToSave = { ...surveyModel.data };
+        executeUpdate({ id: submission.id, data: dataToSave });
+      },
+    });
+    surveyModel.addNavigationItem({
+      id: "submit-process",
+      title: "Prozess abschließen",
+      innerCss: "sd-btn submit-form",
+      action: () => {
+        modals.open({
+          closeOnClickOutside: false,
+          title: "Prozess abschließen",
+          children: (
+            <ButtonAction
+              fullWidth
+              action={completeProcessRun}
+              values={{ id: submission.id }}
+            >
+              Prozess abschließen
+            </ButtonAction>
+          ),
+        });
+      },
+    });
 
-  model.addNavigationItem({
-    id: "save-process",
-    title: "Speichern",
-    innerCss: "sd-btn save-form",
-    action: () => {
-      const dataToSave = { ...model.data };
-      executeUpdate({ id: submission.id, data: dataToSave });
-    },
-  });
-  model.addNavigationItem({
-    id: "submit-process",
-    title: "Prozess abschließen",
-    innerCss: "sd-btn submit-form",
-    action: () => {
-      modals.open({
-        closeOnClickOutside: false,
-        title: "Prozess abschließen",
-        children: (
-          <ButtonAction
-            fullWidth
-            action={completeProcessRun}
-            values={{ id: submission.id }}
-          >
-            Prozess abschließen
-          </ButtonAction>
-        ),
-      });
-    },
-  });
+    surveyModel.addNavigationItem({
+      id: "pdf-export",
+      title: "PDF Export",
+      action: () => savePdf(surveyModel.data),
+    });
 
-  model.addNavigationItem({
-    id: "pdf-export",
-    title: "PDF Export",
-    action: () => savePdf(model.data),
-  });
+    return surveyModel;
+  }, [
+    submission.form.id,
+    submission.form.schema,
+    submission.data,
+    submission.status,
+    executeUpdate,
+  ]);
 
   return (
     <Box pos="relative">

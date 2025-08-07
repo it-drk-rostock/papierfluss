@@ -91,10 +91,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <AppShell.Main>
         <Stack gap="md">
           <Suspense fallback={<Loader />}>
-            <Group gap="xs">
-              <BackButton variant="light" />
-              <Breadcrumbs />
-            </Group>
+            <Breadcrumbs />
           </Suspense>
           {children}
         </Stack>

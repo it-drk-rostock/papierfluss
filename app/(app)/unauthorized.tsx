@@ -1,16 +1,15 @@
 import { LinkBackButton } from "@/components/link-back-button";
 import { Center, Paper, Stack, Text, Title } from "@mantine/core";
 
-export default function Forbidden() {
+export default function Unauthorized() {
   return (
     <Center>
       <Paper withBorder p="lg">
         <Stack>
-          <Title order={1}>Zugriff verweigert</Title>
+          <Title order={1}>Anmeldung erforderlich</Title>
           <Text>
-            Sie haben keine Berechtigung, um auf diese Seite zuzugreifen. Wenden
-            Sie sich an Ihren Administrator, falls Sie glauben, dass dies ein
-            Fehler ist.
+            Sie sind nicht angemeldet. Bitte melden Sie sich an, um auf diese
+            Seite zuzugreifen.
           </Text>
           <LinkBackButton>Zurück</LinkBackButton>
         </Stack>

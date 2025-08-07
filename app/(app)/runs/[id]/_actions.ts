@@ -755,6 +755,7 @@ export const completeProcessRun = authActionClient
         where: { id, status: "ongoing" },
         data: {
           status: "completed",
+          completedAt: new Date(),
           resetProcessText: null,
         },
         select: {
@@ -901,6 +902,7 @@ export const completeProcessRun = authActionClient
           where: { id: workflowRunId },
           data: {
             status: "completed",
+            completedAt: new Date(),
           },
         });
       }

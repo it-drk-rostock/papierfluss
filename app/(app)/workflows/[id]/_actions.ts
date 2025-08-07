@@ -618,6 +618,7 @@ export const archiveWorkflowRun = authActionClient
         data: {
           isArchived: true,
           archivedNotes: message,
+          archivedAt: new Date(),
         },
       });
 
