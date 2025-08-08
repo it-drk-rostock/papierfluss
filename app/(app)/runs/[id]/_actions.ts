@@ -9,6 +9,7 @@ import { formatError } from "@/utils/format-error";
 import { idSchema } from "@/schemas/id-schema";
 import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
 import { resetProcessRunSchema, saveProcessRunSchema } from "./_schemas";
+import { forbidden } from "next/navigation";
 
 /**
  * Helper function to get all process run data for a workflow run
@@ -253,24 +254,46 @@ export const getWorkflowRun = async (id: string) => {
   if (!workflowRun) return null;
 
   // Check if user has permission to view this workflow run
-  const context = {
-    user: {
-      ...user,
-      teams: user.teams?.map((t) => t.name) ?? [],
-    },
-    workflow: {
-      responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
-      teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
-    },
-  };
+  // Allow if the workflow is public OR if the user has submit permission for at least one process
+  const hasAnyProcessPermission = workflowRun.processes.some((processRun) => {
+    const process = processRun.process;
 
-  const rules = JSON.parse(
-    workflowRun.workflow.submitProcessPermissions || "{}"
-  );
-  const hasPermission = await jsonLogic.apply(rules, context);
+    // If process has no submit permissions, deny access for this process
+    if (!process.submitProcessPermissions) {
+      return false;
+    }
 
-  if (!hasPermission && !workflowRun.workflow.isPublic) {
-    throw new Error("Keine Berechtigung zum Anzeigen dieses Workflow Runs");
+    try {
+      const context = {
+        user: {
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          id: user.id,
+          teams: user.teams?.map((t) => t.name) ?? [],
+        },
+        process: {
+          responsibleTeam: process.responsibleTeam?.name,
+          teams: process.teams?.map((t) => t.name) ?? [],
+        },
+        workflow: {
+          responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
+          teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
+        },
+        data: processRun.data || {},
+      };
+
+      const rules = JSON.parse(process.submitProcessPermissions);
+      const hasPermission = jsonLogic.apply(rules, context);
+      return hasPermission === true;
+    } catch {
+      // If there's an error parsing permissions, deny access for this process
+      return false;
+    }
+  });
+
+  if (!hasAnyProcessPermission) {
+    forbidden();
   }
 
   // Apply view permissions filtering for regular users (not admins)
@@ -820,13 +843,17 @@ export const completeProcessRun = authActionClient
                 const rules = JSON.parse(
                   currentProcessRun.process.skippablePermissions
                 );
+                const flattenedCurrentData =
+                  processRun.data && typeof processRun.data === "object"
+                    ? (processRun.data as Record<string, unknown>)
+                    : {};
                 const permissionContext = {
                   user: {
                     ...ctx.session.user,
                     teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
                   },
                   data: {
-                    ...processRun.data, // Flatten current process data for JsonLogic
+                    ...flattenedCurrentData, // Flatten current process data for JsonLogic
                     currentProcessData: processRun.data,
                     allProcessData: allProcessData,
                   },
@@ -848,7 +875,7 @@ export const completeProcessRun = authActionClient
 
                 shouldSkipAll =
                   jsonLogic.apply(rules, permissionContext) === true;
-              } catch (permissionError) {
+              } catch {
                 // If permission evaluation fails, default to not skipping
                 shouldSkipAll = false;
               }
