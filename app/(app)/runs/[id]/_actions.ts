@@ -564,6 +564,9 @@ export const resetProcessRun = authActionClient
             currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
           teams: currentProcessRun.workflowRun.workflow.teams ?? [],
         },
+        workflowRun: {
+          id: workflowRunId,
+        },
         activeProcess: processRun.process,
       };
 
@@ -962,6 +965,9 @@ export const completeProcessRun = authActionClient
             currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
           teams: currentProcessRun.workflowRun.workflow.teams ?? [],
         },
+        workflowRun: {
+          id: workflowRunId,
+        },
         activeProcess: processRun.process,
       };
 
@@ -1226,6 +1232,9 @@ export const saveProcessRun = authActionClient
           responsibleTeam:
             currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
           teams: currentProcessRun.workflowRun.workflow.teams ?? [],
+        },
+        workflowRun: {
+          id: workflowRunId,
         },
         activeProcess: processRun.process,
       };
