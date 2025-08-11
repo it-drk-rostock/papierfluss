@@ -12,6 +12,7 @@ import jsonLogic from "json-logic-js";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { WorkflowStatus } from "@/generated/prisma/client";
+import { getAllProcessRunData } from "../../runs/[id]/_actions";
 
 export const getWorkflowRuns = async (
   workflowId: string,
@@ -332,6 +333,13 @@ export const initializeWorkflowRunForm = authActionClient
             select: {
               id: true,
               name: true,
+              description: true,
+              responsibleTeam: {
+                select: {
+                  name: true,
+                  contactEmail: true,
+                },
+              },
             },
           },
           processes: {
@@ -410,20 +418,18 @@ export const initializeWorkflowRunForm = authActionClient
       const submissionContext = {
         user: {
           ...ctx.session.user,
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
         },
         data: {
-          workflow: {
-            name: workflow.name,
-            description: workflow.description,
-          },
-          responsibleTeam: {
-            name: workflow.responsibleTeam?.name,
-            contactEmail: workflow.responsibleTeam?.contactEmail,
-          },
-          activeProcess: workflow.initializeProcess.name,
-          data: data,
+          currentProcessData: data,
+          allProcessData: {},
         },
+        workflow: {
+          name: workflow.name,
+          description: workflow.description,
+          responsibleTeam: workflow.responsibleTeam?.name,
+          teams: workflow.teams ?? [],
+        },
+        activeProcess: workflow.initializeProcess ?? {},
       };
 
       await triggerN8nWebhooks(
@@ -548,6 +554,7 @@ export const archiveWorkflowRun = authActionClient
               teams: {
                 select: {
                   name: true,
+                  contactEmail: true,
                 },
               },
               archiveN8nWorkflows: {
@@ -626,21 +633,27 @@ export const archiveWorkflowRun = authActionClient
         throw new Error("Workflow Ausführung nicht gefunden");
       }
 
+      // Get all process run data for the workflow run
+      const { allProcessRuns: allProcessRunsData } = await getAllProcessRunData(
+        id
+      );
+
       const submissionContext = {
         user: {
           ...ctx.session.user,
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+        },
+        data: {
+          currentProcessData: {},
+          allProcessData: allProcessRunsData,
+          archiveMessage: message,
         },
         workflow: {
           name: workflowRun.workflow.name,
           description: workflowRun.workflow.description,
-          responsibleTeam: {
-            name: workflowRun.workflow.responsibleTeam?.name,
-            contactEmail: workflowRun.workflow.responsibleTeam?.contactEmail,
-          },
-          processes: workflowRun.processes.map((p) => p.process),
+          responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
+          teams: workflowRun.workflow.teams ?? [],
         },
-        data: workflowRun.processes.map((p) => p.data),
+        activeProcess: {},
       };
 
       await triggerN8nWebhooks(

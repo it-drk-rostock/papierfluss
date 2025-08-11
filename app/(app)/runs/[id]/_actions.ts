@@ -14,8 +14,8 @@ import { forbidden } from "next/navigation";
 /**
  * Helper function to get all process run data for a workflow run
  */
-const getAllProcessRunData = async (workflowRunId: string) => {
-  const allProcessRuns = await prisma.processRun.findMany({
+export const getAllProcessRunData = async (workflowRunId: string) => {
+  const allProcessRunsRaw = await prisma.processRun.findMany({
     where: {
       workflowRunId: workflowRunId,
     },
@@ -28,10 +28,16 @@ const getAllProcessRunData = async (workflowRunId: string) => {
           id: true,
           name: true,
           description: true,
+          order: true,
         },
       },
     },
   });
+
+  // Ensure runs are ordered by their process order
+  const allProcessRuns = [...allProcessRunsRaw].sort(
+    (a, b) => (a.process.order ?? 0) - (b.process.order ?? 0)
+  );
 
   // Transform the data to be more accessible in webhooks
   const processDataMap: Record<
@@ -422,11 +428,13 @@ export const resetProcessRun = authActionClient
                   responsibleTeam: {
                     select: {
                       name: true,
+                      contactEmail: true,
                     },
                   },
                   teams: {
                     select: {
                       name: true,
+                      contactEmail: true,
                     },
                   },
                   name: true,
@@ -536,28 +544,27 @@ export const resetProcessRun = authActionClient
       }
 
       // Get all process run data for the workflow run
-      const { processDataMap } = await getAllProcessRunData(workflowRunId);
+      const { allProcessRuns: allProcessRunsData } = await getAllProcessRunData(
+        workflowRunId
+      );
 
       const submissionContext = {
         user: {
           ...ctx.session.user,
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
         },
         data: {
-          data: processRun.data,
-          allProcessData: processDataMap,
-          resetProcessText: processRun.resetProcessText,
+          currentProcessData: processRun.data,
+          allProcessData: allProcessRunsData,
+          resetProcessText: resetProcessText,
         },
         workflow: {
-          name: workflowRun.workflow.name,
-          description: workflowRun.workflow.description,
-          responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
-          teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
+          name: currentProcessRun.workflowRun.workflow.name,
+          description: currentProcessRun.workflowRun.workflow.description,
+          responsibleTeam:
+            currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+          teams: currentProcessRun.workflowRun.workflow.teams ?? [],
         },
-        activeProcess: processRun.process.name,
-        process: {
-          ...processRun.process,
-        },
+        activeProcess: processRun.process,
       };
 
       // Collect all workflow IDs to trigger (process + workflow reactivate workflows)
@@ -636,6 +643,7 @@ export const completeProcessRun = authActionClient
                   teams: {
                     select: {
                       name: true,
+                      contactEmail: true,
                     },
                   },
                   lastN8nWorkflows: {
@@ -935,30 +943,26 @@ export const completeProcessRun = authActionClient
       }
 
       // Get all process run data for the workflow run
-      const { processDataMap } = await getAllProcessRunData(workflowRunId);
+      const { allProcessRuns: allProcessRunsData } = await getAllProcessRunData(
+        workflowRunId
+      );
 
       const submissionContext = {
         user: {
           ...ctx.session.user,
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
         },
         data: {
-          data: processRun.data,
-          allProcessData: processDataMap,
+          currentProcessData: processRun.data,
+          allProcessData: allProcessRunsData,
         },
         workflow: {
           name: currentProcessRun.workflowRun.workflow.name,
           description: currentProcessRun.workflowRun.workflow.description,
           responsibleTeam:
             currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
-          teams:
-            currentProcessRun.workflowRun.workflow.teams?.map((t) => t.name) ??
-            [],
+          teams: currentProcessRun.workflowRun.workflow.teams ?? [],
         },
-        activeProcess: processRun.process.name,
-        process: {
-          ...processRun.process,
-        },
+        activeProcess: processRun.process,
       };
 
       await triggerN8nWebhooks(
@@ -1204,30 +1208,26 @@ export const saveProcessRun = authActionClient
       workflowRunId = processRun.workflowRunId;
 
       // Get all process run data for the workflow run
-      const { processDataMap } = await getAllProcessRunData(workflowRunId);
+      const { allProcessRuns: allProcessRunsData } = await getAllProcessRunData(
+        workflowRunId
+      );
 
       const submissionContext = {
         user: {
           ...ctx.session.user,
-          teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
         },
         data: {
-          data: processRun.data,
-          allProcessData: processDataMap,
+          currentProcessData: processRun.data,
+          allProcessData: allProcessRunsData,
         },
         workflow: {
           name: currentProcessRun.workflowRun.workflow.name,
           description: currentProcessRun.workflowRun.workflow.description,
           responsibleTeam:
             currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
-          teams:
-            currentProcessRun.workflowRun.workflow.teams?.map((t) => t.name) ??
-            [],
+          teams: currentProcessRun.workflowRun.workflow.teams ?? [],
         },
-        activeProcess: processRun.process.name,
-        process: {
-          ...processRun.process,
-        },
+        activeProcess: processRun.process,
       };
 
       await triggerN8nWebhooks(
