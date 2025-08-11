@@ -275,15 +275,16 @@ export const initializeWorkflowRun = authActionClient
           ...ctx.session.user,
           teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
         },
-        data: {
-          workflow: {
-            name: workflow.name,
-            description: workflow.description,
-          },
-          responsibleTeam: {
-            name: workflow.responsibleTeam?.name,
-            contactEmail: workflow.responsibleTeam?.contactEmail,
-          },
+        workflow: {
+          name: workflow.name,
+          description: workflow.description,
+        },
+        responsibleTeam: {
+          name: workflow.responsibleTeam?.name,
+          contactEmail: workflow.responsibleTeam?.contactEmail,
+        },
+        workflowRun: {
+          id: workflowRunId,
         },
       };
 
@@ -428,6 +429,9 @@ export const initializeWorkflowRunForm = authActionClient
           description: workflow.description,
           responsibleTeam: workflow.responsibleTeam?.name,
           teams: workflow.teams ?? [],
+        },
+        workflowRun: {
+          id: workflowRunId,
         },
         activeProcess: workflow.initializeProcess ?? {},
       };
@@ -652,6 +656,9 @@ export const archiveWorkflowRun = authActionClient
           description: workflowRun.workflow.description,
           responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
           teams: workflowRun.workflow.teams ?? [],
+        },
+        workflowRun: {
+          id: id,
         },
         activeProcess: {},
       };
