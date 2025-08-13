@@ -60,9 +60,17 @@ export const getAllProcessRunData = async (workflowRunId: string) => {
     };
   });
 
+  const allProcessDataOnly = Object.assign(
+    {},
+    ...allProcessRuns
+      .filter((p) => p.data && typeof p.data === "object")
+      .map((p) => p.data as Record<string, unknown>)
+  );
+
   return {
     allProcessRuns,
     processDataMap,
+    allProcessDataOnly,
   };
 };
 
@@ -544,9 +552,8 @@ export const resetProcessRun = authActionClient
       }
 
       // Get all process run data for the workflow run
-      const { allProcessRuns: allProcessRunsData } = await getAllProcessRunData(
-        workflowRunId
-      );
+      const { allProcessRuns: allProcessRunsData, allProcessDataOnly } =
+        await getAllProcessRunData(workflowRunId);
 
       const submissionContext = {
         user: {
@@ -555,6 +562,7 @@ export const resetProcessRun = authActionClient
         data: {
           currentProcessData: processRun.data,
           allProcessData: allProcessRunsData,
+          allProcessDataOnly: allProcessDataOnly,
           resetProcessText: resetProcessText,
         },
         workflow: {
@@ -946,9 +954,8 @@ export const completeProcessRun = authActionClient
       }
 
       // Get all process run data for the workflow run
-      const { allProcessRuns: allProcessRunsData } = await getAllProcessRunData(
-        workflowRunId
-      );
+      const { allProcessRuns: allProcessRunsData, allProcessDataOnly } =
+        await getAllProcessRunData(workflowRunId);
 
       const submissionContext = {
         user: {
@@ -957,6 +964,7 @@ export const completeProcessRun = authActionClient
         data: {
           currentProcessData: processRun.data,
           allProcessData: allProcessRunsData,
+          allProcessDataOnly: allProcessDataOnly,
         },
         workflow: {
           name: currentProcessRun.workflowRun.workflow.name,
@@ -1214,9 +1222,8 @@ export const saveProcessRun = authActionClient
       workflowRunId = processRun.workflowRunId;
 
       // Get all process run data for the workflow run
-      const { allProcessRuns: allProcessRunsData } = await getAllProcessRunData(
-        workflowRunId
-      );
+      const { allProcessRuns: allProcessRunsData, allProcessDataOnly } =
+        await getAllProcessRunData(workflowRunId);
 
       const submissionContext = {
         user: {
@@ -1225,6 +1232,7 @@ export const saveProcessRun = authActionClient
         data: {
           currentProcessData: processRun.data,
           allProcessData: allProcessRunsData,
+          allProcessDataOnly: allProcessDataOnly,
         },
         workflow: {
           name: currentProcessRun.workflowRun.workflow.name,

@@ -638,9 +638,10 @@ export const archiveWorkflowRun = authActionClient
       }
 
       // Get all process run data for the workflow run
-      const { allProcessRuns: allProcessRunsData } = await getAllProcessRunData(
-        id
-      );
+      const {
+        allProcessRuns: allProcessRunsData,
+        allProcessDataOnly,
+      } = await getAllProcessRunData(id);
 
       const submissionContext = {
         user: {
@@ -649,6 +650,7 @@ export const archiveWorkflowRun = authActionClient
         data: {
           currentProcessData: {},
           allProcessData: allProcessRunsData,
+          allProcessDataOnly: allProcessDataOnly,
           archiveMessage: message,
         },
         workflow: {
