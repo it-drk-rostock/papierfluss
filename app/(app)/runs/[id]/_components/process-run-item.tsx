@@ -96,7 +96,7 @@ export const ProcessRunItem = ({
             orientation="vertical"
           />
         </Stack>
-        <Stack gap={0}>
+        <Stack gap={0} align="flex-start">
           <Text
             style={{
               lineHeight: 1.2,
