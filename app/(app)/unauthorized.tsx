@@ -1,4 +1,4 @@
-import { LinkBackButton } from "@/components/link-back-button";
+import { ButtonLink } from "@/components/button-link";
 import { Center, Paper, Stack, Text, Title } from "@mantine/core";
 
 export default function Unauthorized() {
@@ -11,7 +11,7 @@ export default function Unauthorized() {
             Sie sind nicht angemeldet. Bitte melden Sie sich an, um auf diese
             Seite zuzugreifen.
           </Text>
-          <LinkBackButton>Zurück</LinkBackButton>
+          <ButtonLink title="Zur Anmeldung" href="/" />
         </Stack>
       </Paper>
     </Center>
