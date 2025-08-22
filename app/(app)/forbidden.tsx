@@ -5,7 +5,7 @@ export default function Forbidden() {
   return (
     <Center>
       <Paper withBorder p="lg">
-        <Stack>
+        <Stack gap="sm">
           <Title order={1}>Zugriff verweigert</Title>
           <Text>
             Sie haben keine Berechtigung, um auf diese Seite zuzugreifen. Wenden

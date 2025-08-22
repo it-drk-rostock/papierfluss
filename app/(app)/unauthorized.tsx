@@ -5,7 +5,7 @@ export default function Unauthorized() {
   return (
     <Center>
       <Paper withBorder p="lg">
-        <Stack gap="md">
+        <Stack gap="sm">
           <Title order={1}>Anmeldung erforderlich</Title>
           <Text>
             Sie sind nicht angemeldet. Bitte melden Sie sich an, um auf diese
