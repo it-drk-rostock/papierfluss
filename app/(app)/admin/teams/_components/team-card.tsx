@@ -47,7 +47,7 @@ export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
   });
 
   return (
-    <Card key={team.id} padding="lg" withBorder w={300}>
+    <Card key={team.id} padding="lg" withBorder w={350}>
       <Title order={2}>{team.name}</Title>
       {team.contactEmail && <Text c="dimmed">E-Mail: {team.contactEmail}</Text>}
       <Text c="dimmed">Mitglieder: {team.users.length} </Text>

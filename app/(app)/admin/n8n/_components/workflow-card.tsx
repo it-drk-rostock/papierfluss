@@ -12,7 +12,7 @@ export const WorkflowCard = ({ workflow }: { workflow: WorkflowProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
 
   return (
-    <Card key={workflow.id} padding="lg" withBorder w={300}>
+    <Card key={workflow.id} padding="lg" withBorder w={350}>
       <Title order={2}>{workflow.name}</Title>
       <Text c="dimmed">{workflow.workflowId}</Text>
       <Card.Section>

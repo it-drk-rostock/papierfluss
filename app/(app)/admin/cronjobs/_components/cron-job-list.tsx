@@ -9,7 +9,7 @@ import { CronjobCard } from "./cron-job-card";
 export const CronjobList = ({ cronjobs }: { cronjobs: N8nCronjobsProps }) => {
   return (
     <>
-      <Group justify="center" gap="xl">
+      <Group justify="center">
         {cronjobs.map((cronjob) => (
           <CronjobCard key={cronjob.id} cronjob={cronjob} />
         ))}

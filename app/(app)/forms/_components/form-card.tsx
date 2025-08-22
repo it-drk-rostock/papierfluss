@@ -44,7 +44,7 @@ export const FormCard = ({ form }: { form: FormProps[0] }) => {
   const { hasAccess } = useAuthSession();
 
   return (
-    <Card key={form.id} padding="lg" withBorder w={300}>
+    <Card key={form.id} padding="lg" withBorder w={350}>
       <Title order={2}>{form.title}</Title>
       <Text c="dimmed">{form.description}</Text>
       <Group gap="xs">

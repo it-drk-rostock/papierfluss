@@ -9,7 +9,7 @@ export const Workflows = async () => {
 
   return (
     <Stack align="center" gap="xl">
-      <Group justify="center" gap="xl">
+      <Group justify="center">
         {workflows.length === 0 ? (
           <EmptyState text="Keine Workflows gefunden" variant="light" />
         ) : (

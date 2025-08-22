@@ -10,7 +10,7 @@ export const CronjobCard = ({ cronjob }: { cronjob: N8nCronjobsProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
 
   return (
-    <Card key={cronjob.id} padding="lg" withBorder w={300}>
+    <Card key={cronjob.id} padding="lg" withBorder w={350}>
       <Title order={2}>{cronjob.name}</Title>
       <Card.Section>
         <Divider my="lg" />

@@ -14,7 +14,7 @@ export const Forms = async ({
 
   return (
     <Stack align="center" gap="xl">
-      <Group justify="center" gap="xl">
+      <Group justify="center">
         {forms.length === 0 ? (
           <EmptyState text="Keine Formulare gefunden" variant="light" />
         ) : (
