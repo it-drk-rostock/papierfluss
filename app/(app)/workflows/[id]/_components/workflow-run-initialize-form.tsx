@@ -8,6 +8,7 @@ import { Box, LoadingOverlay } from "@mantine/core";
 import React from "react";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { initializeWorkflowRunForm } from "../_actions";
+import { notifications } from "@mantine/notifications";
 
 export const WorkflowRunInitializeForm = ({
   workflowId,
@@ -31,6 +32,13 @@ export const WorkflowRunInitializeForm = ({
     title: "Hinzufügen",
     innerCss: "sd-btn submit-form",
     action: () => {
+      // Use built-in model validation
+      const validationResult = model.validate();
+
+      if (!validationResult) {
+        return;
+      }
+
       const dataToSave = { ...model.data };
       executeUpdate({ id: workflowId, data: dataToSave });
     },
