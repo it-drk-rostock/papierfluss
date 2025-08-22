@@ -169,6 +169,10 @@ export const WorkflowRunForm = ({
       title: "Prozess abschließen",
       innerCss: "sd-btn submit-form",
       action: () => {
+        const validationResult = surveyModel.validate();
+        if (!validationResult) {
+          return;
+        }
         modals.open({
           closeOnClickOutside: false,
           title: "Prozess abschließen",
