@@ -925,6 +925,9 @@ export const completeProcessRun = authActionClient
       const allProcessRuns = await prisma.processRun.findMany({
         where: {
           workflowRunId: workflowRunId,
+          process: {
+            isCategory: false,
+          },
         },
         select: {
           id: true,
