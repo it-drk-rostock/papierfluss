@@ -189,11 +189,11 @@ export const WorkflowRunForm = ({
       },
     });
 
-    surveyModel.addNavigationItem({
+    /* surveyModel.addNavigationItem({
       id: "pdf-export",
       title: "PDF Export",
       action: () => savePdf(surveyModel.data),
-    });
+    }); */
 
     return surveyModel;
   }, [
