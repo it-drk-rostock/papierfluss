@@ -46,7 +46,7 @@ export const UserCard = ({ user }: { user: UserWithRole }) => {
   });
 
   return (
-    <Card key={user.id} padding="lg" withBorder w={300}>
+    <Card key={user.id} padding="lg" withBorder w={350}>
       <Avatar color="red" radius="sm" size="xl">
         MP
       </Avatar>

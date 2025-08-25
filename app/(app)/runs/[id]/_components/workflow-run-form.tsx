@@ -169,6 +169,10 @@ export const WorkflowRunForm = ({
       title: "Prozess abschließen",
       innerCss: "sd-btn submit-form",
       action: () => {
+        const validationResult = surveyModel.validate();
+        if (!validationResult) {
+          return;
+        }
         modals.open({
           closeOnClickOutside: false,
           title: "Prozess abschließen",
@@ -185,11 +189,11 @@ export const WorkflowRunForm = ({
       },
     });
 
-    surveyModel.addNavigationItem({
+    /* surveyModel.addNavigationItem({
       id: "pdf-export",
       title: "PDF Export",
       action: () => savePdf(surveyModel.data),
-    });
+    }); */
 
     return surveyModel;
   }, [

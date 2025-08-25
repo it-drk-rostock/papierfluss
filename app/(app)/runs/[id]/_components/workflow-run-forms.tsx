@@ -71,7 +71,7 @@ const FormNode = ({
           <ActionIcon
             variant="light"
             size="lg"
-            disabled={!process.schema}
+            disabled={!process.isCategory && !process.schema}
             onClick={(e) => {
               e.stopPropagation();
               tree.toggleExpanded(node.value);

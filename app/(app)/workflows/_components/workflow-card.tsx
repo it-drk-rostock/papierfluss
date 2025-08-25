@@ -33,7 +33,7 @@ export const WorkflowCard = ({ workflow }: { workflow: WorkflowProps[0] }) => {
   const { hasAccess } = useAuthSession();
 
   return (
-    <Card key={workflow.id} padding="lg" withBorder w={300}>
+    <Card key={workflow.id} padding="lg" withBorder w={350}>
       <Title order={2}>{workflow.name}</Title>
       <Text c="dimmed">{workflow.description}</Text>
       <Group gap="xs">

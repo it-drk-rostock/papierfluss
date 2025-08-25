@@ -188,6 +188,10 @@ export const FormSubmissionForm = ({
       title: "Formular einreichen",
       innerCss: "sd-btn submit-form",
       action: () => {
+        const validationResult = model.validate();
+        if (!validationResult) {
+          return;
+        }
         modals.open({
           closeOnClickOutside: false,
           title: "Formular einreichen",

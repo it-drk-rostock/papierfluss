@@ -53,26 +53,27 @@ export const ProcessRunItem = ({
       if (!hasChildren) return "green";
       if (!childrenStatus) return "gray";
 
-      // If any child is ongoing, make it yellow
-      if (childrenStatus.ongoing > 0) return "yellow";
+      const total =
+        childrenStatus.open + childrenStatus.ongoing + childrenStatus.completed;
 
       // If all children are completed, make it green
-      if (
-        childrenStatus.completed ===
-        childrenStatus.open + childrenStatus.ongoing + childrenStatus.completed
-      ) {
+      if (childrenStatus.completed === total) {
         return "green";
       }
 
       // If all children are open, make it gray
-      if (
-        childrenStatus.open ===
-        childrenStatus.open + childrenStatus.ongoing + childrenStatus.completed
-      ) {
+      if (childrenStatus.open === total) {
         return "gray";
       }
 
-      return "gray";
+      // If any child is ongoing, make it yellow (in progress)
+      if (childrenStatus.ongoing > 0) return "yellow";
+
+      // If any child is completed, make it yellow (in progress)
+      if (childrenStatus.completed > 0) return "yellow";
+
+      // Default to yellow for any mixed state
+      return "yellow";
     }
 
     return workflowStatus[status].color;

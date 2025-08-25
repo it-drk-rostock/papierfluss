@@ -146,7 +146,7 @@ export const WorkflowRun = async ({
           <Paper withBorder p="md">
             <Stack>
               <Title order={3}>Informationen</Title>
-              <Stack gap="md">
+              <Stack gap="sm">
                 <Group>
                   <WorkflowStatusBadge status={workflowRun.status} />
                   {workflowRun.isArchived && (

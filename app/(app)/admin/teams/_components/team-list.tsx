@@ -8,7 +8,7 @@ import { TeamProps } from "../_actions";
 export const TeamList = ({ teams }: { teams: TeamProps }) => {
   return (
     <>
-      <Group justify="center" gap="xl">
+      <Group justify="center">
         {teams.map((team) => (
           <TeamCard key={team.id} team={team} />
         ))}

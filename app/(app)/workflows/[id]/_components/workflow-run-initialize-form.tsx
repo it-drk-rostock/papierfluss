@@ -31,6 +31,13 @@ export const WorkflowRunInitializeForm = ({
     title: "Hinzufügen",
     innerCss: "sd-btn submit-form",
     action: () => {
+      // Use built-in model validation
+      const validationResult = model.validate();
+
+      if (!validationResult) {
+        return;
+      }
+
       const dataToSave = { ...model.data };
       executeUpdate({ id: workflowId, data: dataToSave });
     },

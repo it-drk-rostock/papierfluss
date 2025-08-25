@@ -8,7 +8,7 @@ import { UserProps } from "../_actions";
 export const UserList = ({ users }: { users: UserProps }) => {
   return (
     <>
-      <Group justify="center" gap="xl">
+      <Group justify="center">
         {users.map((user) => (
           <UserCard key={user.id} user={user} />
         ))}
