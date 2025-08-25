@@ -8,7 +8,6 @@ import { Box, LoadingOverlay } from "@mantine/core";
 import React from "react";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { initializeWorkflowRunForm } from "../_actions";
-import { notifications } from "@mantine/notifications";
 
 export const WorkflowRunInitializeForm = ({
   workflowId,

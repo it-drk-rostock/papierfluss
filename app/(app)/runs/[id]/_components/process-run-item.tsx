@@ -56,12 +56,6 @@ export const ProcessRunItem = ({
       const total =
         childrenStatus.open + childrenStatus.ongoing + childrenStatus.completed;
 
-      // If any child is ongoing, make it yellow (in progress)
-      if (childrenStatus.ongoing > 0) return "yellow";
-
-      // If any child is completed, make it yellow (in progress)
-      if (childrenStatus.completed > 0) return "yellow";
-
       // If all children are completed, make it green
       if (childrenStatus.completed === total) {
         return "green";
@@ -71,6 +65,12 @@ export const ProcessRunItem = ({
       if (childrenStatus.open === total) {
         return "gray";
       }
+
+      // If any child is ongoing, make it yellow (in progress)
+      if (childrenStatus.ongoing > 0) return "yellow";
+
+      // If any child is completed, make it yellow (in progress)
+      if (childrenStatus.completed > 0) return "yellow";
 
       // Default to yellow for any mixed state
       return "yellow";
