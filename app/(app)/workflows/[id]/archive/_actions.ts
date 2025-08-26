@@ -118,6 +118,13 @@ export const getArchivedWorkflowRuns = async (
         return false;
       }
 
+       const mergedData = workflowRun.processes.reduce((acc, proc) => {
+         if (proc.data) {
+           return { ...acc, ...proc.data };
+         }
+         return acc;
+       }, {});
+
       try {
         const context = {
           user: {
@@ -135,7 +142,7 @@ export const getArchivedWorkflowRuns = async (
             responsibleTeam: workflow.responsibleTeam?.name,
             teams: workflow.teams?.map((t) => t.name) ?? [],
           },
-          data: processRun.data || {},
+          data: mergedData,
         };
 
         const rules = JSON.parse(process.submitProcessPermissions);

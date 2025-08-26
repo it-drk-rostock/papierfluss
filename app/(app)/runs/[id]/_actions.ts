@@ -277,6 +277,13 @@ export const getWorkflowRun = async (id: string) => {
       return false;
     }
 
+    const allProcessData = Object.assign(
+      {},
+      ...workflowRun.processes
+        .filter((p) => p.data && typeof p.data === "object")
+        .map((p) => p.data)
+    );
+
     try {
       const context = {
         user: {
@@ -294,7 +301,7 @@ export const getWorkflowRun = async (id: string) => {
           responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
           teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
         },
-        data: processRun.data || {},
+        data: allProcessData || {},
       };
 
       const rules = JSON.parse(process.submitProcessPermissions);
