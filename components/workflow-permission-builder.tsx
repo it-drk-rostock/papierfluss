@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { QueryBuilderMantine } from "@react-querybuilder/mantine";
 import { useState } from "react";
 import {
@@ -74,7 +74,7 @@ export const WorkflowPermissionBuilder = ({
   } = useQuery({
     queryKey: ["userNames"],
     queryFn: () => getUserNames(),
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const {
@@ -84,12 +84,15 @@ export const WorkflowPermissionBuilder = ({
   } = useQuery({
     queryKey: ["teamNames"],
     queryFn: () => getTeamNames(),
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Get all unique field names from workflow runs
-  const workflowFields = workflowRuns?.length
-    ? Array.from(
+  // Memoize expensive field processing
+  const workflowFields = useMemo(() => {
+    if (!workflowRuns?.length) return [];
+
+    try {
+      return Array.from(
         new Set(
           workflowRuns.flatMap((run) =>
             run.processes.flatMap((process) =>
@@ -97,101 +100,116 @@ export const WorkflowPermissionBuilder = ({
             )
           )
         )
-      )
-    : [];
+      );
+    } catch (error) {
+      console.error("Error processing workflow fields:", error);
+      return [];
+    }
+  }, [workflowRuns]);
 
-  const fields: Field[] = [
-    {
-      name: "user.name",
-      label: "Name",
-      valueEditorType: "select",
-      values:
-        userNames?.map((name) => ({
-          value: name,
-          label: name,
-        })) || [],
-    },
-    { name: "user.email", label: "E-Mail" },
-    { name: "user.role", label: "Rolle" },
-    { name: "user.id", label: "Benutzer ID" },
-    {
-      name: "user.teams",
-      label: "Benutzer Bereiche",
-      valueEditorType: "multiselect",
-      values: teamNames?.map((team) => ({ value: team, label: team })),
-      defaultOperator: "contains",
-      operators: [
-        {
-          name: "contains",
-          label: "enthält",
-          formatOp: (field, op, valueSource, value) =>
-            arrayContainsOperator(field, value),
-        },
-      ],
-    },
-    // Add workflow-specific fields
-    {
-      name: "workflow.responsibleTeam",
-      label: "Verantwortlicher Bereich",
-      valueEditorType: "select" as const,
-      values:
-        teamNames?.map((team) => ({
-          value: team,
-          label: team,
-        })) || [],
-    },
-    {
-      name: "workflow.teams",
-      label: "Workflow Bereiche",
-      valueEditorType: "multiselect" as const,
-      values: teamNames?.map((team) => ({ value: team, label: team })),
-      defaultOperator: "contains",
-      operators: [
-        {
-          name: "contains",
-          label: "enthält",
-          formatOp: (field, op, valueSource, value) =>
-            arrayContainsOperator(field, value),
-        },
-      ],
-    },
+  // Memoize the fields array to prevent recreation on every render
+  const fields: Field[] = useMemo(() => {
+    const baseFields: Field[] = [
+      {
+        name: "user.name",
+        label: "Name",
+        valueEditorType: "select",
+        values:
+          userNames?.map((name) => ({
+            value: name,
+            label: name,
+          })) || [],
+      },
+      { name: "user.email", label: "E-Mail" },
+      { name: "user.role", label: "Rolle" },
+      { name: "user.id", label: "Benutzer ID" },
+      {
+        name: "user.teams",
+        label: "Benutzer Bereiche",
+        valueEditorType: "multiselect",
+        values: teamNames?.map((team) => ({ value: team, label: team })) || [],
+        defaultOperator: "contains",
+        operators: [
+          {
+            name: "contains",
+            label: "enthält",
+            formatOp: (field, op, valueSource, value) =>
+              arrayContainsOperator(field, value),
+          },
+        ],
+      },
+      // Add workflow-specific fields
+      {
+        name: "workflow.responsibleTeam",
+        label: "Verantwortlicher Bereich",
+        valueEditorType: "select" as const,
+        values:
+          teamNames?.map((team) => ({
+            value: team,
+            label: team,
+          })) || [],
+      },
+      {
+        name: "workflow.teams",
+        label: "Workflow Bereiche",
+        valueEditorType: "multiselect" as const,
+        values: teamNames?.map((team) => ({ value: team, label: team })) || [],
+        defaultOperator: "contains",
+        operators: [
+          {
+            name: "contains",
+            label: "enthält",
+            formatOp: (field, op, valueSource, value) =>
+              arrayContainsOperator(field, value),
+          },
+        ],
+      },
+    ];
+
     // Add process-specific fields if this is for process permissions
-    ...(permissionType === "process"
-      ? [
-          {
-            name: "process.responsibleTeam",
-            label: "Prozess Verantwortlicher Bereich",
-            valueEditorType: "select" as const,
-            values:
-              teamNames?.map((team) => ({
-                value: team,
-                label: team,
-              })) || [],
-          },
-          {
-            name: "process.teams",
-            label: "Prozess Bereiche",
-            valueEditorType: "multiselect" as const,
-            values: teamNames?.map((team) => ({ value: team, label: team })),
-            defaultOperator: "contains",
-            operators: [
-              {
-                name: "contains",
-                label: "enthält",
-                formatOp: (field, op, valueSource, value) =>
-                  arrayContainsOperator(field, value),
-              },
-            ],
-          },
-        ]
-      : []),
-    // Add dynamic fields from workflow runs
-    ...workflowFields.map((fieldName) => ({
-      name: `data.${fieldName}`,
-      label: fieldName,
-      valueEditorType: "text" as const,
-    })),
-  ];
+    if (permissionType === "process") {
+      baseFields.push(
+        {
+          name: "process.responsibleTeam",
+          label: "Prozess Verantwortlicher Bereich",
+          valueEditorType: "select" as const,
+          values:
+            teamNames?.map((team) => ({
+              value: team,
+              label: team,
+            })) || [],
+        },
+        {
+          name: "process.teams",
+          label: "Prozess Bereiche",
+          valueEditorType: "multiselect" as const,
+          values:
+            teamNames?.map((team) => ({ value: team, label: team })) || [],
+          defaultOperator: "contains",
+          operators: [
+            {
+              name: "contains",
+              label: "enthält",
+              formatOp: (field, op, valueSource, value) =>
+                arrayContainsOperator(field, value),
+            },
+          ],
+        }
+      );
+    }
+
+    // Add dynamic fields from workflow runs (limit to prevent performance issues)
+    const limitedWorkflowFields = workflowFields.slice(0, 100); // Limit to 100 fields
+    baseFields.push(
+      ...limitedWorkflowFields.map((fieldName) => ({
+        name: `data.${fieldName}`,
+        label: fieldName,
+        valueEditorType: "text" as const,
+      }))
+    );
+
+    return baseFields;
+  }, [userNames, teamNames, permissionType, workflowFields]);
 
   useEffect(() => {
     // If there are no rules, it means "allow all" (true)
