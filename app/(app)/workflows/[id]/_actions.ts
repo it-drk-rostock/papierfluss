@@ -128,6 +128,14 @@ export const getWorkflowRuns = async (
       }
 
       try {
+        // Merge all data from all processes in this workflow run
+        const mergedData = workflowRun.processes.reduce((acc, proc) => {
+          if (proc.data) {
+            return { ...acc, ...proc.data };
+          }
+          return acc;
+        }, {});
+
         const context = {
           user: {
             email: user.email,
@@ -144,7 +152,7 @@ export const getWorkflowRuns = async (
             responsibleTeam: workflow.responsibleTeam?.name,
             teams: workflow.teams?.map((t) => t.name) ?? [],
           },
-          data: processRun.data || {},
+          data: mergedData,
         };
 
         const rules = JSON.parse(process.submitProcessPermissions);
@@ -638,10 +646,8 @@ export const archiveWorkflowRun = authActionClient
       }
 
       // Get all process run data for the workflow run
-      const {
-        allProcessRuns: allProcessRunsData,
-        allProcessDataOnly,
-      } = await getAllProcessRunData(id);
+      const { allProcessRuns: allProcessRunsData, allProcessDataOnly } =
+        await getAllProcessRunData(id);
 
       const submissionContext = {
         user: {

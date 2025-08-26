@@ -5,6 +5,7 @@ import React from "react";
 import { IconLogout } from "@tabler/icons-react";
 import { authClient } from "@lib/auth-client";
 import { useRouter } from "next/navigation";
+import { getInitials } from "@/utils/get-initials";
 
 export const UserButton = () => {
   const router = useRouter();
@@ -21,7 +22,9 @@ export const UserButton = () => {
     <Menu shadow="md" width={200} withinPortal>
       <Menu.Target>
         <ActionIcon color="red" size="xl" variant="subtle" radius="xl">
-          <Avatar radius="xl" color="red" />
+          <Avatar color="red" src={session.user.image || undefined} radius="xl">
+            {getInitials(session.user.name)}
+          </Avatar>
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
