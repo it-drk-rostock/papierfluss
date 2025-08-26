@@ -79,7 +79,7 @@ export const getArchivedWorkflowRuns = async (
               id: true,
               name: true,
               schema: true,
-
+              viewProcessPermissions: true,
               submitProcessPermissions: true,
               responsibleTeam: {
                 select: {
@@ -114,7 +114,7 @@ export const getArchivedWorkflowRuns = async (
       const process = processRun.process;
 
       // If process has no submit permissions, deny access
-      if (!process.submitProcessPermissions) {
+      if (!process.viewProcessPermissions) {
         return false;
       }
 
@@ -145,7 +145,7 @@ export const getArchivedWorkflowRuns = async (
           data: mergedData,
         };
 
-        const rules = JSON.parse(process.submitProcessPermissions);
+        const rules = JSON.parse(process.viewProcessPermissions);
         const hasPermission = jsonLogic.apply(rules, context);
 
         return hasPermission === true;

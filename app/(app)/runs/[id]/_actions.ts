@@ -268,12 +268,12 @@ export const getWorkflowRun = async (id: string) => {
   if (!workflowRun) return null;
 
   // Check if user has permission to view this workflow run
-  // Allow if the workflow is public OR if the user has submit permission for at least one process
+  // Allow if the workflow is public OR if the user has view permission for at least one process
   const hasAnyProcessPermission = workflowRun.processes.some((processRun) => {
     const process = processRun.process;
 
     // If process has no submit permissions, deny access for this process
-    if (!process.submitProcessPermissions) {
+    if (!process.viewProcessPermissions) {
       return false;
     }
 
@@ -304,7 +304,7 @@ export const getWorkflowRun = async (id: string) => {
         data: allProcessData || {},
       };
 
-      const rules = JSON.parse(process.submitProcessPermissions);
+      const rules = JSON.parse(process.viewProcessPermissions);
       const hasPermission = jsonLogic.apply(rules, context);
       return hasPermission === true;
     } catch {
