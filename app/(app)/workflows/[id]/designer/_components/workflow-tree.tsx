@@ -314,6 +314,7 @@ export function WorkflowTree({
                         resetProcessPermissions={
                           process.resetProcessPermissions
                         }
+                        skippablePermissions={process.skippablePermissions}
                         formActionName="process-permissions"
                       />
                     }

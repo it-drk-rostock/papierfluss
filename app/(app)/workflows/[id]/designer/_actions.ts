@@ -76,6 +76,7 @@ export const getWorkflowProcesses = async (workflowId: string) => {
           submitProcessPermissions: true,
           viewProcessPermissions: true,
           resetProcessPermissions: true,
+          skippablePermissions: true,
           dependencies: {
             select: {
               id: true,
@@ -669,6 +670,7 @@ export const updateProcessPermissions = authActionClient
       skippablePermissions,
     } = parsedInput;
 
+    console.log(skippablePermissions);
     try {
       await prisma.process.update({
         where: { id },
