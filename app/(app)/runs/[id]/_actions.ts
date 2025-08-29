@@ -10,6 +10,7 @@ import { idSchema } from "@/schemas/id-schema";
 import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
 import { resetProcessRunSchema, saveProcessRunSchema } from "./_schemas";
 import { forbidden } from "next/navigation";
+import type { JsonValue } from "@prisma/client/runtime/library";
 
 /**
  * Helper function to get all process run data for a workflow run
@@ -171,6 +172,55 @@ export const getWorkflowRun = async (id: string) => {
       },
     });
 
+    // Process information fields on the server side (admin)
+    if (workflowRun && workflowRun.workflow.information) {
+      const info = workflowRun.workflow.information as {
+        fields?: Array<{ label: string; fieldKey: string }>;
+      };
+
+      if (info.fields) {
+        const processedFields = info.fields.map((field) => {
+          // Search through all process runs to find the field data
+          for (const processRun of workflowRun.processes) {
+            if (
+              processRun.data &&
+              typeof processRun.data === "object" &&
+              processRun.data !== null
+            ) {
+              const data = processRun.data as Record<string, unknown>;
+              if (
+                field.fieldKey in data &&
+                data[field.fieldKey] !== null &&
+                data[field.fieldKey] !== undefined
+              ) {
+                return {
+                  ...field,
+                  data: {
+                    value:
+                      data[field.fieldKey] === null ||
+                      data[field.fieldKey] === undefined
+                        ? ""
+                        : String(data[field.fieldKey]),
+                    processName: processRun.process.name,
+                  },
+                };
+              }
+            }
+          }
+          return {
+            ...field,
+            data: null,
+          };
+        });
+
+        // Overwrite information fields with processed results
+        // Note: we keep it JSON-compatible (values as strings)
+        workflowRun.workflow.information = {
+          fields: processedFields,
+        } as unknown as JsonValue;
+      }
+    }
+
     return workflowRun;
   }
 
@@ -315,6 +365,45 @@ export const getWorkflowRun = async (id: string) => {
 
   if (!hasAnyProcessPermission) {
     forbidden();
+  }
+
+  // Compute information fields BEFORE view-permission filtering for non-admins
+  if (workflowRun && workflowRun.workflow.information) {
+    try {
+      const info = workflowRun.workflow.information as {
+        fields?: Array<{ label: string; fieldKey: string }>;
+      };
+      const processedFields = (info.fields ?? []).map((field) => {
+        for (const processRun of workflowRun.processes) {
+          if (
+            processRun.data &&
+            typeof processRun.data === "object" &&
+            processRun.data !== null
+          ) {
+            const data = processRun.data as Record<string, unknown>;
+            if (
+              Object.prototype.hasOwnProperty.call(data, field.fieldKey) &&
+              data[field.fieldKey] !== undefined &&
+              data[field.fieldKey] !== null
+            ) {
+              return {
+                ...field,
+                data: {
+                  value: String(data[field.fieldKey]),
+                  processName: processRun.process.name,
+                },
+              };
+            }
+          }
+        }
+        return { ...field, data: null };
+      });
+      workflowRun.workflow.information = {
+        fields: processedFields,
+      } as unknown as JsonValue;
+    } catch {
+      // leave information as-is if processing fails
+    }
   }
 
   // Apply view permissions filtering for regular users (not admins)
