@@ -19,32 +19,6 @@ import { LinkButton } from "@/components/link-button";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { buttonIconStyles } from "@/constants/button-icon-styles";
 
-// Helper function to extract information field data
-const getInformationFieldData = (
-  workflowRun: Awaited<ReturnType<typeof getWorkflowRun>>,
-  fieldKey: string
-) => {
-  if (!workflowRun) return null;
-
-  // Search through all process runs to find the field data
-  for (const processRun of workflowRun.processes) {
-    if (
-      processRun.data &&
-      typeof processRun.data === "object" &&
-      processRun.data !== null
-    ) {
-      const data = processRun.data as Record<string, unknown>;
-      if (fieldKey in data) {
-        return {
-          value: data[fieldKey],
-          processName: processRun.process.name,
-        };
-      }
-    }
-  }
-  return null;
-};
-
 export const WorkflowRun = async ({
   params,
 }: {
@@ -58,7 +32,7 @@ export const WorkflowRun = async ({
     return notFound();
   }
 
-  // Extract configured information fields
+  // Get the processed information fields from the server
   const configuredFields = (() => {
     if (
       !workflowRun.workflow.information ||
@@ -69,16 +43,14 @@ export const WorkflowRun = async ({
     }
 
     const info = workflowRun.workflow.information as {
-      fields: Array<{ label: string; fieldKey: string }>;
+      fields: Array<{
+        label: string;
+        fieldKey: string;
+        data: { value: unknown; processName: string } | null;
+      }>;
     };
 
-    return info.fields.map((field) => {
-      const fieldData = getInformationFieldData(workflowRun, field.fieldKey);
-      return {
-        ...field,
-        data: fieldData,
-      };
-    });
+    return info.fields;
   })();
 
   return (
@@ -167,9 +139,9 @@ export const WorkflowRun = async ({
                     <Divider />
                     {configuredFields.map((field, index) => (
                       <Text key={index}>
-                        {field.fieldKey}:{" "}
+                        {field.label}:{" "}
                         {field.data
-                          ? String(field.data.value)
+                          ? `${field.data.value} `
                           : "Keine Daten verfügbar"}
                       </Text>
                     ))}
