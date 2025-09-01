@@ -50,12 +50,12 @@ export const UserCard = ({ user }: { user: UserWithRole }) => {
 
   return (
     <Card key={user.id} padding="lg" withBorder w={350}>
-      <Avatar color="red" src={user.image || undefined} radius="sm" >
+      <Avatar color="red" src={user.image || undefined} radius="sm">
         {getInitials(user.name)}
       </Avatar>
       <Title order={2}>{user.name}</Title>
       <Text c="dimmed">{user.email}</Text>
-      <Text c="dimmed">{user.role}</Text>
+      <Text c="dimmed">{userRoles.find((role) => role.value === user.role)?.label}</Text>
       <Card.Section>
         <Divider my="lg" />
       </Card.Section>
