@@ -26,6 +26,7 @@ export const getAllProcessRunData = async (workflowRunId: string) => {
       status: true,
       process: {
         select: {
+          isCategory: true,
           id: true,
           name: true,
           description: true,
