@@ -100,5 +100,5 @@ a {
 }
 
 .mantine-Tree-node {
-  margin-bottom: var(--mantine-spacing-sm);
+  margin-bottom: var(--mantine-spacing-sm) !important;
 }

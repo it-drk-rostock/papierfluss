@@ -26,19 +26,53 @@ export const getAllProcessRunData = async (workflowRunId: string) => {
       status: true,
       process: {
         select: {
+          isCategory: true,
           id: true,
           name: true,
           description: true,
           order: true,
+          parentId: true,
         },
       },
     },
   });
 
-  // Ensure runs are ordered by their process order
-  const allProcessRuns = [...allProcessRunsRaw].sort(
-    (a, b) => (a.process.order ?? 0) - (b.process.order ?? 0)
-  );
+  // Build hierarchical order (parent -> children), sorting siblings by process.order
+  const childrenMap = new Map<string | null, typeof allProcessRunsRaw>();
+  for (const run of allProcessRunsRaw) {
+    const parentId = run.process.parentId;
+    if (!childrenMap.has(parentId)) {
+      childrenMap.set(parentId, [] as unknown as typeof allProcessRunsRaw);
+    }
+    childrenMap.get(parentId)!.push(run);
+  }
+
+  // Sort children of every parent by order, then name, then id for stability
+  childrenMap.forEach((children) => {
+    children.sort((a, b) => {
+      const orderA = a.process.order ?? 0;
+      const orderB = b.process.order ?? 0;
+      if (orderA !== orderB) return orderA - orderB;
+      if (a.process.name !== b.process.name)
+        return a.process.name.localeCompare(b.process.name);
+      return a.process.id.localeCompare(b.process.id);
+    });
+  });
+
+  const flatten = (parentId: string | null): typeof allProcessRunsRaw => {
+    const siblings =
+      childrenMap.get(parentId) || ([] as unknown as typeof allProcessRunsRaw);
+    const result: typeof allProcessRunsRaw =
+      [] as unknown as typeof allProcessRunsRaw;
+    for (const s of siblings) {
+      result.push(s);
+      const desc = flatten(s.process.id);
+      if (desc.length) result.push(...desc);
+    }
+    return result;
+  };
+
+  const allProcessRuns = flatten(null);
 
   // Transform the data to be more accessible in webhooks
   const processDataMap: Record<
@@ -642,6 +676,7 @@ export const resetProcessRun = authActionClient
         await prisma.workflowRun.update({
           where: { id: workflowRunId },
           data: {
+            isArchived: false,
             status: "ongoing",
           },
         });
