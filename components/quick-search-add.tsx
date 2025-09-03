@@ -68,7 +68,7 @@ export const QuickSearchAdd = ({
             )
           }
         />
-        {hasAccess("moderator") && modalContent && (
+        {modalContent && (
           <>
             <Button
               visibleFrom="sm"
