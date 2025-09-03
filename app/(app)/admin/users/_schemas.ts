@@ -1,4 +1,4 @@
-import { UserRole } from "@/generated/prisma/index";
+import { UserRole } from "@/generated/prisma";
 import { z } from "zod";
 
 export const updateUserSchema = z.object({
