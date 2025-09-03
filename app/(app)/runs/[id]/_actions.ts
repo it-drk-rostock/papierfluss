@@ -11,6 +11,7 @@ import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
 import { resetProcessRunSchema, saveProcessRunSchema } from "./_schemas";
 import { forbidden } from "next/navigation";
 import type { JsonValue } from "@prisma/client/runtime/library";
+import { validateSurveyData } from "@/utils/validate-survey-data";
 
 /**
  * Helper function to get all process run data for a workflow run
@@ -1208,6 +1209,7 @@ export const saveProcessRun = authActionClient
               id: true,
               name: true,
               description: true,
+              schema: true,
               responsibleTeam: {
                 select: {
                   name: true,
@@ -1231,6 +1233,20 @@ export const saveProcessRun = authActionClient
 
       if (!currentProcessRun) {
         throw new Error("Prozess nicht gefunden");
+      }
+
+      const validatedData = await validateSurveyData(
+        currentProcessRun.process.schema,
+        { ...data },
+        { strict: true }
+      );
+
+      if (!validatedData.valid) {
+        throw new Error(
+          validatedData.errors
+            .map((e: { message: string }) => e.message)
+            .join(", ")
+        );
       }
 
       const allProcessData = Object.assign(

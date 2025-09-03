@@ -28,8 +28,6 @@ import { ButtonAction } from "@/components/button-action";
 import { ModalMenuItem } from "@/components/modal-menu-item";
 import { getInitials } from "@/utils/get-initials";
 
-
-
 export const UserCard = ({ user }: { user: UserWithRole }) => {
   const [opened, handlers] = useDisclosure(false);
 
@@ -48,6 +46,8 @@ export const UserCard = ({ user }: { user: UserWithRole }) => {
     hideModals: true,
   });
 
+  console.log(form.errors, form.values);
+
   return (
     <Card key={user.id} padding="lg" withBorder w={350}>
       <Avatar color="red" src={user.image || undefined} radius="sm">
@@ -55,7 +55,9 @@ export const UserCard = ({ user }: { user: UserWithRole }) => {
       </Avatar>
       <Title order={2}>{user.name}</Title>
       <Text c="dimmed">{user.email}</Text>
-      <Text c="dimmed">{userRoles.find((role) => role.value === user.role)?.label}</Text>
+      <Text c="dimmed">
+        {userRoles.find((role) => role.value === user.role)?.label}
+      </Text>
       <Card.Section>
         <Divider my="lg" />
       </Card.Section>
