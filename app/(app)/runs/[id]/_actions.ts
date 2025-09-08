@@ -1067,15 +1067,15 @@ export const completeProcessRun = authActionClient
         },
       });
 
-      const ongoingProcesses = allProcessRuns.filter(
-        (run) => run.status === "ongoing"
+      const activeProcesses = allProcessRuns.filter(
+        (run) => run.status === "open" || run.status === "ongoing"
       );
       const allProcessesCompleted = allProcessRuns.every(
         (run) => run.status === "completed"
       );
 
-      // Check if only one process remains (second-to-last was just completed)
-      const onlyOneProcessRemains = ongoingProcesses.length === 1;
+      // Check if only one process remains (open or ongoing)
+      const onlyOneProcessRemains = activeProcesses.length === 1;
 
       // If all processes are completed, also complete the workflow run
       if (allProcessesCompleted) {
