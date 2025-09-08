@@ -1119,12 +1119,6 @@ export const completeProcessRun = authActionClient
         submissionContext
       );
 
-      console.log(
-        onlyOneProcessRemains,
-        currentProcessRun.workflowRun.workflow.lastN8nWorkflows,
-        allProcessRuns
-      );
-
       // Trigger lastN8nWorkflows if only one process remains
       if (onlyOneProcessRemains) {
         await triggerN8nWebhooks(
