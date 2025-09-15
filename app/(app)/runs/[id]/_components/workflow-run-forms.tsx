@@ -9,6 +9,7 @@ import {
   useTree,
   Group,
   ActionIcon,
+  Alert,
 } from "@mantine/core";
 import { useMemo } from "react";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
@@ -20,6 +21,7 @@ interface FormTreeNodeData extends TreeNodeData {
     name: string;
     description: string | null;
     schema: Record<string, unknown> | null;
+    resetProcessText: string | null;
     isCategory: boolean;
     data: Record<string, unknown> | null;
     status: "open" | "ongoing" | "completed";
@@ -96,7 +98,19 @@ const FormNode = ({
               }}
             >
               {process.schema && submission ? (
-                <WorkflowRunForm submission={submission} />
+                <>
+                  {process.resetProcessText && (
+                    <Alert
+                      mb="sm"
+                      title="Bitte Prozess erneut bearbeiten"
+                      variant="light"
+                      color="yellow"
+                    >
+                      {process.resetProcessText}
+                    </Alert>
+                  )}
+                  <WorkflowRunForm submission={submission} />
+                </>
               ) : (
                 <Text c="dimmed" ta="center" py="xl">
                   Kein Formular verfügbar oder fehlende Berechtigung dieses
@@ -116,6 +130,7 @@ interface WorkflowRunFormsProps {
     id: string;
     status: "open" | "ongoing" | "completed";
     data: Record<string, unknown> | null;
+    resetProcessText: string | null;
     process: {
       id: string;
       name: string;
@@ -142,6 +157,7 @@ export function WorkflowRunForms({ processes }: WorkflowRunFormsProps) {
           label: process.process.name,
           children: buildFormTree(processes, process.process.id),
           processData: {
+            resetProcessText: process.resetProcessText,
             id: process.id,
             name: process.process.name,
             description: process.process.description,

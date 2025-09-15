@@ -78,6 +78,7 @@ export const WorkflowRun = async ({
                 processes={workflowRun.processes.map((processRun) => ({
                   id: processRun.id,
                   status: processRun.status,
+                  resetProcessText: processRun.resetProcessText,
                   data:
                     processRun.data &&
                     typeof processRun.data === "object" &&

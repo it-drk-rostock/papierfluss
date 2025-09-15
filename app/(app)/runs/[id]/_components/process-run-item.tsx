@@ -118,11 +118,7 @@ export const ProcessRunItem = ({
               {workflowStatus[status].label}
             </Text>
           )}
-          {resetProcessText && (
-            <Text size="xs" c="yellow">
-              Bitte beachten Sie: {resetProcessText}
-            </Text>
-          )}
+
           {!isCategory && status === "completed" && (
             <ModalButton
               title="Prozess zurücksetzen"
