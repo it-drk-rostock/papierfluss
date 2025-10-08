@@ -10,10 +10,12 @@ import {
   Group,
   ActionIcon,
   Alert,
+  Divider,
 } from "@mantine/core";
 import { useMemo } from "react";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { WorkflowRunForm } from "./workflow-run-form";
+import { WorkflowRunInformationForm } from "./workflow-run-information-form";
 
 interface FormTreeNodeData extends TreeNodeData {
   processData: {
@@ -24,6 +26,8 @@ interface FormTreeNodeData extends TreeNodeData {
     resetProcessText: string | null;
     isCategory: boolean;
     data: Record<string, unknown> | null;
+    information: Record<string, unknown> | null;
+    informationData: Record<string, unknown> | null;
     status: "open" | "ongoing" | "completed";
   };
 }
@@ -54,9 +58,18 @@ const FormNode = ({
         schema: process.schema,
       },
       data: process.data,
+      information: process.information,
+      informationData: process.informationData,
       status: process.status,
     };
-  }, [process.id, process.schema, process.data, process.status]);
+  }, [
+    process.id,
+    process.schema,
+    process.data,
+    process.status,
+    process.information,
+    process.informationData,
+  ]);
 
   return (
     <Stack gap="md" {...elementProps}>
@@ -109,6 +122,13 @@ const FormNode = ({
                       {process.resetProcessText}
                     </Alert>
                   )}
+                  {process.information && submission && (
+                    <>
+                      <WorkflowRunInformationForm submission={submission} />
+                      <Divider my="md" />
+                    </>
+                  )}
+
                   <WorkflowRunForm submission={submission} />
                 </>
               ) : (
@@ -130,6 +150,8 @@ interface WorkflowRunFormsProps {
     id: string;
     status: "open" | "ongoing" | "completed";
     data: Record<string, unknown> | null;
+    information: Record<string, unknown> | null;
+    informationData: Record<string, unknown> | null;
     resetProcessText: string | null;
     process: {
       id: string;
@@ -164,6 +186,8 @@ export function WorkflowRunForms({ processes }: WorkflowRunFormsProps) {
             schema: process.process.schema,
             isCategory: process.process.isCategory,
             data: process.data,
+            information: process.information,
+            informationData: process.informationData,
             status: process.status,
           },
         })) as FormTreeNodeData[];

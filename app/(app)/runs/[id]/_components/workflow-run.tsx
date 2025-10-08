@@ -85,6 +85,18 @@ export const WorkflowRun = async ({
                     processRun.data !== null
                       ? (processRun.data as Record<string, unknown>)
                       : null,
+                  information:
+                    processRun.information &&
+                    typeof processRun.information === "object" &&
+                    processRun.information !== null
+                      ? (processRun.information as Record<string, unknown>)
+                      : null,
+                  informationData:
+                    processRun.informationData &&
+                    typeof processRun.informationData === "object" &&
+                    processRun.informationData !== null
+                      ? (processRun.informationData as Record<string, unknown>)
+                      : null,
                   process: {
                     id: processRun.process.id,
                     name: processRun.process.name,

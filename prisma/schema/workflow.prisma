@@ -87,6 +87,8 @@ model ProcessRun {
     id               String        @id @default(uuid())
     status           ProcessStatus @default(open)
     data             Json?
+    information      Json?
+    informationData  Json?
     resetProcessText String?
     startedAt        DateTime      @default(now())
     updatedAt        DateTime      @updatedAt

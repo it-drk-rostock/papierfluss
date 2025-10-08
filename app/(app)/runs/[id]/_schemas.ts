@@ -5,6 +5,10 @@ export const saveProcessRunSchema = idSchema.extend({
   data: z.any(),
 });
 
+export const saveProcessRunInformationSchema = idSchema.extend({
+  informationData: z.any(),
+});
+
 export const resetProcessRunSchema = idSchema.extend({
   resetProcessText: z.string().optional(),
 });
