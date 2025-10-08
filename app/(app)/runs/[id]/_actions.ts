@@ -8,7 +8,11 @@ import { revalidatePath } from "next/cache";
 import { formatError } from "@/utils/format-error";
 import { idSchema } from "@/schemas/id-schema";
 import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
-import { resetProcessRunSchema, saveProcessRunSchema } from "./_schemas";
+import {
+  resetProcessRunSchema,
+  saveProcessRunInformationSchema,
+  saveProcessRunSchema,
+} from "./_schemas";
 import { forbidden } from "next/navigation";
 import type { JsonValue } from "@prisma/client/runtime/library";
 import { validateSurveyData } from "@/utils/validate-survey-data";
@@ -150,6 +154,8 @@ export const getWorkflowRun = async (id: string) => {
           select: {
             id: true,
             data: true,
+            information: true,
+            informationData: true,
             status: true,
             resetProcessText: true,
             startedAt: true,
@@ -293,6 +299,8 @@ export const getWorkflowRun = async (id: string) => {
         select: {
           id: true,
           data: true,
+          information: true,
+          informationData: true,
           status: true,
           resetProcessText: true,
           startedAt: true,
@@ -1408,5 +1416,280 @@ export const saveProcessRun = authActionClient
     revalidatePath(`/runs/${workflowRunId}`);
     return {
       message: "Prozess aktualisiert",
+    };
+  });
+
+/**
+ * Saves the data for a process run and triggers any save N8n workflows.
+ *
+ * This action:
+ * 1. Validates that the process run exists and is not completed
+ * 2. Updates the process run data with the provided form data
+ * 3. Triggers any save N8n workflows with the updated data
+ * 4. Revalidates the workflow run page to reflect the changes
+ *
+ * @param {string} id - The ID of the process run to save
+ * @param {Record<string, unknown>} data - The form data to save for the process run
+ * @returns {Promise<{ message: string }>} A success message
+ * @throws {Error} If:
+ *  - User is not authenticated
+ *  - Process run is not found
+ *  - Process run is already completed
+ *  - Database operation fails
+ *  - N8n webhook calls fail
+ */
+export const saveProcessRunInformation = authActionClient
+  .schema(saveProcessRunInformationSchema)
+  .metadata({
+    event: "saveProcessRunInformationAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, informationData } = parsedInput;
+
+    let workflowRunId: string;
+    try {
+      // First, get the current process run and its dependencies
+      const currentProcessRun = await prisma.processRun.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          id: true,
+          status: true,
+          information: true,
+          informationData: true,
+          workflowRun: {
+            select: {
+              isArchived: true,
+              processes: {
+                select: {
+                  data: true,
+                },
+              },
+              status: true,
+              workflow: {
+                select: {
+                  name: true,
+                  description: true,
+                  teams: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  responsibleTeam: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          workflowRunId: true,
+          process: {
+            select: {
+              submitProcessPermissions: true,
+              id: true,
+              name: true,
+              description: true,
+              schema: true,
+              responsibleTeam: {
+                select: {
+                  name: true,
+                },
+              },
+              completeN8nWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+              dependencies: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!currentProcessRun) {
+        throw new Error("Prozess nicht gefunden");
+      }
+
+      const validatedData = await validateSurveyData(
+        currentProcessRun.information,
+        { ...informationData },
+        { strict: true }
+      );
+
+      if (!validatedData.valid) {
+        throw new Error(
+          validatedData.errors
+            .map((e: { message: string }) => e.message)
+            .join(", ")
+        );
+      }
+
+      const allProcessData = Object.assign(
+        {},
+        ...currentProcessRun.workflowRun.processes
+          .filter((p) => p.data && typeof p.data === "object")
+          .map((p) => p.data)
+      );
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          data: allProcessData,
+          process: {
+            responsibleTeam:
+              currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+            teams:
+              currentProcessRun.workflowRun.workflow.teams?.map(
+                (t) => t.name
+              ) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          currentProcessRun.process.submitProcessPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error(
+            "Keine Berechtigung zum Abschließen dieses Prozesses"
+          );
+        }
+      }
+
+      if (
+        currentProcessRun.workflowRun.isArchived ||
+        currentProcessRun.workflowRun.status === "completed"
+      ) {
+        throw new Error(
+          "Workflow Ausführung ist abgeschlossen oder archiviert"
+        );
+      }
+
+      if (currentProcessRun.status === "completed") {
+        throw new Error("Prozess ist bereits abgeschlossen");
+      }
+
+      // Check if all dependencies are completed
+      const dependentProcessIds = currentProcessRun.process.dependencies.map(
+        (p) => p.id
+      );
+      if (dependentProcessIds.length > 0) {
+        const dependentProcessRuns = await prisma.processRun.findMany({
+          where: {
+            workflowRunId: currentProcessRun.workflowRunId,
+            processId: { in: dependentProcessIds },
+          },
+          select: {
+            id: true,
+            status: true,
+            process: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        });
+
+        const incompleteDependencies = dependentProcessRuns.filter(
+          (run) => run.status !== "completed"
+        );
+
+        if (incompleteDependencies.length > 0) {
+          throw new Error(
+            `Prozess kann nicht abgeschlossen werden. Die folgenden Abhängigkeiten sind nicht abgeschlossen: ${incompleteDependencies
+              .map((run) => run.process.name)
+              .join(", ")}`
+          );
+        }
+      }
+
+      // Now update the process run status
+      const processRun = await prisma.processRun.update({
+        where: { id },
+        data: {
+          resetProcessText: null,
+          informationData,
+          status: "ongoing",
+          workflowRun: {
+            update: {
+              status: "ongoing",
+            },
+          },
+        },
+        select: {
+          data: true,
+          process: {
+            select: {
+              name: true,
+              description: true,
+              responsibleTeam: {
+                select: {
+                  name: true,
+                },
+              },
+              saveN8nWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+            },
+          },
+          workflowRunId: true,
+        },
+      });
+      workflowRunId = processRun.workflowRunId;
+
+      /* // Get all process run data for the workflow run
+      const { allProcessRuns: allProcessRunsData, allProcessDataOnly } =
+        await getAllProcessRunData(workflowRunId);
+
+      const submissionContext = {
+        user: {
+          ...ctx.session.user,
+        },
+        data: {
+          currentProcessData: processRun.data,
+          allProcessData: allProcessRunsData,
+          allProcessDataOnly: allProcessDataOnly,
+        },
+        workflow: {
+          name: currentProcessRun.workflowRun.workflow.name,
+          description: currentProcessRun.workflowRun.workflow.description,
+          responsibleTeam:
+            currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
+          teams: currentProcessRun.workflowRun.workflow.teams ?? [],
+        },
+        workflowRun: {
+          id: workflowRunId,
+        },
+        activeProcess: processRun.process,
+      };
+
+      await triggerN8nWebhooks(
+        processRun.process.saveN8nWorkflows.map((w) => w.workflowId),
+        submissionContext
+      ); */
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/runs/${workflowRunId}`);
+    return {
+      message: "Informationen/Aufgaben aktualisiert",
     };
   });
