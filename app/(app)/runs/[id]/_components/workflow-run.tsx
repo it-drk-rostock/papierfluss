@@ -57,14 +57,14 @@ export const WorkflowRun = async ({
     <Stack gap="md">
       <Group align="flex-end" justify="space-between">
         <Stack gap="0">
-          <Title order={2}>{workflowRun.workflow.name}</Title>
+          <Title order={1}>{workflowRun.workflow.name}</Title>
           <Text c="dimmed">{workflowRun.workflow.description}</Text>
         </Stack>
         <LinkButton
           leftSection={<IconArrowLeft style={buttonIconStyles} />}
           variant="outline"
           href={`/workflows/${workflowRun.workflow.id}`}
-          title={`Zurück zu ${workflowRun.workflow.name}`}
+          title={`Zurück zu ${workflowRun.workflow.name} - Übersicht`}
         />
       </Group>
       <Divider />
