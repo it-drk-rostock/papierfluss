@@ -55,7 +55,9 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             </ActionIcon>
             <Branding />
           </Group>
-          <UserButton />
+          <Suspense fallback={<Loader />}>
+            <UserButton />
+          </Suspense>
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
