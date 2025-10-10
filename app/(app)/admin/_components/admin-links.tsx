@@ -45,6 +45,26 @@ export const AdminLinks = async () => {
         <Title order={2}>Cronjobs</Title>
         <Text c="dimmed">Verwalten Sie Cronjobs.</Text>
       </Card>
+      <Card
+        padding="lg"
+        component={Link}
+        href="/workflows"
+        withBorder
+        w={300}
+      >
+        <Title order={2}>Portale</Title>
+        <Text c="dimmed">Verwalten Sie Portale.</Text>
+      </Card>
+      <Card
+        padding="lg"
+        component={Link}
+        href="/forms"
+        withBorder
+        w={300}
+      >
+        <Title order={2}>Formulare</Title>
+        <Text c="dimmed">Verwalten Sie Formulare.</Text>
+      </Card>
     </Group>
   );
 };
