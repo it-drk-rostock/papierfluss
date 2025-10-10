@@ -8,6 +8,7 @@ import {
   Group,
   Divider,
   Badge,
+  Anchor,
 } from "@mantine/core";
 import React from "react";
 import { getWorkflowRun } from "../_actions";
@@ -52,6 +53,31 @@ export const WorkflowRun = async ({
 
     return info.fields;
   })();
+
+  const formatConfiguredValue = (value: unknown): React.ReactNode => {
+    if (value instanceof Date) {
+      return value.toLocaleDateString();
+    }
+    if (typeof value === "string") {
+      // Try to parse date-like strings
+      const parsed = new Date(value);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString();
+      }
+      // Render HTTPS links as downloadable anchors
+      if (value.startsWith("https://")) {
+        return (
+          <Anchor href={value} target="_blank" rel="noopener noreferrer">
+            Download
+          </Anchor>
+        );
+      }
+      return value;
+    }
+    return String(value);
+  };
+
+  console.log(workflowRun.workflow.information.fields);
 
   return (
     <Stack gap="md">
@@ -154,7 +180,7 @@ export const WorkflowRun = async ({
                       <Text key={index}>
                         {field.label}:{" "}
                         {field.data
-                          ? `${field.data.value} `
+                          ? formatConfiguredValue(field.data.value)
                           : "Keine Daten verfügbar"}
                       </Text>
                     ))}
