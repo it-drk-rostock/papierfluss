@@ -1,7 +1,7 @@
 "use client";
 
 import { ActionIcon, Avatar, Loader, Menu } from "@mantine/core";
-import React from "react";
+import React, { useTransition } from "react";
 import { IconLogout, IconRefresh } from "@tabler/icons-react";
 import { authClient } from "@lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,8 @@ import { refreshSession } from "@/server/utils/refresh-session";
 
 export const UserButton = () => {
   const router = useRouter();
+
+  const [isPendingLogout, startTransitionLogout] = useTransition();
 
   const { data: session, isPending, error, refetch } = authClient.useSession();
 
@@ -55,8 +57,9 @@ export const UserButton = () => {
           Sitzung aktualisieren
         </Menu.Item>
         <Menu.Item
-          leftSection={<IconLogout size={16} />}
+          leftSection={isPendingLogout ? <Loader size={16} /> : <IconLogout size={16} />}
           onClick={() => {
+            startTransitionLogout(() => {
             authClient.signOut({
               fetchOptions: {
                 onSuccess: () => {
@@ -64,8 +67,9 @@ export const UserButton = () => {
                 },
                 onError: (ctx) => {
                   alert(ctx.error.message);
+                  },
                 },
-              },
+              });
             });
           }}
         >
