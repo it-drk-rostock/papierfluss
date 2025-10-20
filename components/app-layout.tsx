@@ -34,7 +34,6 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
     queryFn: getWorkflowsAndForms,
   });
 
-  console.log(data);
   const { hasAccess } = useAuthSession();
   const workflows = data?.workflows ?? [];
   const forms = data?.forms ?? [];

@@ -20,6 +20,7 @@ import { LinkButton } from "@/components/link-button";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { buttonIconStyles } from "@/constants/button-icon-styles";
 
+
 export const WorkflowRun = async ({
   params,
 }: {
@@ -77,7 +78,7 @@ export const WorkflowRun = async ({
     return String(value);
   };
 
-  console.log(workflowRun.workflow.information.fields);
+  
 
   return (
     <Stack gap="md">
