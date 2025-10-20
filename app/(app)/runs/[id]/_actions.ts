@@ -1243,7 +1243,7 @@ export const saveProcessRun = authActionClient
         throw new Error("Prozess nicht gefunden");
       }
 
-      const validatedData = await validateSurveyData(
+      /* const validatedData = await validateSurveyData(
         currentProcessRun.process.schema,
         { ...data },
         { strict: true }
@@ -1255,7 +1255,7 @@ export const saveProcessRun = authActionClient
             .map((e: { message: string }) => e.message)
             .join(", ")
         );
-      }
+      } */
 
       const allProcessData = Object.assign(
         {},

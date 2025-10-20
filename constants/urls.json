@@ -1,6 +1,6 @@
 {
-  "runs": "Workflow-Ausführungen",
-  "workflows": "Workflows",
+  "runs": "Portal-Ausführungen",
+  "workflows": "Portale",
   "designer": "Editor",
   "users": "Benutzer",
   "teams": "Bereiche",

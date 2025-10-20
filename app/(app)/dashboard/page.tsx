@@ -12,10 +12,10 @@ export default function Page() {
       <Suspense fallback={<Loader />}>
         <Teams />
       </Suspense>
-      <Title order={2}>Meine Formulare</Title>
+      {/* <Title order={2}>Meine Formulare</Title>
       <Suspense fallback={<Loader />}>
         <FormSubmissions />
-      </Suspense>
+      </Suspense> */}
     </>
   );
 }

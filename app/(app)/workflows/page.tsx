@@ -7,10 +7,10 @@ import { WorkflowForm } from "./_components/workflow-form";
 export default function Page() {
   return (
     <>
-      <Title order={1}>Workflows</Title>
+      <Title order={1}>Portale</Title>
       <Suspense fallback={<div>Loading...</div>}>
         <QuickSearchAdd
-          modalTitle="Workflow hinzufügen"
+          modalTitle="Portal hinzufügen"
           modalContent={<WorkflowForm />}
         />
       </Suspense>

@@ -9,7 +9,7 @@ export default async function Page({
 }) {
   return (
     <>
-      <Title order={1}>Workflow Ausführung</Title>
+      
       <Suspense fallback={<div>Loading...</div>}>
         <WorkflowRun params={params} />
       </Suspense>

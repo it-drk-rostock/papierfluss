@@ -12,22 +12,34 @@ import { useDisclosure } from "@mantine/hooks";
 import { Branding } from "./branding";
 import { UserButton } from "./user-button";
 import {
+  IconApps,
   IconClipboard,
   IconHome,
   IconLayoutSidebarRightExpand,
-  IconTopologyRing,
   IconUserShield,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { baseIconStyles } from "@/constants/base-icon-styles";
 import { Breadcrumbs } from "./breadcrumbs";
-import { BackButton } from "./back-button";
+import { useQuery } from "@tanstack/react-query";
+import { getWorkflowsAndForms } from "@/app/(app)/_actions";
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
+
+  const { data, isPending } = useQuery({
+    queryKey: ["workflowsAndForms"],
+    queryFn: getWorkflowsAndForms,
+  });
+
+  console.log(data);
   const { hasAccess } = useAuthSession();
+  const workflows = data?.workflows ?? [];
+  const forms = data?.forms ?? [];
+  const disablePortale = !isPending && workflows.length === 0;
+  const disableFormulare = !isPending && forms.length === 0;
 
   return (
     <AppShell
@@ -55,7 +67,9 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             </ActionIcon>
             <Branding />
           </Group>
-          <UserButton />
+          <Suspense fallback={<Loader />}>
+            <UserButton />
+          </Suspense>
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
@@ -68,16 +82,50 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           />
           <NavLink
             component={Link}
-            href="/workflows"
-            label="Workflows"
-            leftSection={<IconTopologyRing size={16} stroke={1.5} />}
-          />
+            label="Portale"
+            leftSection={<IconApps size={16} stroke={1.5} />}
+            href="#required-for-focus"
+            disabled={disablePortale}
+          >
+            {isPending ? (
+              <NavLink
+                label="Portale werden geladen"
+                leftSection={<Loader size="xs" />}
+              />
+            ) : (
+              workflows.map((w) => (
+                <NavLink
+                  key={w.id}
+                  component={Link}
+                  href={`/workflows/${w.id}`}
+                  label={w.name}
+                />
+              ))
+            )}
+          </NavLink>
           <NavLink
             component={Link}
-            href="/forms"
             label="Formulare"
+            href="#required-for-focus"
             leftSection={<IconClipboard size={16} stroke={1.5} />}
-          />
+            disabled={disableFormulare}
+          >
+            {isPending ? (
+              <NavLink
+                label="Formulare werden geladen"
+                leftSection={<Loader size="xs" />}
+              />
+            ) : (
+              forms.map((f) => (
+                <NavLink
+                  key={f.id}
+                  component={Link}
+                  href={`/forms/${f.id}`}
+                  label={f.title}
+                />
+              ))
+            )}
+          </NavLink>
           {hasAccess("admin") && (
             <NavLink
               component={Link}
