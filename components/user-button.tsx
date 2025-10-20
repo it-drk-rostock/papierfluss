@@ -6,25 +6,14 @@ import { IconLogout, IconRefresh } from "@tabler/icons-react";
 import { authClient } from "@lib/auth-client";
 import { useRouter } from "next/navigation";
 import { getInitials } from "@/utils/get-initials";
-import { useEnhancedAction } from "@/hooks/use-enhanced-action";
-import { refreshSession } from "@/server/utils/refresh-session";
 
 export const UserButton = () => {
   const router = useRouter();
 
   const [isPendingLogout, startTransitionLogout] = useTransition();
+  const [isRefreshing, startRefreshing] = useTransition();
 
   const { data: session, isPending, error, refetch } = authClient.useSession();
-
-  const { execute, status } = useEnhancedAction({
-    action: refreshSession,
-    hideModals: true,
-
-    onSuccess: () => {
-      refetch();
-      window.location.reload();
-    },
-  });
 
   if (isPending) {
     return <Loader />;
@@ -46,27 +35,30 @@ export const UserButton = () => {
         <Menu.Label>{session.user.email}</Menu.Label>
         <Menu.Item
           leftSection={
-            status === "executing" ? (
-              <Loader size={16} />
-            ) : (
-              <IconRefresh size={16} />
-            )
+            isRefreshing ? <Loader size={16} /> : <IconRefresh size={16} />
           }
-          onClick={() => execute({})}
+          onClick={() =>
+            startRefreshing(() => {
+              refetch();
+              window.location.reload();
+            })
+          }
         >
           Sitzung aktualisieren
         </Menu.Item>
         <Menu.Item
-          leftSection={isPendingLogout ? <Loader size={16} /> : <IconLogout size={16} />}
+          leftSection={
+            isPendingLogout ? <Loader size={16} /> : <IconLogout size={16} />
+          }
           onClick={() => {
             startTransitionLogout(() => {
-            authClient.signOut({
-              fetchOptions: {
-                onSuccess: () => {
-                  router.replace("/");
-                },
-                onError: (ctx) => {
-                  alert(ctx.error.message);
+              authClient.signOut({
+                fetchOptions: {
+                  onSuccess: () => {
+                    router.replace("/");
+                  },
+                  onError: (ctx) => {
+                    alert(ctx.error.message);
                   },
                 },
               });
