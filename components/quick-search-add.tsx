@@ -78,6 +78,7 @@ export const QuickSearchAdd = ({
                 modals.open({
                   closeOnClickOutside: false,
                   title: modalTitle,
+                  size: "lg",
                   children: (
                     <>
                       <Text c="dimmed" size="sm" mb="sm">
@@ -99,6 +100,7 @@ export const QuickSearchAdd = ({
                 modals.open({
                   closeOnClickOutside: false,
                   title: modalTitle,
+                  size: "lg",
                   children: (
                     <>
                       <Text c="dimmed" size="sm" mb="sm">
