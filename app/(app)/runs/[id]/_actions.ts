@@ -773,6 +773,7 @@ export const completeProcessRun = authActionClient
         select: {
           id: true,
           status: true,
+
           workflowRun: {
             select: {
               isArchived: true,
@@ -813,6 +814,7 @@ export const completeProcessRun = authActionClient
               id: true,
               name: true,
               description: true,
+              schema: true,
               submitProcessPermissions: true,
               skippablePermissions: true,
               responsibleTeam: {
@@ -844,6 +846,20 @@ export const completeProcessRun = authActionClient
 
       if (!currentProcessRun) {
         throw new Error("Prozess nicht gefunden");
+      }
+
+      const validatedData = await validateSurveyData(
+        currentProcessRun.process.schema,
+        { ...(currentProcessRun.data as Record<string, unknown>) },
+        { strict: true }
+      );
+
+      if (!validatedData.valid) {
+        throw new Error(
+          validatedData.errors
+            .map((e: { message: string }) => e.message)
+            .join(", ")
+        );
       }
 
       const allProcessData = Object.assign(
