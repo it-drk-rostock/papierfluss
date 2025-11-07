@@ -54,6 +54,7 @@ export const getWorkflowRuns = async (
 
   // Get all workflow runs with their processes
   const allWorkflowRuns = await prisma.workflowRun.findMany({
+    take: 100,
     where: {
       workflowId: workflowId,
       isArchived: false,
@@ -355,6 +356,7 @@ export const initializeWorkflowRunForm = authActionClient
             select: {
               id: true,
               isCategory: true,
+              name: true,
             },
           },
           initializeN8nWorkflows: {

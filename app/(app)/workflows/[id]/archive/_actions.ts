@@ -45,6 +45,7 @@ export const getArchivedWorkflowRuns = async (
 
   // Get all workflow runs with their processes
   const allWorkflowRuns = await prisma.workflowRun.findMany({
+    take: 100,
     where: {
       workflowId: workflowId,
       isArchived: true,
@@ -118,12 +119,12 @@ export const getArchivedWorkflowRuns = async (
         return false;
       }
 
-       const mergedData = workflowRun.processes.reduce((acc, proc) => {
-         if (proc.data) {
-           return { ...acc, ...proc.data };
-         }
-         return acc;
-       }, {});
+      const mergedData = workflowRun.processes.reduce((acc, proc) => {
+        if (proc.data) {
+          return { ...acc, ...proc.data };
+        }
+        return acc;
+      }, {});
 
       try {
         const context = {
