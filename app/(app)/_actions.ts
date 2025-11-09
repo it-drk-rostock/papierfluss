@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { authQuery } from "@/server/utils/auth-query";
+import { getSession } from "@/server/utils/get-session";
 
 /**
  * Retrieves active workflows and forms based on the current user's role and team access.
@@ -21,9 +22,17 @@ import { authQuery } from "@/server/utils/auth-query";
  * @throws {Error} If the query fails or if the user is not authorized
  */
 export const getWorkflowsAndForms = async () => {
-  const { user } = await authQuery();
+  /* const { user } = await authQuery(); */
+  const session = await getSession();
 
-  if (user.role === "admin") {
+  if (!session) {
+    return {
+      forms: [],
+      workflows: [],
+    };
+  }
+
+  if (session.user.role === "admin") {
     const [workflows, forms] = await Promise.all([
       prisma.workflow.findMany({
         where: {
@@ -60,7 +69,7 @@ export const getWorkflowsAndForms = async () => {
         teams: {
           some: {
             users: {
-              some: { id: user.id },
+              some: { id: session.user.id },
             },
           },
         },
