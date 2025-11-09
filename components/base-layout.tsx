@@ -9,7 +9,7 @@ export const BaseLayout = ({ children }: { children: React.ReactNode }) => {
       <Container fluid p="md">
         <Navbar />
       </Container>
-      <Divider my="sm" />
+      <Divider my="-sm" />
       <Container fluid p="md">
         <Center> {children}</Center>
       </Container>
