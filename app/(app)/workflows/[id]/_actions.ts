@@ -69,6 +69,7 @@ export const getWorkflowRuns = async (
                 data: {
                   path: [field.fieldKey],
                   string_contains: search as string,
+                  mode: "insensitive",
                 },
               })),
             },

@@ -198,6 +198,8 @@ export function WorkflowRunForms({ processes }: WorkflowRunFormsProps) {
 
   const tree = useTree({
     initialExpandedState: { root: true },
+    onNodeCollapse: (value) => console.log("Node collapsed:", value),
+    onNodeExpand: (value) => console.log("Node expanded:", value),
   });
 
   return (
@@ -205,7 +207,7 @@ export function WorkflowRunForms({ processes }: WorkflowRunFormsProps) {
       expandOnSpace={false}
       expandOnClick={false}
       data={formTreeData}
-      tree={tree}
+      tree={{ ...tree, setHoveredNode: () => {} }}
       className="workflow-run-forms-tree"
       renderNode={({ node, expanded, hasChildren, elementProps }) => (
         <FormNode
