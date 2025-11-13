@@ -14,6 +14,7 @@ import { DataTableColumn } from "mantine-datatable";
 import { WorkflowRunArchiveForm } from "./workflow-run-archive-form";
 import { FilterSelectInput } from "@/components/filter-select-input";
 import { workflowStatusFilter } from "@/constants/workflow-status";
+import { FilterTextInput } from "@/components/filter-text-input";
 
 interface ProcessRunData {
   id: string;
@@ -129,7 +130,7 @@ export const WorkflowRunsTable = ({
     ...configuredFields.map((field) => ({
       accessor: field.fieldKey,
       title: field.fieldKey,
-
+      /* filter: <FilterTextInput field={field.fieldKey} />, */
       render: (record: Record<string, unknown>) =>
         String(record[field.fieldKey] || "-"),
     })),
