@@ -5,7 +5,7 @@ import { createRouteMatcher } from "@utils/create-route-matcher";
 
 const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/admin(.*)"]);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if protected route using pathname directly
