@@ -1,70 +1,42 @@
-import React from "react";
 import { adminQuery } from "@server/utils/admin-query";
-import { Card, Text, Title, Group } from "@mantine/core";
-import Link from "next/link";
+import { SimpleGrid } from "@mantine/core";
+import { AdminCards } from "./admin-cards";
 
 export const AdminLinks = async () => {
   await adminQuery();
 
   return (
-    <Group justify="center" gap="md">
-      <Card
-        padding="lg"
-        component={Link}
+    <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }} spacing="md">
+      <AdminCards
         href="/admin/users"
-        withBorder
-        w={300}
-      >
-        <Title order={2}>Benutzer</Title>
-        <Text c="dimmed">
-          Verwalten Sie Benutzerkonten, Berechtigungen und Rollen.
-        </Text>
-      </Card>
-
-      <Card
-        padding="lg"
-        withBorder
-        component={Link}
+        title="Benutzer"
+        description="Verwalten Sie Benutzerkonten, Berechtigungen und Rollen."
+      />
+      <AdminCards
         href="/admin/teams"
-        w={300}
-      >
-        <Title order={2}>Bereiche</Title>
-        <Text c="dimmed">Verwalten Sie Bereiche und deren Einstellungen.</Text>
-      </Card>
-      <Card padding="lg" withBorder component={Link} href="/admin/n8n" w={300}>
-        <Title order={2}>n8n Workflows</Title>
-        <Text c="dimmed">Verwalten Sie n8n-Workflows.</Text>
-      </Card>
-      <Card
-        padding="lg"
-        component={Link}
+        title="Bereiche"
+        description="Verwalten Sie Bereiche und deren Einstellungen."
+      />
+      <AdminCards
+        href="/admin/n8n"
+        title="n8n Workflows"
+        description="Verwalten Sie n8n-Workflows."
+      />
+      <AdminCards
         href="/admin/cronjobs"
-        withBorder
-        w={300}
-      >
-        <Title order={2}>Cronjobs</Title>
-        <Text c="dimmed">Verwalten Sie Cronjobs.</Text>
-      </Card>
-      <Card
-        padding="lg"
-        component={Link}
+        title="Cronjobs"
+        description="Verwalten Sie Cronjobs."
+      />
+      <AdminCards
         href="/workflows"
-        withBorder
-        w={300}
-      >
-        <Title order={2}>Portale</Title>
-        <Text c="dimmed">Verwalten Sie Portale.</Text>
-      </Card>
-      <Card
-        padding="lg"
-        component={Link}
+        title="Portale"
+        description="Verwalten Sie Portale."
+      />
+      <AdminCards
         href="/forms"
-        withBorder
-        w={300}
-      >
-        <Title order={2}>Formulare</Title>
-        <Text c="dimmed">Verwalten Sie Formulare.</Text>
-      </Card>
-    </Group>
+        title="Formulare"
+        description="Verwalten Sie Formulare."
+      />
+    </SimpleGrid>
   );
 };
