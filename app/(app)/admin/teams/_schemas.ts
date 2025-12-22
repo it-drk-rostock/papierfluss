@@ -1,5 +1,5 @@
 import { idSchema } from "@/schemas/id-schema";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { requiredFieldMessage } from "@/constants/required-field-message";
 
 export const createTeamSchema = z.object({

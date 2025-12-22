@@ -5,7 +5,6 @@ import { Survey } from "survey-react-ui";
 import "survey-core/survey-core.css";
 import "survey-core/i18n/german";
 import { Box, LoadingOverlay } from "@mantine/core";
-import React from "react";
 import {
   FormSubmissionProps,
   reviewFormSubmission,

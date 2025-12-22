@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import z from "zod";
+import z from "zod/v4";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { idSchema } from "@/schemas/id-schema";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useForm } from "@mantine/form";
 import { Button, Stack, Textarea } from "@mantine/core";
 import { archiveWorkflowRun } from "../_actions";
@@ -12,7 +12,7 @@ import { archiveWorkflowRun } from "../_actions";
 export const WorkflowRunArchiveForm = ({ id }: { id: string }) => {
   const form = useForm({
     name: "archive-workflow-run",
-    validate: zodResolver(idSchema.extend({ message: z.string().optional() })),
+    validate: zod4Resolver(idSchema.extend({ message: z.string().optional() })),
     mode: "uncontrolled",
     initialValues: {
       id: id,

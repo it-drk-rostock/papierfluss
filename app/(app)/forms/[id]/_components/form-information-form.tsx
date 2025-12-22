@@ -19,7 +19,7 @@ import {
 import { baseIconStyles } from "@/constants/base-icon-styles";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { updateFormInformationSchema } from "../../_schemas";
 import { updateFormInformation } from "../../_actions";
 import { EmptyState } from "@/components/empty-state";
@@ -50,7 +50,7 @@ export const FormInformationForm = ({ form }: FormInformationFormProps) => {
   });
 
   const formForm = useForm({
-    validate: zodResolver(updateFormInformationSchema),
+    validate: zod4Resolver(updateFormInformationSchema),
     initialValues: {
       id: form.id,
       fields: form.information?.fields || [],

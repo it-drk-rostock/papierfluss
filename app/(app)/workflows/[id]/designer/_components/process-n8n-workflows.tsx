@@ -30,7 +30,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getN8nWorkflows } from "@/server/utils/get-n8n-workflows";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver, zodResolver } from "mantine-form-zod-resolver";
 import { connectProcessN8nWorkflowSchema } from "../_schemas/process-n8n";
 
 const N8N_URL = process.env.NEXT_PUBLIC_N8N_URL || "";
@@ -73,7 +73,7 @@ export const ProcessN8nWorkflows = ({ processId }: { processId: string }) => {
   // Initialize forms for each workflow type
   const forms = {
     saveN8nWorkflows: useForm<WorkflowFormValues>({
-      validate: zodResolver(connectProcessN8nWorkflowSchema),
+      validate: zod4Resolver(connectProcessN8nWorkflowSchema),
       initialValues: {
         processId,
         workflowType: "saveN8nWorkflows",
@@ -81,7 +81,7 @@ export const ProcessN8nWorkflows = ({ processId }: { processId: string }) => {
       },
     }),
     completeN8nWorkflows: useForm<WorkflowFormValues>({
-      validate: zodResolver(connectProcessN8nWorkflowSchema),
+      validate: zod4Resolver(connectProcessN8nWorkflowSchema),
       initialValues: {
         processId,
         workflowType: "completeN8nWorkflows",
@@ -89,7 +89,7 @@ export const ProcessN8nWorkflows = ({ processId }: { processId: string }) => {
       },
     }),
     reactivateN8nWorkflows: useForm<WorkflowFormValues>({
-      validate: zodResolver(connectProcessN8nWorkflowSchema),
+      validate: zod4Resolver(connectProcessN8nWorkflowSchema),
       initialValues: {
         processId,
         workflowType: "reactivateN8nWorkflows",

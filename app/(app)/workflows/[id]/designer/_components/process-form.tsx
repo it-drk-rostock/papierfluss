@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { processSchema, updateProcessSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { createProcess, updateProcess } from "../_actions";
@@ -33,7 +33,7 @@ export const ProcessForm = ({
   const isEditing = !!process;
 
   const form = useForm({
-    validate: zodResolver(isEditing ? updateProcessSchema : processSchema),
+    validate: zod4Resolver(isEditing ? updateProcessSchema : processSchema),
     mode: "uncontrolled",
     initialValues: isEditing
       ? {

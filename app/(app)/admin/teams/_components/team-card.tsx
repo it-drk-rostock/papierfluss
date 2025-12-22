@@ -16,7 +16,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconTrash, IconUsersGroup } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { updateTeamSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { deleteTeam, removeMember, TeamProps, updateTeam } from "../_actions";
@@ -32,7 +32,7 @@ export const TeamCard = ({ team }: { team: TeamProps[0] }) => {
   const [opened, handlers] = useDisclosure(false);
 
   const form = useForm({
-    validate: zodResolver(updateTeamSchema),
+    validate: zod4Resolver(updateTeamSchema),
     mode: "uncontrolled",
     initialValues: {
       id: team.id,

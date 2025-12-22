@@ -1,6 +1,6 @@
 "use client";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { updateWorkflowSchema, workflowSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import {
@@ -26,7 +26,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
   const formForm = useForm({
-    validate: zodResolver(workflow ? updateWorkflowSchema : workflowSchema),
+    validate: zod4Resolver(workflow ? updateWorkflowSchema : workflowSchema),
     mode: "uncontrolled",
     name: "create-workflow",
     initialValues: workflow

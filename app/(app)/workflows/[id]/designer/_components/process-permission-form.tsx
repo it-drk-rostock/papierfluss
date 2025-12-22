@@ -1,12 +1,11 @@
 "use client";
 
-import React from "react";
 import { Stack, Title, Paper, Text, Alert, Button } from "@mantine/core";
 import { WorkflowPermissionBuilder } from "@/components/workflow-permission-builder";
 import { useQuery } from "@tanstack/react-query";
 import { getWorkflowRunsForPermissions } from "../../../_actions";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { updateProcessPermissions } from "../_actions";
 import { updateProcessPermissionsSchema } from "../_schemas";
@@ -41,7 +40,7 @@ export const ProcessPermissionForm = ({
   // Initialize form
   const form = useForm({
     name: formActionName,
-    validate: zodResolver(updateProcessPermissionsSchema),
+    validate: zod4Resolver(updateProcessPermissionsSchema),
     mode: "uncontrolled",
     initialValues: {
       id: processId,

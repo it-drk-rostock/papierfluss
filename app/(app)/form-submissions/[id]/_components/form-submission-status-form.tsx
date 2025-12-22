@@ -5,7 +5,7 @@ import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { Button, Group, Stack, Text, Textarea } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { SubmissionStatus } from "@prisma/client";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver, zodResolver } from "mantine-form-zod-resolver";
 import { updateFormSubmissionStatusSchema } from "../_schemas";
 import { updateFormSubmissionStatus } from "../_actions";
 
@@ -17,7 +17,7 @@ export const FormSubmissionStatusForm = ({
   status: Extract<SubmissionStatus, "ongoing" | "rejected" | "completed">;
 }) => {
   const form = useForm({
-    validate: zodResolver(updateFormSubmissionStatusSchema),
+    validate: zod4Resolver(updateFormSubmissionStatusSchema),
     mode: "uncontrolled",
     name: "update-form-submission-status",
     initialValues: {

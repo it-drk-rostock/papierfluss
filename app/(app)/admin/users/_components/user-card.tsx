@@ -19,7 +19,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { type UserWithRole } from "better-auth/plugins/admin";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver, zodResolver } from "mantine-form-zod-resolver";
 import { updateUserSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { deleteUser, updateUser } from "../_actions";
@@ -32,7 +32,7 @@ export const UserCard = ({ user }: { user: UserWithRole }) => {
   const [opened, handlers] = useDisclosure(false);
 
   const form = useForm({
-    validate: zodResolver(updateUserSchema),
+    validate: zod4Resolver(updateUserSchema),
     mode: "uncontrolled",
     initialValues: {
       role: user.role,

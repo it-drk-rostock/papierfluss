@@ -1,15 +1,14 @@
 "use client";
 import { useForm } from "@mantine/form";
-import React from "react";
 import { createTeamSchema } from "../_schemas";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { createTeam } from "../_actions";
 import { Button, Group, Stack, TextInput } from "@mantine/core";
 
 export const TeamForm = () => {
   const form = useForm({
-    validate: zodResolver(createTeamSchema),
+    validate: zod4Resolver(createTeamSchema),
     mode: "uncontrolled",
     initialValues: {
       name: "",

@@ -12,7 +12,7 @@ import { revalidatePath } from "next/cache";
 import { idSchema } from "@/schemas/id-schema";
 import { forbidden, notFound, redirect } from "next/navigation";
 import jsonLogic from "json-logic-js";
-import z from "zod";
+import z from "zod/v4";
 import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
 
 /**

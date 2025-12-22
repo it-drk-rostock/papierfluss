@@ -11,8 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
-import React from "react";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { connectProcessN8nWorkflow } from "../_actions/process-n8n";
 import { connectProcessN8nWorkflowSchema } from "../_schemas/process-n8n";
 import { IconPlus, IconX } from "@tabler/icons-react";
@@ -34,7 +33,7 @@ export const ConnectProcessN8nWorkflowsForm = ({
   processId: string;
 }) => {
   const form = useForm({
-    validate: zodResolver(connectProcessN8nWorkflowSchema),
+    validate: zod4Resolver(connectProcessN8nWorkflowSchema),
     mode: "uncontrolled",
     initialValues: {
       processId,
