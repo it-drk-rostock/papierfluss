@@ -7,12 +7,12 @@ import { getUserRole } from "@/server/utils/get-user-role";
 import { getUserTeams } from "@/server/utils/get-user-teams";
 
 export const auth = betterAuth({
+  experimental: { joins: true },
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
   trustedOrigins: ["http://localhost:3000", "https://fms.drk-rostock.de"],
   plugins: [
-    nextCookies(),
     customSession(async ({ user, session }) => {
       const role = await getUserRole(session.userId);
       const teams = await getUserTeams(session.userId);
@@ -25,6 +25,7 @@ export const auth = betterAuth({
         session,
       };
     }),
+    nextCookies(),
   ],
   socialProviders: {
     microsoft: {
