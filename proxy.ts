@@ -24,7 +24,7 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = {
+/* export const config = {
   runtime: "nodejs",
   matcher: [
     // Skip Next.js internals and all static files
@@ -32,4 +32,4 @@ export const config = {
     // Always run for API routes
     "/(api|trpc)(.*)",
   ],
-};
+}; */
