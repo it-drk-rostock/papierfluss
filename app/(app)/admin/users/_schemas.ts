@@ -1,4 +1,4 @@
-import { UserRole } from "@/generated/prisma/client";
+import { UserRole } from "@/generated/prisma/browser";
 import { z } from "zod/v4";
 
 export const updateUserSchema = z.object({
