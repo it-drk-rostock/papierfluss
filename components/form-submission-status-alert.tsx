@@ -1,7 +1,7 @@
 import React from "react";
 import { formSubmissionStatus } from "@/constants/form-submission-status";
 import { Alert } from "@mantine/core";
-import { SubmissionStatus } from "@prisma-client/client";
+import { SubmissionStatus } from "@/generated/prisma/browser";
 
 export const FormSubmissionStatusAlert = ({
   status,

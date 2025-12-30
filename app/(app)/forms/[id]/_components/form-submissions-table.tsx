@@ -10,7 +10,7 @@ import { ButtonAction } from "@/components/button-action";
 import { deleteFormSubmission } from "../_actions";
 import { MantineTable } from "@/components/mantine-table";
 import { DataTableColumn } from "mantine-datatable";
-import { SubmissionStatus } from "@prisma-client/client";
+import { SubmissionStatus } from "@/generated/prisma/browser";
 import { FormSubmissionArchiveForm } from "@/app/(app)/form-submissions/[id]/_components/form-submission-archive-form";
 import { FilterSelectInput } from "@/components/filter-select-input";
 import { formStatusFilter } from "@/constants/form-status";
