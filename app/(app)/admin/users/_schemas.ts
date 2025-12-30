@@ -1,4 +1,4 @@
-import { UserRole } from "@/generated/prisma";
+import { UserRole } from "@/generated/prisma/client";
 import { z } from "zod/v4";
 
 export const updateUserSchema = z.object({
@@ -8,5 +8,5 @@ export const updateUserSchema = z.object({
   name: z.string().min(1, {
     message: "Name ist erforderlich",
   }),
-  role: z.nativeEnum(UserRole),
+  role: z.enum(UserRole),
 });

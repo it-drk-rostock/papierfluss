@@ -14,7 +14,7 @@ import {
   saveProcessRunSchema,
 } from "./_schemas";
 import { forbidden } from "next/navigation";
-import type { JsonValue } from "@prisma/client/runtime/library";
+import type { JsonValue } from "@/generated/prisma/runtime/library";
 import { validateSurveyData } from "@/utils/validate-survey-data";
 
 /**

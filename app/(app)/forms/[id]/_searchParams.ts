@@ -1,4 +1,4 @@
-import { SubmissionStatus } from "@/generated/prisma";
+import { SubmissionStatus } from "@/generated/prisma/client";
 import { parseAsString, createLoader, parseAsStringEnum } from "nuqs/server";
 
 export const formsSearchParams = {

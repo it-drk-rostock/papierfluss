@@ -10,7 +10,7 @@ import { ProcessRunItem } from "./process-run-item";
 import { useMemo } from "react";
 import { IconFolder, IconFile } from "@tabler/icons-react";
 import { baseIconStyles } from "@/constants/base-icon-styles";
-import { JsonValue } from "@prisma/client/runtime/library";
+import { JsonValue } from "@/generated/prisma/runtime/library";
 
 interface ProcessRun {
   id: string;

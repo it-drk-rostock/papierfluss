@@ -10,7 +10,7 @@ import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
 import { authActionClient } from "@/server/utils/action-clients";
 import { idSchema } from "@/schemas/id-schema";
 import { z } from "zod/v4";
-import { SubmissionStatus } from "@/generated/prisma";
+import { SubmissionStatus } from "@/generated/prisma/client";
 
 /**
  * Retrieves a form from the database based on user's role and access permissions.

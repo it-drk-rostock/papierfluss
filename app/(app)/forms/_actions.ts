@@ -10,7 +10,7 @@ import {
   updateFormInformationSchema,
 } from "./_schemas";
 import prisma from "@/lib/prisma";
-import { Prisma, SubmissionStatus } from "@prisma/client";
+import { Prisma, SubmissionStatus } from "@/generated/prisma/client";
 import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
