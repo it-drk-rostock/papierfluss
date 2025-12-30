@@ -4,7 +4,7 @@ import React from "react";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { Button, Group, Stack, Text, Textarea } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { SubmissionStatus } from "@/generated/prisma/client";
+import { SubmissionStatus } from "@/generated/prisma/browser";
 import { zod4Resolver, zodResolver } from "mantine-form-zod-resolver";
 import { updateFormSubmissionStatusSchema } from "../_schemas";
 import { updateFormSubmissionStatus } from "../_actions";

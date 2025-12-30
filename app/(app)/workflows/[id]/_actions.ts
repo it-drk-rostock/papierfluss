@@ -11,7 +11,7 @@ import jsonLogic from "json-logic-js";
 
 import { redirect } from "next/navigation";
 import { z } from "zod/v4";
-import { WorkflowStatus } from "@/generated/prisma/client";
+import { WorkflowStatus } from "@/generated/prisma/browser";
 import { getAllProcessRunData } from "../../runs/[id]/_actions";
 
 export const getWorkflowRuns = async (

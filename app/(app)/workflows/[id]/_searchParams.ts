@@ -1,4 +1,4 @@
-import { WorkflowStatus } from "@/generated/prisma/client";
+import { WorkflowStatus } from "@/generated/prisma/browser";
 import { parseAsString, createLoader, parseAsStringEnum } from "nuqs/server";
 
 export const workflowRunsSearchParams = {
