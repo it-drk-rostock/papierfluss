@@ -3,7 +3,7 @@
 import React from "react";
 import { Button, Menu } from "@mantine/core";
 import { WorkflowStatusBadge } from "@/components/workflow-status-badge";
-import { WorkflowStatus, ProcessStatus } from "@prisma-client/client";
+import { WorkflowStatus, ProcessStatus } from "@/generated/prisma/browser";
 import { MenuItemLink } from "@/components/link-menu-item";
 import { ModalMenuItem } from "@/components/modal-menu-item";
 import { IconArchive, IconTrash } from "@tabler/icons-react";

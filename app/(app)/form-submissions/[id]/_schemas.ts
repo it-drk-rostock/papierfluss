@@ -1,5 +1,5 @@
 import { idSchema } from "@/schemas/id-schema";
-import { SubmissionStatus } from "@prisma-client/client";
+import { SubmissionStatus } from "@/generated/prisma/browser";
 import { z } from "zod/v4";
 
 export const formSubmissionSchema = z.object({
