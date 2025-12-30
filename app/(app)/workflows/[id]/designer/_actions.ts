@@ -15,7 +15,7 @@ import {
   updateProcessSchema,
   updateProcessPermissionsSchema,
 } from "./_schemas";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import jsonLogic from "json-logic-js";
 import { idSchema } from "@/schemas/id-schema";
 import { forbidden } from "next/navigation";

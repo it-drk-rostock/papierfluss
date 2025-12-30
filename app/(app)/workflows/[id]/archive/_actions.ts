@@ -1,6 +1,6 @@
 "use server";
 
-import { WorkflowStatus } from "@/generated/prisma";
+import { WorkflowStatus } from "@/generated/prisma/client";
 import prisma from "@/lib/prisma";
 import { authQuery } from "@/server/utils/auth-query";
 import jsonLogic from "json-logic-js";

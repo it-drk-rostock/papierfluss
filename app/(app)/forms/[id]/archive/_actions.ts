@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { authQuery } from "@/server/utils/auth-query";
 import { notFound } from "next/navigation";
 import jsonLogic from "json-logic-js";
-import { SubmissionStatus } from "@/generated/prisma";
+import { SubmissionStatus } from "@/generated/prisma/client";
 
 /**
  * Retrieves a form from the database based on user's role and access permissions.
