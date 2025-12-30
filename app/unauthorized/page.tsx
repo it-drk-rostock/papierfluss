@@ -1,6 +1,6 @@
 import { BaseLayout } from "@/components/base-layout";
 import { ButtonLink } from "@/components/button-link";
-import { Paper, Stack, Text, Title } from "@mantine/core";
+import { Paper, Stack, Text, Title, Center } from "@mantine/core";
 
 export default function Unauthorized() {
   return (

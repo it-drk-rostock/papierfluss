@@ -27,7 +27,7 @@ import { baseIconStyles } from "@/constants/base-icon-styles";
 import { useQuery } from "@tanstack/react-query";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver, zodResolver } from "mantine-form-zod-resolver";
 import { workflowInformationSchema } from "../../../_schemas";
 import { z } from "zod";
 
@@ -60,7 +60,9 @@ export const WorkflowInformationForm = ({
   });
 
   const form = useForm<WorkflowInformationFormValues>({
-    validate: zodResolver(workflowInformationSchema.extend({ id: z.string() })),
+    validate: zod4Resolver(
+      workflowInformationSchema.extend({ id: z.string() })
+    ),
     initialValues: {
       id: workflowId,
       fields: [],
@@ -108,8 +110,6 @@ export const WorkflowInformationForm = ({
   const hasWorkflowRun = workflow.latestWorkflowRun !== null;
   const latestWorkflowRun = workflow.latestWorkflowRun;
 
-  
-
   // Get all available field keys from workflow run data
   const getAllAvailableFields = () => {
     const allFields: Array<{
@@ -119,17 +119,14 @@ export const WorkflowInformationForm = ({
     }> = [];
 
     if (!latestWorkflowRun) {
-      
       return allFields;
     }
-
-   
 
     latestWorkflowRun.processes.forEach((processRun: any) => {
       console.log("Processing run:", processRun);
       if (processRun.data && typeof processRun.data === "object") {
         const data = processRun.data as Record<string, unknown>;
-        
+
         Object.keys(data).forEach((key) => {
           allFields.push({
             value: key,
@@ -142,7 +139,6 @@ export const WorkflowInformationForm = ({
       }
     });
 
-    
     return allFields;
   };
 

@@ -1,5 +1,5 @@
 import { requiredFieldMessage } from "@/constants/required-field-message";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const connectProcessN8nWorkflowSchema = z.object({
   processId: z.string().min(1),

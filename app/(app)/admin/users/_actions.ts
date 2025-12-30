@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { updateUserSchema } from "./_schemas";
 import prisma from "@/lib/prisma";
 import { adminQuery } from "@/server/utils/admin-query";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { formatError } from "@/utils/format-error";
 
 /**

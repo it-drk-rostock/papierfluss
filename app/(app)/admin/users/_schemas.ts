@@ -1,5 +1,5 @@
 import { UserRole } from "@/generated/prisma";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const updateUserSchema = z.object({
   userId: z.string().min(1, {

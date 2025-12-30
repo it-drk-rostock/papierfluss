@@ -12,7 +12,7 @@ import {
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { unstable_cacheTag as cacheTag } from "next/cache";
+import { cacheTag } from "next/cache";
 import { adminQuery } from "@/server/utils/admin-query";
 import { z } from "zod";
 import { idSchema } from "@/schemas/id-schema";

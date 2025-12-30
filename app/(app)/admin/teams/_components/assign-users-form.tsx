@@ -2,8 +2,7 @@
 
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
-import React from "react";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { assignUsersSchema } from "../_schemas";
 import { assignUsers, getAvailableUsers } from "../_actions";
 import { ActionIcon, Button, Loader, Stack, Title, Text } from "@mantine/core";
@@ -13,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const AssignUsersForm = ({ teamId }: { teamId: string }) => {
   const form = useForm({
-    validate: zodResolver(assignUsersSchema),
+    validate: zod4Resolver(assignUsersSchema),
     mode: "uncontrolled",
     initialValues: {
       id: teamId,

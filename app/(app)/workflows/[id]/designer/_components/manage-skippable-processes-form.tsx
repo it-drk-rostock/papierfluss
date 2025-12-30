@@ -2,7 +2,7 @@
 
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import {
   manageSkippableProcesses,
   getAvailableSkippableProcesses,
@@ -34,7 +34,7 @@ export const ManageSkippableProcessesForm = ({
   currentSkippableProcesses: Process[];
 }) => {
   const form = useForm({
-    validate: zodResolver(manageSkippableProcessesSchema),
+    validate: zod4Resolver(manageSkippableProcessesSchema),
     mode: "uncontrolled",
     initialValues: {
       processId,

@@ -1,8 +1,7 @@
 "use client";
 import { useForm } from "@mantine/form";
-import React from "react";
 import { createWorkflowSchema } from "../_schemas";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { createWorkflow, getN8nWorkflows } from "../_actions";
 import {
@@ -28,7 +27,7 @@ type WorkflowFormProps = {
 
 export const WorkflowForm = ({ existingWorkflows }: WorkflowFormProps) => {
   const form = useForm({
-    validate: zodResolver(createWorkflowSchema),
+    validate: zod4Resolver(createWorkflowSchema),
     mode: "uncontrolled",
     initialValues: {
       workflows: [],

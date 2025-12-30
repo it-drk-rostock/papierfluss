@@ -1,5 +1,5 @@
 import { requiredFieldMessage } from "@/constants/required-field-message";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const processSchema = z.object({
   name: z.string().min(1, {

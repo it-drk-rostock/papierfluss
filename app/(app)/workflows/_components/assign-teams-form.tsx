@@ -2,8 +2,7 @@
 
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
-import React from "react";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { assignTeamsSchema } from "../_schemas";
 import { assignTeams, getAvailableTeams } from "../_actions";
 import { ActionIcon, Button, Loader, Stack, Title, Text } from "@mantine/core";
@@ -13,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const AssignTeamsForm = ({ workflowId }: { workflowId: string }) => {
   const form = useForm({
-    validate: zodResolver(assignTeamsSchema),
+    validate: zod4Resolver(assignTeamsSchema),
     mode: "uncontrolled",
     initialValues: {
       id: workflowId,
@@ -32,7 +31,7 @@ export const AssignTeamsForm = ({ workflowId }: { workflowId: string }) => {
     isError: isErrorAvailableTeams,
   } = useQuery({
     queryKey: ["availableTeams", workflowId],
-    queryFn: () => getAvailableTeams(workflowId ),
+    queryFn: () => getAvailableTeams(workflowId),
     staleTime: 0,
   });
 

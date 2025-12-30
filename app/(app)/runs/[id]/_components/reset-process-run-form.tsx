@@ -1,6 +1,6 @@
 "use client";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { resetProcessRunSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { Button, Group, Stack, Textarea } from "@mantine/core";
@@ -8,7 +8,7 @@ import { resetProcessRun } from "../_actions";
 
 export const ResetProcessRunForm = ({ id }: { id: string }) => {
   const form = useForm({
-    validate: zodResolver(resetProcessRunSchema),
+    validate: zod4Resolver(resetProcessRunSchema),
     mode: "uncontrolled",
     name: "reset-process-run-form",
     initialValues: {

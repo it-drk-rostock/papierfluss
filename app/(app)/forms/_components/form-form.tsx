@@ -1,6 +1,6 @@
 "use client";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { formSchema, updateFormSchema } from "../_schemas";
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { createForm, FormProps, updateForm } from "../_actions";
@@ -55,7 +55,7 @@ interface FormValues {
 
 export const FormForm = ({ form }: { form?: FormProps[0] }) => {
   const formForm = useForm<FormValues>({
-    validate: zodResolver(form ? updateFormSchema : formSchema),
+    validate: zod4Resolver(form ? updateFormSchema : formSchema),
     mode: "uncontrolled",
     name: "create-form",
     initialValues: form

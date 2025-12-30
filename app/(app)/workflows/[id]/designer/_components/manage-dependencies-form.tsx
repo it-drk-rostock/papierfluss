@@ -2,7 +2,7 @@
 
 import { useEnhancedAction } from "@/hooks/use-enhanced-action";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { manageDependencies, getAvailableDependencies } from "../_actions";
 import { manageDependenciesSchema } from "../_schemas";
 import {
@@ -31,7 +31,7 @@ export const ManageDependenciesForm = ({
   currentDependencies: Process[];
 }) => {
   const form = useForm({
-    validate: zodResolver(manageDependenciesSchema),
+    validate: zod4Resolver(manageDependenciesSchema),
     mode: "uncontrolled",
     initialValues: {
       processId,
