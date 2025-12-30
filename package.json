@@ -11,6 +11,9 @@
   "prisma": {
     "schema": "./prisma"
   },
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.88",
     "@ai-sdk/openai-compatible": "^1.0.29",
