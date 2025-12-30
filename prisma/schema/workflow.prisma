@@ -24,7 +24,6 @@ model Workflow {
     reactivateN8nWorkflows   N8nWorkflow[] @relation("ReactivateWorkflows")
     lastN8nWorkflows         N8nWorkflow[] @relation("LastWorkflows")
 
-    @@index([id])
 }
 
 model Process {
