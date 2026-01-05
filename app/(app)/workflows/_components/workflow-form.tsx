@@ -23,6 +23,7 @@ import { EntitySelect } from "@/components/entity-select";
 import { getTeams } from "../../dashboard/_actions";
 import { WorkflowPermissionBuilder } from "@/components/workflow-permission-builder";
 import { useQuery } from "@tanstack/react-query";
+import { useServerAction } from "@/hooks/use-server-action";
 
 export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
   const formForm = useForm({
@@ -59,7 +60,7 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
         },
   });
 
-  const { execute, status } = useEnhancedAction({
+  const { execute, status, error } = useServerAction({
     action: workflow ? updateWorkflow : createWorkflow,
     hideModals: true,
   });
@@ -146,7 +147,7 @@ export const WorkflowForm = ({ workflow }: { workflow?: WorkflowProps[0] }) => {
           </>
         )}
         <Group mt="lg" justify="flex-end">
-          <Button loading={status === "executing"} type="submit">
+          <Button loading={status === "pending"} type="submit">
             {workflow ? "Speichern" : "Hinzufügen"}
           </Button>
         </Group>

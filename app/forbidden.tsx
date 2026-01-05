@@ -11,7 +11,7 @@ export default function Forbidden() {
       <Paper p="md" withBorder>
         <Stack align="center" gap="sm">
           <IconShieldLock
-            size={64}
+            size={32}
             stroke={1.5}
             style={{ color: "var(--mantine-color-red-6)" }}
           />

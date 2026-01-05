@@ -14,18 +14,22 @@ import { formatError } from "@/utils/format-error";
 import { authQuery } from "@/server/utils/auth-query";
 import { idSchema } from "@/schemas/id-schema";
 import jsonLogic from "json-logic-js";
+import { onError, onSuccess, os } from "@orpc/server";
+import { authorized } from "@/lib/orpc/middleware";
 
 export const getWorkflowProcesses = async (id: string, search?: string) => {
   const { user } = await authQuery();
 
   const whereClause = {
     workflowId: id,
-    ...(search ? {
-      name: {
-        contains: search,
-        mode: 'insensitive' as const,
-      },
-    } : {}),
+    ...(search
+      ? {
+          name: {
+            contains: search,
+            mode: "insensitive" as const,
+          },
+        }
+      : {}),
   };
 
   if (user.role === "admin") {
@@ -61,7 +65,7 @@ export type ProcessProps = Awaited<ReturnType<typeof getWorkflowProcesses>>;
  *
  * @throws {Error} If user is not authenticated or if any database operation fails
  */
-export const createWorkflow = authActionClient
+/* export const createWorkflow = authActionClient
   .schema(workflowSchema)
   .metadata({
     event: "createWorkflowAction",
@@ -107,6 +111,60 @@ export const createWorkflow = authActionClient
     return {
       message: "Workflow erstellt",
     };
+  }); */
+
+export const createWorkflow = authorized
+  .input(workflowSchema)
+  .handler(async ({ input, context }) => {
+    const {
+      name,
+      description,
+      isPublic,
+      isActive,
+      responsibleTeam,
+      initializeProcess,
+    } = input;
+
+    try {
+      if (context.user.role !== "admin" && context.user.role !== "moderator") {
+        throw new Error("Keine Berechtigung zum Erstellen von Workflows");
+      }
+      await prisma.workflow.create({
+        data: {
+          name,
+          description,
+          isPublic,
+          isActive,
+          editWorkflowPermissions: "true",
+          submitProcessPermissions: "true",
+          ...(initializeProcess?.id && {
+            initializeProcessId: initializeProcess.id,
+          }),
+          ...(responsibleTeam?.id && {
+            responsibleTeamId: responsibleTeam.id,
+          }),
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+    revalidatePath("/workflows");
+    return {
+      message: "Workflow erstellt",
+    };
+  })
+
+  .actionable({
+    context: async () => ({}),
+    interceptors: [
+      onSuccess(async (output) => {
+        return output;
+      }),
+      onError(async (error: any) => {
+        console.log(error, "###############");
+        return { error: error };
+      }),
+    ],
   });
 
 /**
