@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { showNotification } from "@/utils/notification";
 import { useServerAction as useOrpcServerAction } from "@orpc/react/hooks";
 import { onError, onStart, onSuccess } from "@orpc/client";
+import * as Sentry from "@sentry/nextjs";
 
 export type EnhancedActionProps = {
   action: any;
@@ -69,6 +70,8 @@ export const useServerAction = ({
         return data;
       }) as any,
       onError((error: any) => {
+        Sentry.captureException(error);
+        console.log(error.message);
         // Always show error notifications regardless of hideNotification
         notifications.hide(executeNotification);
 

@@ -16,6 +16,7 @@ import { idSchema } from "@/schemas/id-schema";
 import jsonLogic from "json-logic-js";
 import { onError, onSuccess, os } from "@orpc/server";
 import { authorized } from "@/lib/orpc/middleware";
+import * as Sentry from "@sentry/nextjs";
 
 export const getWorkflowProcesses = async (id: string, search?: string) => {
   const { user } = await authQuery();
@@ -161,7 +162,6 @@ export const createWorkflow = authorized
         return output;
       }),
       onError(async (error: any) => {
-        console.log(error, "###############");
         return { error: error };
       }),
     ],
