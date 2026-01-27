@@ -36,6 +36,7 @@ interface WorkflowRunData {
   status: WorkflowStatus;
   startedAt: Date;
   completedAt: Date | null;
+  isArchived: boolean;
   processes: ProcessRunData[];
 }
 
@@ -107,6 +108,7 @@ export const WorkflowRunsTable = ({
       status: run.status,
       startedAt: run.startedAt,
       completedAt: run.completedAt,
+      isArchived: run.isArchived,
     };
 
     // Add information fields
@@ -161,10 +163,10 @@ export const WorkflowRunsTable = ({
             <ModalMenuItem
               leftSection={<IconArchive size={14} />}
               color="gray"
-              title="Archivieren"
+              title={record.isArchived ? "Reaktivieren" : "Archivieren"}
               content={<WorkflowRunArchiveForm id={record.id} />}
             >
-              Archivieren
+              {record.isArchived ? "Reaktivieren" : "Archivieren"}
             </ModalMenuItem>
             <ModalMenuItem
               leftSection={<IconTrash size={14} />}

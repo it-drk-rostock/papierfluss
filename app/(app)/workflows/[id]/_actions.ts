@@ -80,6 +80,7 @@ export const getWorkflowRuns = async (
       id: true,
       status: true,
       startedAt: true,
+      isArchived: true,
       completedAt: true,
       processes: {
         select: {
