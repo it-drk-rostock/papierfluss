@@ -2,8 +2,11 @@
 
 import { WorkflowStatus } from "@/generated/prisma/browser";
 import prisma from "@/lib/prisma";
+import { idSchema } from "@/schemas/id-schema";
+import { authActionClient } from "@/server/utils/action-clients";
 import { authQuery } from "@/server/utils/auth-query";
 import jsonLogic from "json-logic-js";
+import z from "zod";
 
 export const getArchivedWorkflowRuns = async (
   workflowId: string,
@@ -72,6 +75,7 @@ export const getArchivedWorkflowRuns = async (
       status: true,
       startedAt: true,
       completedAt: true,
+      isArchived: true,
       processes: {
         select: {
           id: true,
@@ -172,3 +176,147 @@ export const getArchivedWorkflowRuns = async (
 export type ArchivedWorkflowRunsProps = Awaited<
   ReturnType<typeof getArchivedWorkflowRuns>
 >;
+
+/**
+ * Archives a workflow run
+ */
+export const reactivateWorkflowRun = authActionClient
+  .schema(idSchema.extend({ message: z.string().optional() }))
+  .metadata({
+    event: "archiveWorkflowRunAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, message } = parsedInput;
+
+    try {
+      const workflowRun = await prisma.workflowRun.findUnique({
+        where: { id },
+        select: {
+          workflow: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              submitProcessPermissions: true,
+              teams: {
+                select: {
+                  name: true,
+                  contactEmail: true,
+                },
+              },
+              archiveN8nWorkflows: {
+                select: {
+                  workflowId: true,
+                },
+              },
+              responsibleTeam: {
+                select: {
+                  name: true,
+                  contactEmail: true,
+                },
+              },
+            },
+          },
+          processes: {
+            select: {
+              id: true,
+              data: true,
+              status: true,
+              process: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!workflowRun) {
+        throw new Error("Workflow Ausführung nicht gefunden");
+      }
+
+      // Only check permissions if user is not admin
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            email: ctx.session.user.email,
+            name: ctx.session.user.name,
+            role: ctx.session.user.role,
+            id: ctx.session.user.id,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
+            teams: workflowRun.workflow.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          workflowRun.workflow.submitProcessPermissions || "{}"
+        );
+        const hasPermission = jsonLogic.apply(rules, context);
+
+        if (hasPermission !== true) {
+          throw new Error(
+            "Keine Berechtigung zum Archivieren dieser Workflow Ausführung"
+          );
+        }
+      }
+      await prisma.workflowRun.update({
+        where: {
+          id,
+        },
+        data: {
+          isArchived: true,
+          archivedNotes: message,
+          archivedAt: new Date(),
+        },
+      });
+
+      if (!workflowRun) {
+        throw new Error("Workflow Ausführung nicht gefunden");
+      }
+
+      // Get all process run data for the workflow run
+      const { allProcessRuns: allProcessRunsData, allProcessDataOnly } =
+        await getAllProcessRunData(id);
+
+      const submissionContext = {
+        user: {
+          ...ctx.session.user,
+        },
+        data: {
+          currentProcessData: {},
+          allProcessData: allProcessRunsData,
+          allProcessDataOnly: allProcessDataOnly,
+          archiveMessage: message,
+        },
+        workflow: {
+          name: workflowRun.workflow.name,
+          description: workflowRun.workflow.description,
+          responsibleTeam: workflowRun.workflow.responsibleTeam?.name,
+          teams: workflowRun.workflow.teams ?? [],
+        },
+        workflowRun: {
+          id: id,
+        },
+        activeProcess: {},
+      };
+
+      await triggerN8nWebhooks(
+        workflowRun.workflow.archiveN8nWorkflows.map((w) => w.workflowId),
+        submissionContext
+      );
+
+      revalidatePath(`/workflows/${workflowRun.workflow.id}`);
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    return {
+      message: "Workflow Ausführung archiviert",
+    };
+  });
