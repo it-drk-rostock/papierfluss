@@ -16,6 +16,7 @@ import {
   IconClipboard,
   IconHome,
   IconLayoutSidebarRightExpand,
+  IconMessage,
   IconUserShield,
 } from "@tabler/icons-react";
 import Link from "next/link";
@@ -24,6 +25,8 @@ import { baseIconStyles } from "@/constants/base-icon-styles";
 import { Breadcrumbs } from "./breadcrumbs";
 import { useQuery } from "@tanstack/react-query";
 import { getWorkflowsAndForms } from "@/app/(app)/_actions";
+import { modals } from "@mantine/modals";
+import { CreateFeedbackForm } from "./create-feedback-form";
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
@@ -66,9 +69,24 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             </ActionIcon>
             <Branding />
           </Group>
-          <Suspense fallback={<Loader />}>
-            <UserButton />
-          </Suspense>
+          <Group>
+            <ActionIcon
+              size="lg"
+              color="black"
+              onClick={() => {
+                modals.open({
+                  title: "Feedback",
+                  children: <CreateFeedbackForm />,
+                });
+              }}
+              variant="subtle"
+            >
+              <IconMessage style={baseIconStyles} stroke={1.5} />
+            </ActionIcon>
+            <Suspense fallback={<Loader />}>
+              <UserButton />
+            </Suspense>
+          </Group>
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
