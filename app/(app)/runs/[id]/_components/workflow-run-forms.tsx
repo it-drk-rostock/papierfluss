@@ -11,11 +11,18 @@ import {
   ActionIcon,
   Alert,
   Divider,
+  Tooltip,
 } from "@mantine/core";
 import { useMemo } from "react";
-import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconFileInfo,
+} from "@tabler/icons-react";
 import { WorkflowRunForm } from "./workflow-run-form";
 import { WorkflowRunInformationForm } from "./workflow-run-information-form";
+import { DrawerActionIcon } from "@/components/drawer-action-icon";
+import { SurveyPreview } from "@/components/survey-preview";
 
 interface FormTreeNodeData extends TreeNodeData {
   processData: {
@@ -23,6 +30,7 @@ interface FormTreeNodeData extends TreeNodeData {
     name: string;
     description: string | null;
     schema: Record<string, unknown> | null;
+    informationSchema: Record<string, unknown> | null;
     resetProcessText: string | null;
     isCategory: boolean;
     data: Record<string, unknown> | null;
@@ -59,6 +67,7 @@ const FormNode = ({
       },
       data: process.data,
       information: process.information,
+      informationSchema: process.informationSchema,
       informationData: process.informationData,
       status: process.status,
     };
@@ -82,23 +91,46 @@ const FormNode = ({
             </Text>
           )}
         </div>
-        {(hasChildren || !process.isCategory) && (
-          <ActionIcon
-            variant="light"
-            size="lg"
-            disabled={!process.isCategory && !process.schema}
-            onClick={(e) => {
-              e.stopPropagation();
-              tree.toggleExpanded(node.value);
-            }}
-          >
-            {expanded ? (
-              <IconChevronUp size={20} />
-            ) : (
-              <IconChevronDown size={20} />
-            )}
-          </ActionIcon>
-        )}
+        <Group gap="xs">
+          {(hasChildren || !process.isCategory) && (
+            <>
+              <ActionIcon
+                variant="light"
+                size="lg"
+                disabled={!process.isCategory && !process.schema}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  tree.toggleExpanded(node.value);
+                }}
+              >
+                {expanded ? (
+                  <IconChevronUp size={20} />
+                ) : (
+                  <IconChevronDown size={20} />
+                )}
+              </ActionIcon>
+              <Tooltip label="Informationen/Hilfe">
+                <DrawerActionIcon
+                  disabled={!process.informationSchema}
+                  initialDrawerId={`information-${node.value}`}
+                  drawers={[
+                    {
+                      id: `information-${node.value}`,
+                      title: "Informationen/Hilfe",
+                      children: (
+                        <SurveyPreview json={process.informationSchema} />
+                      ),
+                    },
+                  ]}
+                  variant="subtle"
+                  size="lg"
+                >
+                  <IconFileInfo size={20} />
+                </DrawerActionIcon>
+              </Tooltip>
+            </>
+          )}
+        </Group>
       </Group>
       {expanded && (
         <Stack gap="md" pl="md">
@@ -160,6 +192,7 @@ interface WorkflowRunFormsProps {
       isCategory: boolean;
       order: number;
       schema: Record<string, unknown> | null;
+      informationSchema: Record<string, unknown> | null;
       parentId: string | null;
     };
   }>;
@@ -169,7 +202,7 @@ export function WorkflowRunForms({ processes }: WorkflowRunFormsProps) {
   const formTreeData = useMemo(() => {
     const buildFormTree = (
       processes: WorkflowRunFormsProps["processes"],
-      parentId: string | null = null
+      parentId: string | null = null,
     ): FormTreeNodeData[] => {
       return processes
         .filter((process) => process.process.parentId === parentId)
@@ -181,6 +214,7 @@ export function WorkflowRunForms({ processes }: WorkflowRunFormsProps) {
           processData: {
             resetProcessText: process.resetProcessText,
             id: process.id,
+            informationSchema: process.process.informationSchema,
             name: process.process.name,
             description: process.process.description,
             schema: process.process.schema,
