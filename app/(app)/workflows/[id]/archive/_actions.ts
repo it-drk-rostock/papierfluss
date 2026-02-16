@@ -1,16 +1,19 @@
 "use server";
 
+import { getAllProcessRunData } from "@/app/(app)/runs/[id]/_actions";
 import { WorkflowStatus } from "@/generated/prisma/browser";
 import prisma from "@/lib/prisma";
 import { idSchema } from "@/schemas/id-schema";
 import { authActionClient } from "@/server/utils/action-clients";
 import { authQuery } from "@/server/utils/auth-query";
+import { triggerN8nWebhooks } from "@/utils/trigger-n8n-webhooks";
 import jsonLogic from "json-logic-js";
-import z from "zod";
+import { revalidatePath } from "next/cache";
+import z, { formatError } from "zod";
 
 export const getArchivedWorkflowRuns = async (
   workflowId: string,
-  { search, status }: { search?: string; status?: WorkflowStatus }
+  { search, status }: { search?: string; status?: WorkflowStatus },
 ) => {
   const { user } = await authQuery();
 
@@ -181,12 +184,12 @@ export type ArchivedWorkflowRunsProps = Awaited<
  * Archives a workflow run
  */
 export const reactivateWorkflowRun = authActionClient
-  .schema(idSchema.extend({ message: z.string().optional() }))
+  .schema(idSchema)
   .metadata({
-    event: "archiveWorkflowRunAction",
+    event: "reactivateWorkflowRunAction",
   })
   .stateAction(async ({ parsedInput, ctx }) => {
-    const { id, message } = parsedInput;
+    const { id } = parsedInput;
 
     try {
       const workflowRun = await prisma.workflowRun.findUnique({
@@ -255,13 +258,13 @@ export const reactivateWorkflowRun = authActionClient
         };
 
         const rules = JSON.parse(
-          workflowRun.workflow.submitProcessPermissions || "{}"
+          workflowRun.workflow.submitProcessPermissions || "{}",
         );
         const hasPermission = jsonLogic.apply(rules, context);
 
         if (hasPermission !== true) {
           throw new Error(
-            "Keine Berechtigung zum Archivieren dieser Workflow Ausführung"
+            "Keine Berechtigung zum Reaktivieren dieser Workflow Ausführung",
           );
         }
       }
@@ -270,9 +273,9 @@ export const reactivateWorkflowRun = authActionClient
           id,
         },
         data: {
-          isArchived: true,
-          archivedNotes: message,
-          archivedAt: new Date(),
+          isArchived: false,
+          archivedNotes: null,
+          archivedAt: null,
         },
       });
 
@@ -292,7 +295,6 @@ export const reactivateWorkflowRun = authActionClient
           currentProcessData: {},
           allProcessData: allProcessRunsData,
           allProcessDataOnly: allProcessDataOnly,
-          archiveMessage: message,
         },
         workflow: {
           name: workflowRun.workflow.name,
@@ -308,7 +310,7 @@ export const reactivateWorkflowRun = authActionClient
 
       await triggerN8nWebhooks(
         workflowRun.workflow.archiveN8nWorkflows.map((w) => w.workflowId),
-        submissionContext
+        submissionContext,
       );
 
       revalidatePath(`/workflows/${workflowRun.workflow.id}`);
@@ -317,6 +319,6 @@ export const reactivateWorkflowRun = authActionClient
     }
 
     return {
-      message: "Workflow Ausführung archiviert",
+      message: "Workflow Ausführung reaktiviert",
     };
   });
