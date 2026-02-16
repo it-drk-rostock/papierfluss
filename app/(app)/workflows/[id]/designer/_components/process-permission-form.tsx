@@ -1,6 +1,15 @@
 "use client";
 
-import { Stack, Title, Paper, Text, Alert, Button } from "@mantine/core";
+import {
+  Stack,
+  Title,
+  Paper,
+  Text,
+  Alert,
+  Button,
+  JsonInput,
+  Divider,
+} from "@mantine/core";
 import { WorkflowPermissionBuilder } from "@/components/workflow-permission-builder";
 import { useQuery } from "@tanstack/react-query";
 import { getWorkflowRunsForPermissions } from "../../../_actions";
@@ -89,7 +98,14 @@ export const ProcessPermissionForm = ({
               workflowRuns={workflowRuns}
               permissionType="process"
             />
-
+            <JsonInput
+              validationError="Invalid JSON"
+              autosize
+              key={form.key("editProcessPermissions")}
+              {...form.getInputProps("editProcessPermissions")}
+              minRows={4}
+            />
+            <Divider />
             <WorkflowPermissionBuilder
               label="Prozess Übermittlungs Berechtigungen"
               initialData={submitProcessPermissions ?? ""}
@@ -97,6 +113,13 @@ export const ProcessPermissionForm = ({
               fieldValue="submitProcessPermissions"
               workflowRuns={workflowRuns}
               permissionType="process"
+            />
+            <JsonInput
+              validationError="Invalid JSON"
+              autosize
+              key={form.key("submitProcessPermissions")}
+              {...form.getInputProps("submitProcessPermissions")}
+              minRows={4}
             />
 
             <WorkflowPermissionBuilder
@@ -107,7 +130,14 @@ export const ProcessPermissionForm = ({
               workflowRuns={workflowRuns}
               permissionType="process"
             />
-
+            <JsonInput
+              validationError="Invalid JSON"
+              autosize
+              key={form.key("viewProcessPermissions")}
+              {...form.getInputProps("viewProcessPermissions")}
+              minRows={4}
+            />
+            <Divider />
             <WorkflowPermissionBuilder
               label="Prozess Zurücksetzen Berechtigungen"
               initialData={resetProcessPermissions ?? ""}
@@ -117,6 +147,16 @@ export const ProcessPermissionForm = ({
               permissionType="process"
             />
 
+            <JsonInput
+              validationError="Invalid JSON"
+              autosize
+              key={form.key("resetProcessPermissions")}
+              {...form.getInputProps("resetProcessPermissions")}
+              minRows={4}
+            />
+
+            <Divider />
+
             <WorkflowPermissionBuilder
               label="Prozess Überspringen Berechtigungen"
               initialData={skippablePermissions ?? ""}
@@ -124,6 +164,14 @@ export const ProcessPermissionForm = ({
               fieldValue="skippablePermissions"
               workflowRuns={workflowRuns}
               permissionType="process"
+            />
+
+            <JsonInput
+              validationError="Invalid JSON"
+              autosize
+              key={form.key("skippablePermissions")}
+              {...form.getInputProps("skippablePermissions")}
+              minRows={4}
             />
 
             <Button fullWidth type="submit" loading={status === "executing"}>
