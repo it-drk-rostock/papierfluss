@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "@mantine/form";
-import { Button, Stack, Textarea } from "@mantine/core";
+import { Alert, Button, Rating, Stack, Text, Textarea } from "@mantine/core";
 import { usePathname } from "next/navigation";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { createFeedback } from "@/server/actions/create-feedback";
@@ -16,6 +16,7 @@ export const CreateFeedbackForm = () => {
     initialValues: {
       feedback: "",
       path: pathname,
+      rating: 0,
     },
   });
 
@@ -31,6 +32,17 @@ export const CreateFeedbackForm = () => {
       })}
     >
       <Stack gap="sm">
+        <Alert color="yellow">
+          Helfen Sie uns mit Ihrer Bewertung das Formularservice zu verbessern!
+          Technische Details (Seite & Datensatz) werden zur Analyse automatisch
+          beigefügt.
+        </Alert>
+        <Stack gap="2px">
+          <Text size="sm" fw="500">
+            Bewertung
+          </Text>
+          <Rating {...form.getInputProps("rating")} />
+        </Stack>
         <Textarea label="Feedback" {...form.getInputProps("feedback")} />
         <Button loading={status === "pending"} type="submit">
           Senden

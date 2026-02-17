@@ -17,6 +17,7 @@ import {
   IconHome,
   IconLayoutSidebarRightExpand,
   IconMessage,
+  IconMessage2Star,
   IconUserShield,
 } from "@tabler/icons-react";
 import Link from "next/link";
@@ -72,7 +73,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <Group>
             <ActionIcon
               size="lg"
-              color="black"
+              color="yellow"
               onClick={() => {
                 modals.open({
                   title: "Feedback",
@@ -81,7 +82,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               }}
               variant="subtle"
             >
-              <IconMessage style={baseIconStyles} stroke={1.5} />
+              <IconMessage2Star style={baseIconStyles} stroke={1.5} />
             </ActionIcon>
             <Suspense fallback={<Loader />}>
               <UserButton />

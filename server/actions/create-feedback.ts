@@ -9,11 +9,12 @@ import { FeedbackSchema } from "../schemas/feedback-schema";
 export const createFeedback = authorized
   .input(FeedbackSchema)
   .handler(async ({ input, context }) => {
-    const { feedback, path } = input;
+    const { feedback, path, rating } = input;
 
     const submissionContext = {
       feedback,
       path,
+      rating,
       userEmail: context.user.email,
       userName: context.user.name,
       app: "FMS",
