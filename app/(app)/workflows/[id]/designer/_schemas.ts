@@ -63,3 +63,8 @@ export const updateProcessFormSchema = z.object({
   schema: z.any(),
   theme: z.any(),
 });
+
+export const updateProcessInformationFormSchema = z.object({
+  id: z.string().min(1),
+  schema: z.any(),
+});

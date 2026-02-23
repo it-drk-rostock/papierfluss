@@ -15,6 +15,7 @@ import { WorkflowRunArchiveForm } from "./workflow-run-archive-form";
 import { FilterSelectInput } from "@/components/filter-select-input";
 import { workflowStatusFilter } from "@/constants/workflow-status";
 import { FilterTextInput } from "@/components/filter-text-input";
+import { WorkflowRunReactivateForm } from "../archive/_components/workflow-run-reactivate-form";
 
 interface ProcessRunData {
   id: string;
@@ -62,7 +63,7 @@ interface WorkflowRunsTableProps {
 // Helper function to extract information field data
 const getInformationFieldData = (
   workflowRun: WorkflowRunData,
-  fieldKey: string
+  fieldKey: string,
 ) => {
   // Search through all process runs to find the field data
   for (const processRun of workflowRun.processes) {
@@ -116,7 +117,7 @@ export const WorkflowRunsTable = ({
     configuredFields.forEach((field) => {
       informationFields[field.fieldKey] = getInformationFieldData(
         run,
-        field.fieldKey
+        field.fieldKey,
       );
     });
 
@@ -164,7 +165,13 @@ export const WorkflowRunsTable = ({
               leftSection={<IconArchive size={14} />}
               color="gray"
               title={record.isArchived ? "Reaktivieren" : "Archivieren"}
-              content={<WorkflowRunArchiveForm id={record.id} />}
+              content={
+                record.isArchived ? (
+                  <WorkflowRunReactivateForm id={record.id} />
+                ) : (
+                  <WorkflowRunArchiveForm id={record.id} />
+                )
+              }
             >
               {record.isArchived ? "Reaktivieren" : "Archivieren"}
             </ModalMenuItem>

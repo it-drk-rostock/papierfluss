@@ -133,6 +133,16 @@ export const WorkflowRun = async ({
                       processRun.process.schema !== null
                         ? (processRun.process.schema as Record<string, unknown>)
                         : null,
+                    informationSchema:
+                      processRun.process.informationSchema &&
+                      typeof processRun.process.informationSchema ===
+                        "object" &&
+                      processRun.process.informationSchema !== null
+                        ? (processRun.process.informationSchema as Record<
+                            string,
+                            unknown
+                          >)
+                        : null,
                     parentId: processRun.process.parentId,
                   },
                 }))}

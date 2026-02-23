@@ -33,6 +33,7 @@ model Process {
     order                    Int
     isCategory               Boolean       @default(false)
     schema                   Json?
+    informationSchema        Json?
     theme                    Json?
     editProcessPermissions   String?
     submitProcessPermissions String?

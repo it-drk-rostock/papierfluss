@@ -38,7 +38,7 @@ export const useServerAction = ({
           showNotification(
             "Aktion wird ausgeführt",
             "info",
-            executeNotification
+            executeNotification,
           );
         }
 
@@ -71,6 +71,7 @@ export const useServerAction = ({
       }) as any,
       onError((error: any) => {
         Sentry.captureException(error);
+
         console.log(error.message);
         // Always show error notifications regardless of hideNotification
         notifications.hide(executeNotification);

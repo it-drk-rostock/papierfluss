@@ -177,12 +177,9 @@ export const createWorkflow = authorized
  *
  * @throws {Error} If user is not authenticated or if any database operation fails
  */
-export const updateWorkflow = authActionClient
-  .schema(updateWorkflowSchema)
-  .metadata({
-    event: "updateWorkflowAction",
-  })
-  .stateAction(async ({ parsedInput, ctx }) => {
+export const updateWorkflow = authorized
+  .input(updateWorkflowSchema)
+  .handler(async ({ input, context }) => {
     const {
       id,
       name,
@@ -193,14 +190,11 @@ export const updateWorkflow = authActionClient
       submitProcessPermissions,
       responsibleTeam,
       initializeProcess,
-    } = parsedInput;
+    } = input;
 
     try {
       // Check if user has moderator or admin role
-      if (
-        ctx.session.user.role !== "admin" &&
-        ctx.session.user.role !== "moderator"
-      ) {
+      if (context.user.role !== "admin" && context.user.role !== "moderator") {
         throw new Error("Keine Berechtigung zum Bearbeiten von Workflows");
       }
 
@@ -218,11 +212,11 @@ export const updateWorkflow = authActionClient
       }
 
       // Only check permissions if user is not admin
-      if (ctx.session.user.role !== "admin") {
-        const context = {
+      if (context.user.role !== "admin") {
+        const contextData = {
           user: {
-            ...ctx.session.user,
-            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+            ...context.user,
+            teams: context.user.teams?.map((t) => t.name) ?? [],
           },
           form: {
             responsibleTeam: workflow.responsibleTeam?.name,
@@ -232,7 +226,7 @@ export const updateWorkflow = authActionClient
 
         const rules = JSON.parse(workflow.editWorkflowPermissions || "{}");
 
-        const hasPermission = jsonLogic.apply(rules, context);
+        const hasPermission = jsonLogic.apply(rules, contextData);
 
         if (!hasPermission) {
           throw new Error("Keine Berechtigung zum Bearbeiten dieses Workflows");
@@ -262,6 +256,17 @@ export const updateWorkflow = authActionClient
     return {
       message: "Workflow aktualisiert",
     };
+  })
+  .actionable({
+    context: async () => ({}),
+    interceptors: [
+      onSuccess(async (output) => {
+        return output;
+      }),
+      onError(async (error: any) => {
+        return { error: error };
+      }),
+    ],
   });
 
 /**

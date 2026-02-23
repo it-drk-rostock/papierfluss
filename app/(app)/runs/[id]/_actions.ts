@@ -104,7 +104,7 @@ export const getAllProcessRunData = async (workflowRunId: string) => {
     {},
     ...allProcessRuns
       .filter((p) => p.data && typeof p.data === "object")
-      .map((p) => p.data as Record<string, unknown>)
+      .map((p) => p.data as Record<string, unknown>),
   );
 
   return {
@@ -174,6 +174,7 @@ export const getWorkflowRun = async (id: string) => {
                 isCategory: true,
                 order: true,
                 schema: true,
+                informationSchema: true,
                 theme: true,
                 parentId: true,
                 submitProcessPermissions: true,
@@ -319,6 +320,7 @@ export const getWorkflowRun = async (id: string) => {
               isCategory: true,
               order: true,
               schema: true,
+              informationSchema: true,
               theme: true,
               parentId: true,
               submitProcessPermissions: true,
@@ -374,7 +376,7 @@ export const getWorkflowRun = async (id: string) => {
       {},
       ...workflowRun.processes
         .filter((p) => p.data && typeof p.data === "object")
-        .map((p) => p.data)
+        .map((p) => p.data),
     );
 
     try {
@@ -456,7 +458,7 @@ export const getWorkflowRun = async (id: string) => {
       {},
       ...workflowRun.processes
         .filter((p) => p.data && typeof p.data === "object")
-        .map((p) => p.data)
+        .map((p) => p.data),
     );
 
     // Filter processes based on view permissions
@@ -610,7 +612,7 @@ export const resetProcessRun = authActionClient
         {},
         ...currentProcessRun.workflowRun.processes
           .filter((p) => p.data && typeof p.data === "object")
-          .map((p) => p.data)
+          .map((p) => p.data),
       );
 
       if (ctx.session.user.role !== "admin") {
@@ -628,19 +630,19 @@ export const resetProcessRun = authActionClient
               currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
             teams:
               currentProcessRun.workflowRun.workflow.teams?.map(
-                (t) => t.name
+                (t) => t.name,
               ) ?? [],
           },
         };
 
         const rules = JSON.parse(
-          currentProcessRun.process.resetProcessPermissions || "{}"
+          currentProcessRun.process.resetProcessPermissions || "{}",
         );
         const hasPermission = jsonLogic.apply(rules, context);
 
         if (hasPermission !== true) {
           throw new Error(
-            "Keine Berechtigung zum Zurücksetzen dieses Prozesses"
+            "Keine Berechtigung zum Zurücksetzen dieses Prozesses",
           );
         }
       }
@@ -851,14 +853,14 @@ export const completeProcessRun = authActionClient
       const validatedData = await validateSurveyData(
         currentProcessRun.process.schema,
         { ...(currentProcessRun.data as Record<string, unknown>) },
-        { strict: true }
+        { strict: true },
       );
 
       if (!validatedData.valid) {
         throw new Error(
           validatedData.errors
             .map((e: { message: string }) => e.message)
-            .join(", ")
+            .join(", "),
         );
       }
 
@@ -866,7 +868,7 @@ export const completeProcessRun = authActionClient
         {},
         ...currentProcessRun.workflowRun.processes
           .filter((p) => p.data && typeof p.data === "object")
-          .map((p) => p.data)
+          .map((p) => p.data),
       );
 
       if (ctx.session.user.role !== "admin") {
@@ -884,19 +886,19 @@ export const completeProcessRun = authActionClient
               currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
             teams:
               currentProcessRun.workflowRun.workflow.teams?.map(
-                (t) => t.name
+                (t) => t.name,
               ) ?? [],
           },
         };
 
         const rules = JSON.parse(
-          currentProcessRun.process.submitProcessPermissions || "{}"
+          currentProcessRun.process.submitProcessPermissions || "{}",
         );
         const hasPermission = jsonLogic.apply(rules, context);
 
         if (hasPermission !== true) {
           throw new Error(
-            "Keine Berechtigung zum Abschließen dieses Prozesses"
+            "Keine Berechtigung zum Abschließen dieses Prozesses",
           );
         }
       }
@@ -906,7 +908,7 @@ export const completeProcessRun = authActionClient
         currentProcessRun.workflowRun.status === "completed"
       ) {
         throw new Error(
-          "Workflow Ausführung ist abgeschlossen oder archiviert"
+          "Workflow Ausführung ist abgeschlossen oder archiviert",
         );
       }
 
@@ -916,7 +918,7 @@ export const completeProcessRun = authActionClient
 
       // Check if all dependencies are completed
       const dependentProcessIds = currentProcessRun.process.dependencies.map(
-        (p) => p.id
+        (p) => p.id,
       );
       if (dependentProcessIds.length > 0) {
         const dependentProcessRuns = await prisma.processRun.findMany({
@@ -936,14 +938,14 @@ export const completeProcessRun = authActionClient
         });
 
         const incompleteDependencies = dependentProcessRuns.filter(
-          (run) => run.status !== "completed"
+          (run) => run.status !== "completed",
         );
 
         if (incompleteDependencies.length > 0) {
           throw new Error(
             `Prozess kann nicht abgeschlossen werden. Die folgenden Abhängigkeiten sind nicht abgeschlossen: ${incompleteDependencies
               .map((run) => run.process.name)
-              .join(", ")}`
+              .join(", ")}`,
           );
         }
       }
@@ -1016,7 +1018,7 @@ export const completeProcessRun = authActionClient
             if (currentProcessRun.process.skippablePermissions) {
               try {
                 const rules = JSON.parse(
-                  currentProcessRun.process.skippablePermissions
+                  currentProcessRun.process.skippablePermissions,
                 );
                 const flattenedCurrentData =
                   processRun.data && typeof processRun.data === "object"
@@ -1038,7 +1040,7 @@ export const completeProcessRun = authActionClient
                         ?.name,
                     teams:
                       currentProcessRun.workflowRun.workflow.teams?.map(
-                        (t) => t.name
+                        (t) => t.name,
                       ) ?? [],
                   },
                   workflow: {
@@ -1092,10 +1094,10 @@ export const completeProcessRun = authActionClient
       });
 
       const activeProcesses = allProcessRuns.filter(
-        (run) => run.status === "open" || run.status === "ongoing"
+        (run) => run.status === "open" || run.status === "ongoing",
       );
       const allProcessesCompleted = allProcessRuns.every(
-        (run) => run.status === "completed"
+        (run) => run.status === "completed",
       );
 
       // Check if only one process remains (open or ongoing)
@@ -1140,16 +1142,16 @@ export const completeProcessRun = authActionClient
 
       await triggerN8nWebhooks(
         processRun.process.completeN8nWorkflows.map((w) => w.workflowId),
-        submissionContext
+        submissionContext,
       );
 
       // Trigger lastN8nWorkflows if only one process remains
       if (onlyOneProcessRemains) {
         await triggerN8nWebhooks(
           currentProcessRun.workflowRun.workflow.lastN8nWorkflows.map(
-            (w) => w.workflowId
+            (w) => w.workflowId,
           ),
-          submissionContext
+          submissionContext,
         );
       }
     } catch (error) {
@@ -1277,7 +1279,7 @@ export const saveProcessRun = authActionClient
         {},
         ...currentProcessRun.workflowRun.processes
           .filter((p) => p.data && typeof p.data === "object")
-          .map((p) => p.data)
+          .map((p) => p.data),
       );
 
       if (ctx.session.user.role !== "admin") {
@@ -1295,19 +1297,19 @@ export const saveProcessRun = authActionClient
               currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
             teams:
               currentProcessRun.workflowRun.workflow.teams?.map(
-                (t) => t.name
+                (t) => t.name,
               ) ?? [],
           },
         };
 
         const rules = JSON.parse(
-          currentProcessRun.process.submitProcessPermissions || "{}"
+          currentProcessRun.process.submitProcessPermissions || "{}",
         );
         const hasPermission = jsonLogic.apply(rules, context);
 
         if (hasPermission !== true) {
           throw new Error(
-            "Keine Berechtigung zum Abschließen dieses Prozesses"
+            "Keine Berechtigung zum Abschließen dieses Prozesses",
           );
         }
       }
@@ -1317,7 +1319,7 @@ export const saveProcessRun = authActionClient
         currentProcessRun.workflowRun.status === "completed"
       ) {
         throw new Error(
-          "Workflow Ausführung ist abgeschlossen oder archiviert"
+          "Workflow Ausführung ist abgeschlossen oder archiviert",
         );
       }
 
@@ -1327,7 +1329,7 @@ export const saveProcessRun = authActionClient
 
       // Check if all dependencies are completed
       const dependentProcessIds = currentProcessRun.process.dependencies.map(
-        (p) => p.id
+        (p) => p.id,
       );
       if (dependentProcessIds.length > 0) {
         const dependentProcessRuns = await prisma.processRun.findMany({
@@ -1347,14 +1349,14 @@ export const saveProcessRun = authActionClient
         });
 
         const incompleteDependencies = dependentProcessRuns.filter(
-          (run) => run.status !== "completed"
+          (run) => run.status !== "completed",
         );
 
         if (incompleteDependencies.length > 0) {
           throw new Error(
             `Prozess kann nicht abgeschlossen werden. Die folgenden Abhängigkeiten sind nicht abgeschlossen: ${incompleteDependencies
               .map((run) => run.process.name)
-              .join(", ")}`
+              .join(", ")}`,
           );
         }
       }
@@ -1423,7 +1425,7 @@ export const saveProcessRun = authActionClient
 
       await triggerN8nWebhooks(
         processRun.process.saveN8nWorkflows.map((w) => w.workflowId),
-        submissionContext
+        submissionContext,
       );
     } catch (error) {
       throw formatError(error);
@@ -1537,14 +1539,14 @@ export const saveProcessRunInformation = authActionClient
       const validatedData = await validateSurveyData(
         currentProcessRun.information,
         { ...informationData },
-        { strict: true }
+        { strict: true },
       );
 
       if (!validatedData.valid) {
         throw new Error(
           validatedData.errors
             .map((e: { message: string }) => e.message)
-            .join(", ")
+            .join(", "),
         );
       }
 
@@ -1552,7 +1554,7 @@ export const saveProcessRunInformation = authActionClient
         {},
         ...currentProcessRun.workflowRun.processes
           .filter((p) => p.data && typeof p.data === "object")
-          .map((p) => p.data)
+          .map((p) => p.data),
       );
 
       if (ctx.session.user.role !== "admin") {
@@ -1570,19 +1572,19 @@ export const saveProcessRunInformation = authActionClient
               currentProcessRun.workflowRun.workflow.responsibleTeam?.name,
             teams:
               currentProcessRun.workflowRun.workflow.teams?.map(
-                (t) => t.name
+                (t) => t.name,
               ) ?? [],
           },
         };
 
         const rules = JSON.parse(
-          currentProcessRun.process.submitProcessPermissions || "{}"
+          currentProcessRun.process.submitProcessPermissions || "{}",
         );
         const hasPermission = jsonLogic.apply(rules, context);
 
         if (hasPermission !== true) {
           throw new Error(
-            "Keine Berechtigung zum Abschließen dieses Prozesses"
+            "Keine Berechtigung zum Abschließen dieses Prozesses",
           );
         }
       }
@@ -1592,7 +1594,7 @@ export const saveProcessRunInformation = authActionClient
         currentProcessRun.workflowRun.status === "completed"
       ) {
         throw new Error(
-          "Workflow Ausführung ist abgeschlossen oder archiviert"
+          "Workflow Ausführung ist abgeschlossen oder archiviert",
         );
       }
 
@@ -1602,7 +1604,7 @@ export const saveProcessRunInformation = authActionClient
 
       // Check if all dependencies are completed
       const dependentProcessIds = currentProcessRun.process.dependencies.map(
-        (p) => p.id
+        (p) => p.id,
       );
       if (dependentProcessIds.length > 0) {
         const dependentProcessRuns = await prisma.processRun.findMany({
@@ -1622,14 +1624,14 @@ export const saveProcessRunInformation = authActionClient
         });
 
         const incompleteDependencies = dependentProcessRuns.filter(
-          (run) => run.status !== "completed"
+          (run) => run.status !== "completed",
         );
 
         if (incompleteDependencies.length > 0) {
           throw new Error(
             `Prozess kann nicht abgeschlossen werden. Die folgenden Abhängigkeiten sind nicht abgeschlossen: ${incompleteDependencies
               .map((run) => run.process.name)
-              .join(", ")}`
+              .join(", ")}`,
           );
         }
       }

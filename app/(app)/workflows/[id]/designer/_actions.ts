@@ -14,6 +14,7 @@ import {
   moveProcessSchema,
   updateProcessSchema,
   updateProcessPermissionsSchema,
+  updateProcessInformationFormSchema,
 } from "./_schemas";
 import { Prisma } from "@/generated/prisma/browser";
 import jsonLogic from "json-logic-js";
@@ -71,6 +72,7 @@ export const getWorkflowProcesses = async (workflowId: string) => {
           order: true,
           isCategory: true,
           schema: true,
+          informationSchema: true,
           theme: true,
           editProcessPermissions: true,
           submitProcessPermissions: true,
@@ -514,7 +516,7 @@ export const moveProcess = authActionClient
         throw new Error(
           direction === "up"
             ? "Prozess ist bereits am Anfang"
-            : "Prozess ist bereits am Ende"
+            : "Prozess ist bereits am Ende",
         );
       }
 
@@ -587,7 +589,7 @@ export const updateProcessForm = authActionClient
         };
 
         const rules = JSON.parse(
-          process.workflow.editWorkflowPermissions || "{}"
+          process.workflow.editWorkflowPermissions || "{}",
         );
         const hasPermission = await jsonLogic.apply(rules, context);
 
@@ -610,6 +612,73 @@ export const updateProcessForm = authActionClient
     revalidatePath(`/workflows/${id}`);
     return {
       message: "Prozess Formular aktualisiert",
+    };
+  });
+
+/**
+ * Updates a process form schema and theme
+ */
+export const updateProcessInformationForm = authActionClient
+  .schema(updateProcessInformationFormSchema)
+  .metadata({
+    event: "updateProcessInformationFormAction",
+  })
+  .stateAction(async ({ parsedInput, ctx }) => {
+    const { id, schema } = parsedInput;
+
+    try {
+      const process = await prisma.process.findUnique({
+        where: { id },
+        select: {
+          workflow: {
+            select: {
+              editWorkflowPermissions: true,
+              responsibleTeam: true,
+              teams: true,
+            },
+          },
+        },
+      });
+
+      if (!process) {
+        throw new Error("Process not found");
+      }
+
+      if (ctx.session.user.role !== "admin") {
+        const context = {
+          user: {
+            ...ctx.session.user,
+            teams: ctx.session.user.teams?.map((t) => t.name) ?? [],
+          },
+          workflow: {
+            responsibleTeam: process.workflow.responsibleTeam?.name,
+            teams: process.workflow.teams?.map((t) => t.name) ?? [],
+          },
+        };
+
+        const rules = JSON.parse(
+          process.workflow.editWorkflowPermissions || "{}",
+        );
+        const hasPermission = await jsonLogic.apply(rules, context);
+
+        if (!hasPermission) {
+          throw new Error("Keine Berechtigung zum Bearbeiten dieses Prozesses");
+        }
+      }
+
+      await prisma.process.update({
+        where: { id },
+        data: {
+          informationSchema: schema,
+        },
+      });
+    } catch (error) {
+      throw formatError(error);
+    }
+
+    revalidatePath(`/workflows/${id}`);
+    return {
+      message: "Prozess Information Formular aktualisiert",
     };
   });
 

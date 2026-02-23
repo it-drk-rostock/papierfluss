@@ -12,12 +12,19 @@ import {
   Button,
   Grid,
   ActionIcon,
+  Tooltip,
 } from "@mantine/core";
-import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconFileInfo,
+  IconHelp,
+} from "@tabler/icons-react";
 import React, { useMemo } from "react";
 import { WorkflowProcessesProps } from "../_actions";
 import { ProcessPreviewItem } from "./process-preview-item";
 import { SurveyPreview } from "@/components/survey-preview";
+import { DrawerActionIcon } from "@/components/drawer-action-icon";
 
 interface FormTreeNodeData extends TreeNodeData {
   processData: {
@@ -25,6 +32,7 @@ interface FormTreeNodeData extends TreeNodeData {
     description: string | null;
     schema: Record<string, unknown> | null;
     isCategory: boolean;
+    informationSchema: Record<string, unknown> | null;
   };
 }
 
@@ -32,15 +40,16 @@ interface FormNodeProps {
   node: FormTreeNodeData;
   expanded: boolean;
   elementProps: React.HTMLProps<HTMLDivElement>;
+  tree: ReturnType<typeof useTree>;
 }
 
-const FormNode = ({ node, expanded, elementProps }: FormNodeProps) => {
+const FormNode = ({ node, expanded, elementProps, tree }: FormNodeProps) => {
   const process = node.processData;
 
   return (
     <Stack gap="md">
       <div {...elementProps}>
-        <Group wrap="nowrap" justify="space-between">
+        <Group wrap="nowrap" justify="space-between" gap="xs">
           <div style={{ flex: 1 }}>
             <Text fw={500}>{process.name}</Text>
             {process.description && (
@@ -51,13 +60,42 @@ const FormNode = ({ node, expanded, elementProps }: FormNodeProps) => {
           </div>
           {((node.children && node.children.length > 0) ||
             !process.isCategory) && (
-            <ActionIcon variant="subtle" size="lg">
+            <ActionIcon
+              variant="light"
+              size="lg"
+              disabled={!process.isCategory && !process.schema}
+              onClick={(e) => {
+                e.stopPropagation();
+                tree.toggleExpanded(node.value);
+              }}
+            >
               {expanded ? (
                 <IconChevronUp size={20} />
               ) : (
                 <IconChevronDown size={20} />
               )}
             </ActionIcon>
+          )}
+          {!process.isCategory && (
+            <Tooltip label="Informationen/Hilfe">
+              <DrawerActionIcon
+                disabled={!process.informationSchema}
+                initialDrawerId={`information-${node.value}`}
+                drawers={[
+                  {
+                    id: `information-${node.value}`,
+                    title: "Informationen/Hilfe",
+                    children: (
+                      <SurveyPreview json={process.informationSchema} />
+                    ),
+                  },
+                ]}
+                variant="subtle"
+                size="lg"
+              >
+                <IconFileInfo size={20} />
+              </DrawerActionIcon>
+            </Tooltip>
           )}
         </Group>
       </div>
@@ -87,6 +125,8 @@ export const WorkflowPreview = ({
 }) => {
   const tree = useTree({
     initialExpandedState: { root: true },
+    onNodeCollapse: (value) => console.log("Node collapsed:", value),
+    onNodeExpand: (value) => console.log("Node expanded:", value),
   });
 
   const formTreeData = useMemo(() => {
@@ -94,7 +134,7 @@ export const WorkflowPreview = ({
 
     const buildFormTree = (
       processes: typeof workflow.processes,
-      parentId: string | null = null
+      parentId: string | null = null,
     ): FormTreeNodeData[] => {
       return processes
         .filter((process) => process.parentId === parentId)
@@ -108,6 +148,7 @@ export const WorkflowPreview = ({
             description: process.description,
             schema: process.schema,
             isCategory: process.isCategory,
+            informationSchema: process.informationSchema,
           },
         })) as FormTreeNodeData[];
     };
@@ -211,12 +252,16 @@ export const WorkflowPreview = ({
             <Stack>
               <Title order={3}>Formulare</Title>
               <Tree
+                expandOnSpace={false}
+                expandOnClick={false}
                 data={formTreeData}
+                tree={{ ...tree, setHoveredNode: () => {} }}
                 renderNode={({ node, expanded, elementProps }) => (
                   <FormNode
                     node={node as FormTreeNodeData}
                     expanded={expanded}
                     elementProps={elementProps}
+                    tree={tree}
                   />
                 )}
               />
@@ -257,7 +302,7 @@ export const WorkflowPreview = ({
                           {info.fieldKey}
                         </Text>
                       </Stack>
-                    )
+                    ),
                   )
                 )}
               </Stack>

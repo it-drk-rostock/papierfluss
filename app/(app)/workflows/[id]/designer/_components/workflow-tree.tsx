@@ -21,6 +21,7 @@ import {
   IconTopologyBus,
   IconInfoCircle,
   IconShieldLock,
+  IconFileInfo,
 } from "@tabler/icons-react";
 import {
   Button,
@@ -43,11 +44,12 @@ import { ProcessN8nWorkflows } from "./process-n8n-workflows";
 import { WorkflowInformationForm } from "./workflow-information-form";
 import { ProcessPermissionForm } from "./process-permission-form";
 import dynamic from "next/dynamic";
+import { ProcessInformationForm } from "./process-information-form";
 
 const ProcessDesignerForm = dynamic(
   () =>
     import("./process-designer-form").then((mod) => mod.ProcessDesignerForm),
-  { ssr: false }
+  { ssr: false },
 );
 
 interface Process {
@@ -63,6 +65,7 @@ interface Process {
   skippedByProcesses: Array<{ id: string; name: string }>;
   children: Array<{ id: string; name: string }>;
   schema: object | undefined;
+  informationSchema: object | undefined;
   theme: object | undefined;
   editProcessPermissions: string | null;
   submitProcessPermissions: string | null;
@@ -236,6 +239,26 @@ export function WorkflowTree({
                     fullScreen
                   >
                     <IconClipboard style={baseIconStyles} />
+                  </ModalActionIcon>
+                </Tooltip>
+              )}
+              {!process.isCategory && (
+                <Tooltip color="red" label="Prozess Informationen Designer">
+                  <ModalActionIcon
+                    variant="subtle"
+                    title="Prozess Informationen Designer"
+                    content={
+                      <ProcessInformationForm
+                        processId={process.id}
+                        json={process.informationSchema}
+                        theme={process.theme}
+                        name={process.name}
+                        description={process.description}
+                      />
+                    }
+                    fullScreen
+                  >
+                    <IconFileInfo style={baseIconStyles} />
                   </ModalActionIcon>
                 </Tooltip>
               )}
