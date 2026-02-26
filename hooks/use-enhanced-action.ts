@@ -5,6 +5,7 @@ import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { modals } from "@mantine/modals";
 import { v4 as uuidv4 } from "uuid";
+import { useRef } from "react";
 import { showNotification } from "@/utils/notification";
 
 export type EnhancedActionProps = {
@@ -27,11 +28,22 @@ export const useEnhancedAction = ({
   onError,
 }: EnhancedActionProps) => {
   const router = useRouter();
-  const executeNotification = uuidv4();
+  // OLD: const executeNotification = uuidv4();
+  const executeNotificationRef = useRef<string>("");
   const { execute, result, status } = useStateAction(action, {
     onExecute() {
+      // Defensive: hide any previous notification before showing a new one
+      if (executeNotificationRef.current) {
+        notifications.hide(executeNotificationRef.current);
+      }
+      executeNotificationRef.current = uuidv4();
       if (!hideNotification) {
-        showNotification("Aktion wird ausgeführt", "info", executeNotification);
+        // OLD: showNotification("Aktion wird ausgeführt", "info", executeNotification);
+        showNotification(
+          "Aktion wird ausgeführt",
+          "info",
+          executeNotificationRef.current,
+        );
       }
 
       if (onExecute) {
@@ -40,7 +52,8 @@ export const useEnhancedAction = ({
     },
     onSuccess(data) {
       if (!hideNotification) {
-        notifications.hide(executeNotification);
+        // OLD: notifications.hide(executeNotification);
+        notifications.hide(executeNotificationRef.current);
 
         if (data) {
           showNotification(data.data?.message as string, "success", uuidv4());
@@ -63,7 +76,8 @@ export const useEnhancedAction = ({
     },
     onError(error) {
       // Always show error notifications regardless of hideNotification
-      notifications.hide(executeNotification);
+      // OLD: notifications.hide(executeNotification);
+      notifications.hide(executeNotificationRef.current);
 
       if (error) {
         showNotification(
@@ -71,7 +85,7 @@ export const useEnhancedAction = ({
             ? (error.error.serverError as string)
             : "Aktion fehlgeschlagen, versuchen sie es später erneut",
           "error",
-          uuidv4()
+          uuidv4(),
         );
       }
 

@@ -201,7 +201,7 @@ export const WorkflowRunsTable = ({
     <MantineTable
       records={transformedRuns}
       columns={columns}
-      storeKey="workflow-runs-table"
+      storeKey={`workflow-runs-table-${workflow.id}`}
     />
   );
 };
