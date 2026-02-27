@@ -759,11 +759,11 @@ export const resetProcessRun = authActionClient
  *  - Database operation fails
  */
 export const completeProcessRun = authActionClient
-  .schema(idSchema)
+  .inputSchema(idSchema)
   .metadata({
     event: "completeProcessRunAction",
   })
-  .stateAction(async ({ parsedInput, ctx }) => {
+  .action(async ({ parsedInput, ctx }) => {
     const { id } = parsedInput;
 
     let workflowRunId: string;
@@ -1185,11 +1185,11 @@ export const completeProcessRun = authActionClient
  *  - N8n webhook calls fail
  */
 export const saveProcessRun = authActionClient
-  .schema(saveProcessRunSchema)
+  .inputSchema(saveProcessRunSchema)
   .metadata({
     event: "saveProcessRunAction",
   })
-  .stateAction(async ({ parsedInput, ctx }) => {
+  .action(async ({ parsedInput, ctx }) => {
     const { id, data } = parsedInput;
 
     let workflowRunId: string;
