@@ -7,8 +7,8 @@ import "survey-core/i18n/german";
 import { Box, LoadingOverlay } from "@mantine/core";
 import React, { useMemo } from "react";
 import { modals } from "@mantine/modals";
-import { useEnhancedAction } from "@/hooks/use-enhanced-action";
-import { ButtonAction } from "@/components/button-action";
+import { useEnhancedAction2 } from "@/hooks/use-action";
+import { ButtonAction2 } from "@/components/button-action-2";
 import {
   createSignedUploadUrls,
   deleteFiles,
@@ -38,7 +38,7 @@ export const WorkflowRunForm = ({
 }: {
   submission: FormSubmissionProps;
 }) => {
-  const { execute: executeUpdate, status: statusUpdate } = useEnhancedAction({
+  const { execute: executeUpdate, status: statusUpdate } = useEnhancedAction2({
     action: saveProcessRun,
     hideModals: true,
   });
@@ -94,7 +94,7 @@ export const WorkflowRunForm = ({
             fileName: file.name,
             contentType: file.type,
           })),
-          submission.form.id
+          submission.form.id,
         );
 
         if (!uploadData.files?.length) {
@@ -137,7 +137,7 @@ export const WorkflowRunForm = ({
 
         const filesToDelete = options.fileName
           ? options.value.filter(
-              (item: FileItem) => item.name === options.fileName
+              (item: FileItem) => item.name === options.fileName,
             )
           : options.value;
 
@@ -177,13 +177,13 @@ export const WorkflowRunForm = ({
           closeOnClickOutside: false,
           title: "Prozess abschließen",
           children: (
-            <ButtonAction
+            <ButtonAction2
               fullWidth
               action={completeProcessRun}
               values={{ id: submission.id }}
             >
               Prozess abschließen
-            </ButtonAction>
+            </ButtonAction2>
           ),
         });
       },

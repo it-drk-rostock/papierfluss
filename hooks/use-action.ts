@@ -1,13 +1,14 @@
 "use client";
 
-import { useStateAction } from "next-safe-action/stateful-hooks";
+import { useAction } from "next-safe-action/hooks";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { modals } from "@mantine/modals";
 import { v4 as uuidv4 } from "uuid";
+import { useRef } from "react";
 import { showNotification } from "@/utils/notification";
 
-export type EnhancedActionProps = {
+export type EnhancedAction2Props = {
   action: any;
   redirectUrl?: string;
   hideModals?: boolean;
@@ -17,7 +18,7 @@ export type EnhancedActionProps = {
   onError?: (error: any) => void;
 };
 
-export const useEnhancedAction = ({
+export const useEnhancedAction2 = ({
   action,
   redirectUrl,
   hideModals,
@@ -25,25 +26,34 @@ export const useEnhancedAction = ({
   onExecute,
   onSuccess,
   onError,
-}: EnhancedActionProps) => {
+}: EnhancedAction2Props) => {
   const router = useRouter();
-  const executeNotification = uuidv4();
-  const { execute, result, status } = useStateAction(action, {
+  const executeNotificationRef = useRef<string>("");
+  const { execute, result, status } = useAction(action, {
     onExecute() {
+      executeNotificationRef.current = uuidv4();
       if (!hideNotification) {
-        showNotification("Aktion wird ausgeführt", "info", executeNotification);
+        showNotification(
+          "Aktion wird ausgeführt",
+          "info",
+          executeNotificationRef.current,
+        );
       }
 
       if (onExecute) {
         onExecute();
       }
     },
-    onSuccess(data) {
+    onSuccess({ data }) {
       if (!hideNotification) {
-        notifications.hide(executeNotification);
+        notifications.hide(executeNotificationRef.current);
 
         if (data) {
-          showNotification(data.data?.message as string, "success", uuidv4());
+          showNotification(
+            (data as any)?.message as string,
+            "success",
+            uuidv4(),
+          );
         }
       }
 
@@ -58,17 +68,15 @@ export const useEnhancedAction = ({
       if (redirectUrl) {
         router.push(redirectUrl);
       }
-
-      return data;
     },
-    onError(error) {
+    onError({ error }) {
       // Always show error notifications regardless of hideNotification
-      notifications.hide(executeNotification);
+      notifications.hide(executeNotificationRef.current);
 
       if (error) {
         showNotification(
-          error.error?.serverError
-            ? (error.error.serverError as string)
+          error.serverError
+            ? (error.serverError as string)
             : "Aktion fehlgeschlagen, versuchen sie es später erneut",
           "error",
           uuidv4(),
@@ -77,6 +85,15 @@ export const useEnhancedAction = ({
 
       if (onError && error) {
         onError(error);
+      }
+    },
+    // onSettled fires for success, error, AND navigation (revalidatePath)
+    // This ensures the loading notification is always cleaned up
+    onSettled() {
+      notifications.hide(executeNotificationRef.current);
+
+      if (hideModals) {
+        modals.closeAll();
       }
     },
   });
