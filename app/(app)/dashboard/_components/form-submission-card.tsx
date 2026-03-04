@@ -6,6 +6,8 @@ import { useDisclosure } from "@mantine/hooks";
 
 import { FormSubmissionProps } from "../_actions";
 import { FormSubmissionStatusBadge } from "@/components/form-submission-status-badge";
+import { useEffect } from "react";
+import * as Swetrix from "swetrix";
 
 export const FormSubmissionCard = ({
   submission,
@@ -13,6 +15,14 @@ export const FormSubmissionCard = ({
   submission: NonNullable<FormSubmissionProps>[0];
 }) => {
   const [opened, handlers] = useDisclosure(false);
+
+  /* useEffect(() => {
+    Swetrix.pageview({
+      payload: {
+        pg: "/dashboard",
+      },
+    });
+  }, []); */
 
   return (
     <Card key={submission.id} padding="lg" withBorder w={300}>
