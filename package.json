@@ -69,6 +69,7 @@
     "survey-creator-react": "^2.5.1",
     "survey-pdf": "^2.5.1",
     "survey-react-ui": "^2.5.1",
+    "swetrix": "^4.1.0",
     "uuid": "^11.1.0",
     "zod": "^4.2.1"
   },

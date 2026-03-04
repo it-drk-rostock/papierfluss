@@ -8,6 +8,9 @@ import "dayjs/locale/de";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { Providers } from "@/providers/providers";
+import Analytics from "@/components/analytics";
+import Script from "next/script";
+import * as Swetrix from "swetrix";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +38,10 @@ export default function RootLayout({
         <ColorSchemeScript />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Analytics />
+        </Providers>
       </body>
     </html>
   );
