@@ -1,62 +1,125 @@
 model Form {
-    id                    String           @id @default(uuid())
-    title                 String
-    description           String?
-    schema                Json?
-    theme                 Json?
-    information           Json?
-    isPublic              Boolean          @default(false)
-    isActive              Boolean          @default(true)
-    createdAt             DateTime         @default(now())
-    updatedAt             DateTime         @updatedAt
-    editFormPermissions   String?
-    reviewFormPermissions String?
-    createdBy             User?            @relation("FormCreator", fields: [createdById], references: [id], onDelete: SetNull)
-    createdById           String?
-    teams                 Team[]
-    submissions           FormSubmission[]
-    responsibleTeamId     String?
-    responsibleTeam       Team?            @relation(fields: [responsibleTeamId], references: [id], onDelete: SetNull, name: "ResponsibleTeam")
-    fillOutWorkflows      N8nWorkflow[]    @relation("FillOutWorkflows")
-    saveWorkflows         N8nWorkflow[]    @relation("SaveWorkflows")
-    revokeWorkflows       N8nWorkflow[]    @relation("RevokeWorkflows")
-    submitWorkflows       N8nWorkflow[]    @relation("SubmitWorkflows")
-    reviewWorkflows       N8nWorkflow[]    @relation("ReviewWorkflows")
-    reUpdateWorkflows     N8nWorkflow[]    @relation("ReUpdateWorkflows")
-    rejectWorkflows       N8nWorkflow[]    @relation("RejectWorkflows")
-    completeWorkflows     N8nWorkflow[]    @relation("CompleteWorkflows")
-    archiveWorkflows      N8nWorkflow[]    @relation("ArchiveWorkflows")
+  id                    String           @id @default(uuid())
+  title                 String
+  description           String?
+  schema                Json?
+  theme                 Json?
+  information           Json?
+  isPublic              Boolean          @default(false)
+  isActive              Boolean          @default(true)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  editFormPermissions   String?
+  reviewFormPermissions String?
+  createdBy             User?            @relation("FormCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById           String?
+  teams                 Team[]
+  submissions           FormSubmission[]
+  responsibleTeamId     String?
+  responsibleTeam       Team?            @relation(fields: [responsibleTeamId], references: [id], onDelete: SetNull, name: "ResponsibleTeam")
+  fillOutWorkflows      N8nWorkflow[]    @relation("FillOutWorkflows")
+  saveWorkflows         N8nWorkflow[]    @relation("SaveWorkflows")
+  revokeWorkflows       N8nWorkflow[]    @relation("RevokeWorkflows")
+  submitWorkflows       N8nWorkflow[]    @relation("SubmitWorkflows")
+  reviewWorkflows       N8nWorkflow[]    @relation("ReviewWorkflows")
+  reUpdateWorkflows     N8nWorkflow[]    @relation("ReUpdateWorkflows")
+  rejectWorkflows       N8nWorkflow[]    @relation("RejectWorkflows")
+  completeWorkflows     N8nWorkflow[]    @relation("CompleteWorkflows")
+  archiveWorkflows      N8nWorkflow[]    @relation("ArchiveWorkflows")
 
-    @@index([createdById])
+  @@index([createdById])
 }
 
 model FormSubmission {
-    id             String           @id @default(uuid())
-    data           Json?
-    status         SubmissionStatus @default(ongoing)
-    submittedNotes String? // Notes for when sending back for revision (shown in ongoing status)
-    reviewNotes    String? // Notes for when sending back for revision (shown in ongoing status)
-    rejectedNotes  String? // Final rejection reason (shown in rejected status)
-    completedNotes String? // Final approval notes (shown in completed status)
-    isArchived     Boolean          @default(false)
-    archivedNotes  String? // Reason why the submission was archived
-    createdAt      DateTime         @default(now())
-    updatedAt      DateTime         @updatedAt
-    completedAt    DateTime?
-    archivedAt     DateTime?
-    form           Form             @relation(fields: [formId], references: [id], onDelete: Cascade)
-    formId         String
-    submittedBy    User?            @relation(fields: [submittedById], references: [id], onDelete: Cascade)
-    submittedById  String?
+  id             String           @id @default(uuid())
+  data           Json?
+  status         SubmissionStatus @default(ongoing)
+  submittedNotes String? // Notes for when sending back for revision (shown in ongoing status)
+  reviewNotes    String? // Notes for when sending back for revision (shown in ongoing status)
+  rejectedNotes  String? // Final rejection reason (shown in rejected status)
+  completedNotes String? // Final approval notes (shown in completed status)
+  isArchived     Boolean          @default(false)
+  archivedNotes  String? // Reason why the submission was archived
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  completedAt    DateTime?
+  archivedAt     DateTime?
+  form           Form             @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId         String
+  submittedBy    User?            @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  submittedById  String?
 
-    @@index([formId])
-    @@index([submittedById])
+  @@index([formId])
+  @@index([submittedById])
 }
 
 enum SubmissionStatus {
-    ongoing // Form is being worked on (initial state)
-    submitted // User has submitted for review
-    inReview // Reviewer has started the review process
-    rejected // Final state: Reviewer rejected the submission permanently
-    completed // Final state: Reviewer approved the submission
+  ongoing // Form is being worked on (initial state)
+  submitted // User has submitted for review
+  inReview // Reviewer has started the review process
+  rejected // Final state: Reviewer rejected the submission permanently
+  completed // Final state: Reviewer approved the submission
+}
+
+model FormV2 {
+  id                String          @id @default(uuid())
+  title             String
+  description       String?
+  isPublic          Boolean         @default(false)
+  isActive          Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  createdBy         User?           @relation("FormCreatorV2", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById       String?
+  teams             Team[]
+  responsibleTeamId String?
+  responsibleTeam   Team?           @relation(fields: [responsibleTeamId], references: [id], onDelete: SetNull, name: "ResponsibleTeamV2")
+  versions          FormVersionV2[]
+
+  @@index([createdById])
+}
+
+model FormVersionV2 {
+  id                    String             @id @default(uuid())
+  version               Int
+  schema                Json?
+  theme                 Json?
+  information           Json?
+  createFormPermissions String?
+  readFormPermissions   String?
+  updateFormPermissions String?
+  deleteFormPermissions String?
+  createdAt             DateTime           @default(now())
+
+  form                  FormV2             @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId                String
+  submissions           FormSubmissionV2[]
+
+  @@unique([formId, version])
+  @@index([formId])
+}
+
+model FormSubmissionV2 {
+  id             String           @id @default(uuid())
+  data           Json?
+  status         SubmissionStatus @default(ongoing)
+  submittedNotes String? // Notes for when sending back for revision (shown in ongoing status)
+  reviewNotes    String? // Notes for when sending back for revision (shown in ongoing status)
+  rejectedNotes  String? // Final rejection reason (shown in rejected status)
+  completedNotes String? // Final approval notes (shown in completed status)
+  isArchived     Boolean          @default(false)
+  archivedNotes  String? // Reason why the submission was archived
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  completedAt    DateTime?
+  archivedAt     DateTime?
+
+  formVersion    FormVersionV2    @relation(fields: [formVersionId], references: [id], onDelete: Cascade)
+  formVersionId  String
+
+  submittedBy    User?            @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  submittedById  String?
+
+  @@index([formVersionId])
+  @@index([submittedById])
 }
