@@ -61,64 +61,80 @@ enum SubmissionStatus {
   completed // Final state: Reviewer approved the submission
 }
 
-model FormV2 {
-  id                String          @id @default(uuid())
-  title             String
-  description       String?
-  isPublic          Boolean         @default(false)
-  isActive          Boolean         @default(true)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  createdBy         User?           @relation("FormCreatorV2", fields: [createdById], references: [id], onDelete: SetNull)
-  createdById       String?
-  teams             Team[]
-  responsibleTeamId String?
-  responsibleTeam   Team?           @relation(fields: [responsibleTeamId], references: [id], onDelete: SetNull, name: "ResponsibleTeamV2")
-  versions          FormVersionV2[]
+model FormFolderV2 {
+  id        String          @id @default(uuid())
+  name      String
+  order     Int
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
-  @@index([createdById])
+  // Hierarchy (folders within folders)
+  parentId String?
+  parent   FormFolderV2?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children FormFolderV2[] @relation("FolderHierarchy")
+
+  forms FormV2[]
+
+  @@index([parentId])
 }
 
-model FormVersionV2 {
-  id                    String             @id @default(uuid())
-  version               Int
-  schema                Json?
-  theme                 Json?
-  information           Json?
+model FormV2 {
+  id                    String          @id @default(uuid())
+  title                 String
+  description           String?
+  isPublic              Boolean         @default(false)
+  isActive              Boolean         @default(true)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
   createFormPermissions String?
   readFormPermissions   String?
   updateFormPermissions String?
   deleteFormPermissions String?
-  createdAt             DateTime           @default(now())
+  createdBy             User?           @relation("FormCreatorV2", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById           String?
+  teams                 Team[]
+  responsibleTeamId     String?
+  responsibleTeam       Team?           @relation(fields: [responsibleTeamId], references: [id], onDelete: SetNull, name: "ResponsibleTeamV2")
+  versions              FormVersionV2[]
 
-  form                  FormV2             @relation(fields: [formId], references: [id], onDelete: Cascade)
-  formId                String
-  submissions           FormSubmissionV2[]
+  // Folder placement (null = root level)
+  folder   FormFolderV2? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  folderId String?
+
+  @@index([createdById])
+  @@index([folderId])
+}
+
+model FormVersionV2 {
+  id          String   @id @default(uuid())
+  version     Int
+  schema      Json?
+  theme       Json?
+  information Json?
+  createdAt   DateTime @default(now())
+
+  form        FormV2             @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId      String
+  submissions FormSubmissionV2[]
 
   @@unique([formId, version])
   @@index([formId])
 }
 
 model FormSubmissionV2 {
-  id             String           @id @default(uuid())
-  data           Json?
-  status         SubmissionStatus @default(ongoing)
-  submittedNotes String? // Notes for when sending back for revision (shown in ongoing status)
-  reviewNotes    String? // Notes for when sending back for revision (shown in ongoing status)
-  rejectedNotes  String? // Final rejection reason (shown in rejected status)
-  completedNotes String? // Final approval notes (shown in completed status)
-  isArchived     Boolean          @default(false)
-  archivedNotes  String? // Reason why the submission was archived
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  completedAt    DateTime?
-  archivedAt     DateTime?
+  id            String    @id @default(uuid())
+  data          Json?
+  isArchived    Boolean   @default(false)
+  archivedNotes String? // Reason why the submission was archived
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  archivedAt    DateTime?
 
-  formVersion    FormVersionV2    @relation(fields: [formVersionId], references: [id], onDelete: Cascade)
-  formVersionId  String
+  formVersion   FormVersionV2 @relation(fields: [formVersionId], references: [id], onDelete: Cascade)
+  formVersionId String
 
-  submittedBy    User?            @relation(fields: [submittedById], references: [id], onDelete: Cascade)
-  submittedById  String?
+  submittedBy   User?   @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  submittedById String?
 
   @@index([formVersionId])
   @@index([submittedById])
