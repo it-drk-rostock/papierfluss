@@ -90,12 +90,18 @@ model FormV2 {
   readFormPermissions   String?
   updateFormPermissions String?
   deleteFormPermissions String?
+  archiveFormPermissions String?
   createdBy             User?           @relation("FormCreatorV2", fields: [createdById], references: [id], onDelete: SetNull)
   createdById           String?
   teams                 Team[]
   responsibleTeamId     String?
   responsibleTeam       Team?           @relation(fields: [responsibleTeamId], references: [id], onDelete: SetNull, name: "ResponsibleTeamV2")
   versions              FormVersionV2[]
+  statuses              FormStatusV2[]
+  actions               FormActionV2[]
+
+  submitWorkflows       N8nWorkflowV2[] @relation("FormV2SubmitWorkflows")
+  archiveN8nWorkflows   N8nWorkflowV2[] @relation("FormV2ArchiveWorkflows")
 
   // Folder placement (null = root level)
   folder   FormFolderV2? @relation(fields: [folderId], references: [id], onDelete: SetNull)
@@ -133,8 +139,13 @@ model FormSubmissionV2 {
   formVersion   FormVersionV2 @relation(fields: [formVersionId], references: [id], onDelete: Cascade)
   formVersionId String
 
+  status   FormStatusV2? @relation(fields: [statusId], references: [id], onDelete: SetNull)
+  statusId String?
+
   submittedBy   User?   @relation(fields: [submittedById], references: [id], onDelete: Cascade)
   submittedById String?
+
+  logs          FormSubmissionLogV2[]
 
   @@index([formVersionId])
   @@index([submittedById])

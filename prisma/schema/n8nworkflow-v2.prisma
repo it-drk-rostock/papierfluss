@@ -1,0 +1,11 @@
+model N8nWorkflowV2 {
+  id         String   @id @default(uuid())
+  workflowId String   @unique
+  name       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  formActions  FormActionV2[]  @relation("FormActionWorkflowsV2")
+  submitForms  FormV2[]        @relation("FormV2SubmitWorkflows")
+  archiveForms FormV2[]        @relation("FormV2ArchiveWorkflows")
+}

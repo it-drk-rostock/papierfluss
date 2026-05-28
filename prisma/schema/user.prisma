@@ -15,6 +15,7 @@ model User {
   formSubmissions   FormSubmission[]
   formSubmissionsV2 FormSubmissionV2[]
   processRuns       ProcessRun[]
+  formSubmissionLogsV2 FormSubmissionLogV2[]
 
   @@unique([email])
   @@map("user")

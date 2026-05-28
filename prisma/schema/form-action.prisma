@@ -1,0 +1,23 @@
+model FormActionV2 {
+  id           String  @id @default(uuid())
+  label        String  // Button text shown to user
+  color        String  @default("gray") // Mantine color (e.g. gray, blue, red)
+  permissions  String? // json-logic: who can see AND trigger this action
+  schema       Json?   // Optional: form schema for data entry when triggering this action
+
+  // Optional: target status to transition to after successful execution (null = action without status change)
+  toStatus     FormStatusV2? @relation(fields: [toStatusId], references: [id], onDelete: SetNull)
+  toStatusId   String?
+
+  form         FormV2  @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId       String
+
+  n8nWorkflows N8nWorkflowV2[] @relation("FormActionWorkflowsV2")
+  submissionLogs FormSubmissionLogV2[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([formId])
+  @@index([toStatusId])
+}
