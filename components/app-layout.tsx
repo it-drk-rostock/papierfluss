@@ -32,7 +32,6 @@ import { CreateFeedbackForm } from "./create-feedback-form";
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
-  
 
   const { data, isPending } = useQuery({
     queryKey: ["workflowsAndForms"],
@@ -44,8 +43,6 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const forms = data?.forms ?? [];
   const disablePortale = !isPending && workflows.length === 0;
   const disableFormulare = !isPending && forms.length === 0;
-
-  
 
   return (
     <AppShell
@@ -108,14 +105,13 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             href="#required-for-focus"
             disabled={disablePortale}
           >
-            
-      {["admin", "moderator"].includes(session?.user.role) && (
-  <NavLink 
-    component={Link}
-    href="/workflows"
-    label="Alle Portale" 
-  />
-)}
+            {["admin", "moderator"].includes(session?.user.role) && (
+              <NavLink
+                component={Link}
+                href="/workflows"
+                label="Alle Portale"
+              />
+            )}
             {isPending ? (
               <NavLink
                 label="Portale werden geladen"
@@ -140,12 +136,8 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             disabled={disableFormulare}
           >
             {["admin", "moderator"].includes(session?.user.role) && (
-  <NavLink 
-    component={Link}
-    href="/forms"
-    label="Alle Formulare" 
-  />
-)}
+              <NavLink component={Link} href="/forms" label="Alle Formulare" />
+            )}
             {isPending ? (
               <NavLink
                 label="Formulare werden geladen"
@@ -170,6 +162,14 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               leftSection={<IconUserShield size={16} stroke={1.5} />}
             />
           )}
+          <NavLink
+            component={Link}
+            label="Formulare(V2)"
+            href="#required-for-focus"
+            leftSection={<IconClipboard size={16} stroke={1.5} />}
+          >
+            <NavLink component={Link} href="/formsv2" label="Alle Formulare" />
+          </NavLink>
         </Stack>
       </AppShell.Navbar>
       <AppShell.Main>
