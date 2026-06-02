@@ -159,7 +159,9 @@ export const WorkflowRunsTable = ({
       /* filter: <FilterTextInput field={field.fieldKey} />, */
       render: (record: Record<string, unknown>) => {
         const val = record[field.fieldKey];
-        return val !== null && val !== undefined ? formatConfiguredValue(val) : "-";
+        return val !== null && val !== undefined
+          ? formatConfiguredValue(val)
+          : "-";
       },
     })),
     {
@@ -173,12 +175,7 @@ export const WorkflowRunsTable = ({
       title: "Aktionen",
 
       render: (record) => (
-        <Menu
-          shadow="md"
-          width={200}
-          closeOnItemClick={false}
-          closeOnClickOutside={false}
-        >
+        <Menu shadow="md" width={200}>
           <Menu.Target>
             <Button variant="light">Aktionen</Button>
           </Menu.Target>
