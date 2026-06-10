@@ -10,6 +10,7 @@ import {
   Loader,
   ActionIcon,
   Button,
+  TextInput,
 } from "@mantine/core";
 
 import {
@@ -69,6 +70,9 @@ export const WorkflowInformationForm = ({
     },
   });
 
+  const [customFieldKey, setCustomFieldKey] = React.useState("");
+  const [customFieldLabel, setCustomFieldLabel] = React.useState("");
+
   // Update form when data loads
   React.useEffect(() => {
     if (
@@ -106,47 +110,22 @@ export const WorkflowInformationForm = ({
     );
   }
 
-  // Check if workflow run exists
-  const hasWorkflowRun = workflow.latestWorkflowRun !== null;
-  const latestWorkflowRun = workflow.latestWorkflowRun;
+  // Whether any completed workflow run exists to source fields from
+  const hasWorkflowRun = workflow.hasWorkflowRun;
 
-  // Get all available field keys from workflow run data
-  const getAllAvailableFields = () => {
-    const allFields: Array<{
-      value: string;
-      label: string;
-      processName: string;
-    }> = [];
-
-    if (!latestWorkflowRun) {
-      return allFields;
-    }
-
-    latestWorkflowRun.processes.forEach((processRun: any) => {
-      console.log("Processing run:", processRun);
-      if (processRun.data && typeof processRun.data === "object") {
-        const data = processRun.data as Record<string, unknown>;
-
-        Object.keys(data).forEach((key) => {
-          allFields.push({
-            value: key,
-            label: key,
-            processName: processRun.process.name,
-          });
-        });
-      } else {
-        console.log("No data or invalid data for process run:", processRun);
-      }
-    });
-
-    return allFields;
-  };
-
-  const availableFields = getAllAvailableFields();
-  const connectedFieldKeys = form.values.fields.map((f: any) => f.fieldKey);
+  // Deduplicated fields aggregated server-side across the last 10 runs
+  const availableFields = workflow.availableFields;
+  const connectedFieldKeys = form.values.fields.map((f) => f.fieldKey);
   const filteredAvailableFields = availableFields.filter(
-    (f: any) => !connectedFieldKeys.includes(f.value)
+    (f) => !connectedFieldKeys.includes(f.value)
   );
+
+  const addField = (label: string, fieldKey: string) => {
+    if (connectedFieldKeys.includes(fieldKey)) {
+      return;
+    }
+    form.insertListItem("fields", { label, fieldKey });
+  };
 
   const handleSave = () => {
     executeUpdate(form.values);
@@ -170,115 +149,153 @@ export const WorkflowInformationForm = ({
             Workflow-Ausführung angezeigt werden sollen.
           </Text>
 
-          {!hasWorkflowRun ? (
-            <Paper withBorder p="md">
-              <EmptyState text="Keine Workflow-Ausführung verfügbar"></EmptyState>
-            </Paper>
-          ) : (
-            <>
-              {/* Available Fields Section */}
-              <Paper withBorder p="md">
-                <Stack gap="sm">
-                  <Title order={4}>Verfügbare Felder</Title>
-                  {filteredAvailableFields.length === 0 ? (
-                    <EmptyState text="Keine Felder verfügbar" />
-                  ) : (
-                    filteredAvailableFields.map((field: any) => (
-                      <Group key={field.value} justify="space-between">
-                        <Stack gap="xs">
-                          <Text fw={500}>Feld: {field.value}</Text>
-                          <Text size="xs" c="dimmed">
-                            Prozess: {field.processName}
-                          </Text>
-                        </Stack>
-                        <ActionIcon
-                          variant="light"
-                          onClick={() =>
-                            form.insertListItem("fields", {
-                              label: field.label,
-                              fieldKey: field.value,
-                            })
-                          }
-                        >
-                          <IconPlus style={baseIconStyles} />
-                        </ActionIcon>
-                      </Group>
-                    ))
-                  )}
-                </Stack>
-              </Paper>
+          {/* Available Fields Section */}
+          <Paper withBorder p="md">
+            <Stack gap="sm">
+              <Title order={4}>Verfügbare Felder</Title>
+              <Text size="xs" c="dimmed">
+                Felder aus den letzten 10 abgeschlossenen Ausführungen
+                (Duplikate entfernt).
+              </Text>
+              {!hasWorkflowRun ? (
+                <EmptyState text="Keine Workflow-Ausführung verfügbar" />
+              ) : filteredAvailableFields.length === 0 ? (
+                <EmptyState text="Keine Felder verfügbar" />
+              ) : (
+                filteredAvailableFields.map((field) => (
+                  <Group key={field.value} justify="space-between">
+                    <Stack gap="xs">
+                      <Text fw={500}>Feld: {field.value}</Text>
+                      <Text size="xs" c="dimmed">
+                        Prozess: {field.processName}
+                      </Text>
+                    </Stack>
+                    <ActionIcon
+                      variant="light"
+                      onClick={() => addField(field.label, field.value)}
+                    >
+                      <IconPlus style={baseIconStyles} />
+                    </ActionIcon>
+                  </Group>
+                ))
+              )}
+            </Stack>
+          </Paper>
 
-              {/* Connected Fields Section */}
-              <Paper withBorder p="md">
-                <Stack gap="sm">
-                  <Title order={4}>Verbundene Felder</Title>
-                  {form.values.fields.length === 0 ? (
-                    <EmptyState text="Keine Felder verbunden" />
-                  ) : (
-                    <>
-                      {form.values.fields.map((field: any, index: number) => {
-                        const fieldInfo = availableFields.find(
-                          (f: any) => f.value === field.fieldKey
-                        );
+          {/* Custom Field Section */}
+          <Paper withBorder p="md">
+            <Stack gap="sm">
+              <Title order={4}>Eigenes Feld hinzufügen</Title>
+              <Text size="xs" c="dimmed">
+                Felder, die noch in keiner Ausführung vorkommen (z. B. nach
+                einem Schema-Update), können hier manuell hinzugefügt werden.
+              </Text>
+              <Group align="flex-end" gap="sm">
+                <TextInput
+                  label="Feldschlüssel"
+                  placeholder="z. B. customerName"
+                  value={customFieldKey}
+                  onChange={(e) => setCustomFieldKey(e.currentTarget.value)}
+                  style={{ flex: 1 }}
+                />
+                <TextInput
+                  label="Bezeichnung"
+                  placeholder="z. B. Kundenname"
+                  value={customFieldLabel}
+                  onChange={(e) => setCustomFieldLabel(e.currentTarget.value)}
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  leftSection={<IconPlus style={baseIconStyles} />}
+                  disabled={
+                    customFieldKey.trim().length === 0 ||
+                    connectedFieldKeys.includes(customFieldKey.trim())
+                  }
+                  onClick={() => {
+                    const key = customFieldKey.trim();
+                    const label = customFieldLabel.trim() || key;
+                    addField(label, key);
+                    setCustomFieldKey("");
+                    setCustomFieldLabel("");
+                  }}
+                >
+                  Hinzufügen
+                </Button>
+              </Group>
+            </Stack>
+          </Paper>
 
-                        return (
-                          <Paper key={index} p="sm" withBorder>
-                            <Group justify="space-between">
-                              <Stack gap="xs">
-                                <Text fw={500}>Feld: {field.fieldKey}</Text>
-                                {fieldInfo && (
-                                  <Text size="xs" c="dimmed">
-                                    Prozess: {fieldInfo.processName}
-                                  </Text>
-                                )}
-                              </Stack>
-                              <Group gap="xs">
-                                <ActionIcon
-                                  variant="light"
-                                  disabled={index === 0}
-                                  onClick={() =>
-                                    form.reorderListItem("fields", {
-                                      from: index,
-                                      to: index - 1,
-                                    })
-                                  }
-                                >
-                                  <IconArrowUp style={baseIconStyles} />
-                                </ActionIcon>
-                                <ActionIcon
-                                  variant="light"
-                                  disabled={
-                                    index === form.values.fields.length - 1
-                                  }
-                                  onClick={() =>
-                                    form.reorderListItem("fields", {
-                                      from: index,
-                                      to: index + 1,
-                                    })
-                                  }
-                                >
-                                  <IconArrowDown style={baseIconStyles} />
-                                </ActionIcon>
-                                <ActionIcon
-                                  variant="light"
-                                  color="red"
-                                  onClick={() =>
-                                    form.removeListItem("fields", index)
-                                  }
-                                >
-                                  <IconTrash style={baseIconStyles} />
-                                </ActionIcon>
-                              </Group>
-                            </Group>
-                          </Paper>
-                        );
-                      })}
-                    </>
-                  )}
-                </Stack>
-              </Paper>
-            </>
-          )}
+          {/* Connected Fields Section */}
+          <Paper withBorder p="md">
+            <Stack gap="sm">
+              <Title order={4}>Verbundene Felder</Title>
+              {form.values.fields.length === 0 ? (
+                <EmptyState text="Keine Felder verbunden" />
+              ) : (
+                <>
+                  {form.values.fields.map((field, index) => {
+                    const fieldInfo = availableFields.find(
+                      (f) => f.value === field.fieldKey
+                    );
+
+                    return (
+                      <Paper key={index} p="sm" withBorder>
+                        <Group justify="space-between">
+                          <Stack gap="xs">
+                            <Text fw={500}>Feld: {field.fieldKey}</Text>
+                            {fieldInfo ? (
+                              <Text size="xs" c="dimmed">
+                                Prozess: {fieldInfo.processName}
+                              </Text>
+                            ) : (
+                              <Text size="xs" c="dimmed">
+                                Eigenes Feld
+                              </Text>
+                            )}
+                          </Stack>
+                          <Group gap="xs">
+                            <ActionIcon
+                              variant="light"
+                              disabled={index === 0}
+                              onClick={() =>
+                                form.reorderListItem("fields", {
+                                  from: index,
+                                  to: index - 1,
+                                })
+                              }
+                            >
+                              <IconArrowUp style={baseIconStyles} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="light"
+                              disabled={index === form.values.fields.length - 1}
+                              onClick={() =>
+                                form.reorderListItem("fields", {
+                                  from: index,
+                                  to: index + 1,
+                                })
+                              }
+                            >
+                              <IconArrowDown style={baseIconStyles} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="light"
+                              color="red"
+                              onClick={() =>
+                                form.removeListItem("fields", index)
+                              }
+                            >
+                              <IconTrash style={baseIconStyles} />
+                            </ActionIcon>
+                          </Group>
+                        </Group>
+                      </Paper>
+                    );
+                  })}
+                </>
+              )}
+            </Stack>
+          </Paper>
           <Button
             fullWidth
             onClick={handleSave}

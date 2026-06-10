@@ -7,6 +7,7 @@ export default function Analytics() {
   useEffect(() => {
     Swetrix.init(process.env.NEXT_PUBLIC_SWETRIX_PID!, {
       apiURL: process.env.NEXT_PUBLIC_SWETRIX_API_URL,
+      disabled: process.env.NODE_ENV === "development",
     });
     Swetrix.trackViews();
     Swetrix.trackErrors();
