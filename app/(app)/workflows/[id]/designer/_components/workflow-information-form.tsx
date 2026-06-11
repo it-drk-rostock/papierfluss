@@ -11,6 +11,7 @@ import {
   ActionIcon,
   Button,
   TextInput,
+  ColorInput,
 } from "@mantine/core";
 
 import {
@@ -37,6 +38,7 @@ type WorkflowInformationFormValues = {
   fields: Array<{
     label: string;
     fieldKey: string;
+    color?: string;
   }>;
 };
 
@@ -82,7 +84,7 @@ export const WorkflowInformationForm = ({
       "fields" in workflow.information
     ) {
       const info = workflow.information as {
-        fields: Array<{ label: string; fieldKey: string }>;
+        fields: Array<{ label: string; fieldKey: string; color?: string }>;
       };
       form.setValues({
         id: workflowId,
@@ -124,7 +126,7 @@ export const WorkflowInformationForm = ({
     if (connectedFieldKeys.includes(fieldKey)) {
       return;
     }
-    form.insertListItem("fields", { label, fieldKey });
+    form.insertListItem("fields", { label, fieldKey, color: "" });
   };
 
   const handleSave = () => {
@@ -240,8 +242,8 @@ export const WorkflowInformationForm = ({
 
                     return (
                       <Paper key={index} p="sm" withBorder>
-                        <Group justify="space-between">
-                          <Stack gap="xs">
+                        <Group justify="space-between" align="flex-start">
+                          <Stack gap="xs" style={{ flex: 1 }}>
                             <Text fw={500}>Feld: {field.fieldKey}</Text>
                             {fieldInfo ? (
                               <Text size="xs" c="dimmed">
@@ -252,6 +254,18 @@ export const WorkflowInformationForm = ({
                                 Eigenes Feld
                               </Text>
                             )}
+                            <ColorInput
+                              label="Farbe"
+                              placeholder="Keine Farbe"
+                              format="hex"
+                              maw={220}
+                             
+                              popoverProps={{
+                                withinPortal: false,
+                                
+                              }}
+                              {...form.getInputProps(`fields.${index}.color`)}
+                            />
                           </Stack>
                           <Group gap="xs">
                             <ActionIcon

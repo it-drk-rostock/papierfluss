@@ -7,6 +7,7 @@ export const workflowInformationSchema = z.object({
     z.object({
       label: z.string().min(1),
       fieldKey: z.string().min(1),
+      color: z.string().optional(),
     })
   ),
 });

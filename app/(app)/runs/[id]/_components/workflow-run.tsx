@@ -47,6 +47,7 @@ export const WorkflowRun = async ({
       fields: Array<{
         label: string;
         fieldKey: string;
+        color?: string;
         data: { value: unknown; processName: string } | null;
       }>;
     };
@@ -184,14 +185,23 @@ export const WorkflowRun = async ({
                 {configuredFields.length > 0 && (
                   <>
                     <Divider />
-                    {configuredFields.map((field, index) => (
-                      <Text key={index}>
-                        {field.label}:{" "}
-                        {field.data
-                          ? formatConfiguredValue(field.data.value)
-                          : "Keine Daten verfügbar"}
-                      </Text>
-                    ))}
+                    <Stack gap="0">
+                      {configuredFields.map((field, index) => (
+                        <Paper
+                          key={index}
+                          p="xs"
+                          radius="sm"
+                          bg={field.color || undefined}
+                        >
+                          <Text>
+                            {field.label}:{" "}
+                            {field.data
+                              ? formatConfiguredValue(field.data.value)
+                              : "Keine Daten verfügbar"}
+                          </Text>
+                        </Paper>
+                      ))}
+                    </Stack>
                   </>
                 )}
               </Stack>
