@@ -186,21 +186,22 @@ export const WorkflowRun = async ({
                   <>
                     <Divider />
                     <Stack gap="0">
-                      {configuredFields.map((field, index) => (
-                        <Paper
-                          key={index}
-                          p="xs"
-                          radius="sm"
-                          bg={field.color || undefined}
-                        >
-                          <Text>
-                            {field.label}:{" "}
-                            {field.data
-                              ? formatConfiguredValue(field.data.value)
-                              : "Keine Daten verfügbar"}
-                          </Text>
-                        </Paper>
-                      ))}
+                      {configuredFields
+                        .filter((field) => field.data)
+                        .map((field, index) => (
+                          <Paper
+                            key={index}
+                            p="xs"
+                            radius="sm"
+                            bg={field.color || undefined}
+                            mb={field.color ? "xs" : undefined}
+                          >
+                            <Text c={field.color ? "white" : undefined}>
+                              {field.label}:{" "}
+                              {formatConfiguredValue(field.data!.value)}
+                            </Text>
+                          </Paper>
+                        ))}
                     </Stack>
                   </>
                 )}

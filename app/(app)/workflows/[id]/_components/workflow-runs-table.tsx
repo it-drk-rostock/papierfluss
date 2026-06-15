@@ -127,6 +127,16 @@ export const WorkflowRunsTable = ({
     };
   });
 
+  // Only keep dynamic fields that have at least one value across all runs,
+  // so columns that would be entirely empty are hidden.
+  const visibleFields = configuredFields.filter((field) =>
+    transformedRuns.some(
+      (run) =>
+        (run as Record<string, unknown>)[field.fieldKey] !== null &&
+        (run as Record<string, unknown>)[field.fieldKey] !== undefined,
+    ),
+  );
+
   const formatConfiguredValue = (value: unknown): React.ReactNode => {
     if (value instanceof Date) {
       return value.toLocaleDateString("de-DE");
@@ -153,7 +163,7 @@ export const WorkflowRunsTable = ({
   // Build columns dynamically
   const columns: DataTableColumn<(typeof transformedRuns)[0]>[] = [
     // Add dynamic information field columns
-    ...configuredFields.map((field) => ({
+    ...visibleFields.map((field) => ({
       accessor: field.fieldKey,
       title: field.fieldKey,
       /* filter: <FilterTextInput field={field.fieldKey} />, */
