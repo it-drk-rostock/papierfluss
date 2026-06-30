@@ -42,7 +42,7 @@ export default function Page() {
                 }}
               >
                 <source
-                  src="https://seaweedfs.drk-rostock.de/media/FMS_Übersicht_converted.mp4"
+                  src="https://storage.drk-rostock.de/media/FMS_Übersicht_converted.mp4"
                   type="video/mp4"
                 />
                 Your browser does not support the video tag.
@@ -64,7 +64,7 @@ export default function Page() {
                 }}
               >
                 <source
-                  src="https://seaweedfs.drk-rostock.de/media/FMS_Portal_Übersicht_converted.mp4"
+                  src="https://storage.drk-rostock.de/media/FMS_Portal_Übersicht_converted.mp4"
                   type="video/mp4"
                 />
                 Your browser does not support the video tag.
@@ -88,7 +88,7 @@ export default function Page() {
                 }}
               >
                 <source
-                  src="https://seaweedfs.drk-rostock.de/media/FMS_Formular_Übersicht_converted.mp4"
+                  src="https://storage.drk-rostock.de/media/FMS_Formular_Übersicht_converted.mp4"
                   type="video/mp4"
                 />
                 Your browser does not support the video tag.

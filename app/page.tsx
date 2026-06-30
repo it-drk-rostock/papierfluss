@@ -23,7 +23,7 @@ export default function Home() {
               }}
             >
               <source
-                src="https://seaweedfs.drk-rostock.de/media/anmeldung_fms.mp4"
+                src="https://storage.drk-rostock.de/media/anmeldung_fms.mp4"
                 type="video/mp4"
               />
               Your browser does not support the video tag.
