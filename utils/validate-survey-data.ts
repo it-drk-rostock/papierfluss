@@ -1,5 +1,36 @@
 import { Model as SurveyModel } from "survey-core";
 
+/**
+ * Recursively walks a survey schema (or any nested JSON) and collects every
+ * dynamic variable name referenced via {curly-brace} tokens. These tokens are
+ * used by SurveyJS in `html`, `visibleIf`, `enableIf`, `expression`, etc. to
+ * pull in values that are stored in the run data but are NOT backed by an
+ * answerable question. We treat them as valid data keys so strict validation
+ * doesn't reject them.
+ */
+function collectVariableReferences(node: unknown): Set<string> {
+  const names = new Set<string>();
+
+  const visit = (value: unknown) => {
+    if (typeof value === "string") {
+      const matches = value.matchAll(/\{([^}]+)\}/g);
+      for (const match of matches) {
+        // Take the base name before any property/array access, e.g.
+        // "{item.link}" -> "item", "{files[0]}" -> "files".
+        const base = match[1].trim().split(/[.[]/)[0].trim();
+        if (base) names.add(base);
+      }
+    } else if (Array.isArray(value)) {
+      value.forEach(visit);
+    } else if (value && typeof value === "object") {
+      Object.values(value as Record<string, unknown>).forEach(visit);
+    }
+  };
+
+  visit(node);
+  return names;
+}
+
 export async function validateSurveyData(
   schema: any,
   data: any,
@@ -148,6 +179,25 @@ export async function validateSurveyData(
     } catch (error) {
       // If we can't get questions, log but continue
       console.warn("Could not get survey questions:", error);
+    }
+
+    // Allow dynamic variables: any {token} referenced anywhere in the schema
+    // (e.g. html "{Some_Link}" or visibleIf "{Some_Link} notempty") lives in the
+    // run data as a value even though it isn't an answerable question.
+    collectVariableReferences(schema).forEach((name) => allowedKeys.add(name));
+
+    // Allow explicit SurveyJS variables and calculated values.
+    try {
+      (survey as any).getVariableNames?.().forEach((name: string) => {
+        if (name) allowedKeys.add(name);
+      });
+    } catch {
+      // Ignore - getVariableNames may not exist in all versions
+    }
+    if (Array.isArray((schema as any)?.calculatedValues)) {
+      (schema as any).calculatedValues.forEach((cv: any) => {
+        if (cv?.name) allowedKeys.add(cv.name);
+      });
     }
 
     // Clean data - only keep keys that exist in the schema
