@@ -193,12 +193,13 @@ export const WorkflowPreview = ({
       return [];
 
     const info = workflow.information as {
-      fields: Array<{ label: string; fieldKey: string }>;
+      fields: Array<{ label: string; fieldKey: string; color?: string }>;
     };
 
     return info.fields.map((field) => {
       return {
         fieldKey: field.fieldKey,
+        color: field.color,
       };
     });
   }, [workflow]);
@@ -289,19 +290,28 @@ export const WorkflowPreview = ({
           <Paper withBorder p="md">
             <Stack>
               <Title order={3}>Informationen</Title>
-              <Stack gap="md">
+              <Stack gap="0">
                 {dynamicInformation.length === 0 ? (
                   <Text c="dimmed" ta="center" py="xl">
                     Keine Informationen konfiguriert
                   </Text>
                 ) : (
                   dynamicInformation.map(
-                    (info: { fieldKey: string }, index: number) => (
-                      <Stack key={index} gap="xs">
+                    (
+                      info: { fieldKey: string; color?: string },
+                      index: number,
+                    ) => (
+                      <Paper
+                        key={index}
+                        p="xs"
+                        radius="sm"
+                        
+                        bg={info.color || undefined}
+                      >
                         <Text size="sm" fw={500}>
                           {info.fieldKey}
                         </Text>
-                      </Stack>
+                      </Paper>
                     ),
                   )
                 )}

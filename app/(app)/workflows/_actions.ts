@@ -16,7 +16,7 @@ import { idSchema } from "@/schemas/id-schema";
 import jsonLogic from "json-logic-js";
 import { onError, onSuccess, os } from "@orpc/server";
 import { authorized } from "@/lib/orpc/middleware";
-import * as Sentry from "@sentry/nextjs";
+
 
 export const getWorkflowProcesses = async (id: string, search?: string) => {
   const { user } = await authQuery();
@@ -660,10 +660,14 @@ export const getWorkflowInformation = async (workflowId: string) => {
     throw new Error("Workflow not found");
   }
 
-  // Get the latest workflow run with process runs
-  const latestWorkflowRun = await prisma.workflowRun.findFirst({
+  // Get the last 10 completed workflow runs with their process runs.
+  // Aggregating across multiple runs ensures fields that were missing in the
+  // most recent run (e.g. added by a later schema update, or absent because a
+  // process was skipped) are still surfaced as available fields.
+  const recentWorkflowRuns = await prisma.workflowRun.findMany({
     where: { workflowId, status: "completed" },
     orderBy: { startedAt: "desc" },
+    take: 10,
     select: {
       id: true,
       processes: {
@@ -681,9 +685,36 @@ export const getWorkflowInformation = async (workflowId: string) => {
     },
   });
 
+  // Build a deduplicated list of available fields across all collected runs.
+  // The first occurrence of a field key wins (keeps its originating process).
+  const availableFieldsMap = new Map<
+    string,
+    { value: string; label: string; processName: string }
+  >();
+
+  for (const run of recentWorkflowRuns) {
+    for (const processRun of run.processes) {
+      if (processRun.data && typeof processRun.data === "object") {
+        const data = processRun.data as Record<string, unknown>;
+        for (const key of Object.keys(data)) {
+          if (!availableFieldsMap.has(key)) {
+            availableFieldsMap.set(key, {
+              value: key,
+              label: key,
+              processName: processRun.process.name,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  const availableFields = Array.from(availableFieldsMap.values());
+
   return {
     ...workflow,
-    latestWorkflowRun,
+    hasWorkflowRun: recentWorkflowRuns.length > 0,
+    availableFields,
   };
 };
 

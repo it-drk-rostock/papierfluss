@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button, Menu } from "@mantine/core";
+import { Button, Menu, Anchor } from "@mantine/core";
 import { WorkflowStatusBadge } from "@/components/workflow-status-badge";
 import { WorkflowStatus, ProcessStatus } from "@/generated/prisma/browser";
 import { MenuItemLink } from "@/components/link-menu-item";
@@ -127,15 +127,52 @@ export const WorkflowRunsTable = ({
     };
   });
 
+  // Only keep dynamic fields that have at least one value across all runs,
+  // so columns that would be entirely empty are hidden.
+  const visibleFields = configuredFields.filter((field) =>
+    transformedRuns.some(
+      (run) =>
+        (run as Record<string, unknown>)[field.fieldKey] !== null &&
+        (run as Record<string, unknown>)[field.fieldKey] !== undefined,
+    ),
+  );
+
+  const formatConfiguredValue = (value: unknown): React.ReactNode => {
+    if (value instanceof Date) {
+      return value.toLocaleDateString("de-DE");
+    }
+    if (typeof value === "string") {
+      // Try to parse date-like strings
+      const parsed = new Date(value);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString("de-DE");
+      }
+      // Render HTTPS links as downloadable anchors
+      if (value.startsWith("https://")) {
+        return (
+          <Anchor href={value} target="_blank" rel="noopener noreferrer">
+            Download
+          </Anchor>
+        );
+      }
+      return value;
+    }
+    return String(value);
+  };
+
   // Build columns dynamically
   const columns: DataTableColumn<(typeof transformedRuns)[0]>[] = [
     // Add dynamic information field columns
-    ...configuredFields.map((field) => ({
+    ...visibleFields.map((field) => ({
       accessor: field.fieldKey,
       title: field.fieldKey,
       /* filter: <FilterTextInput field={field.fieldKey} />, */
-      render: (record: Record<string, unknown>) =>
-        String(record[field.fieldKey] || "-"),
+      render: (record: Record<string, unknown>) => {
+        const val = record[field.fieldKey];
+        return val !== null && val !== undefined
+          ? formatConfiguredValue(val)
+          : "-";
+      },
     })),
     {
       accessor: "status",
@@ -148,12 +185,7 @@ export const WorkflowRunsTable = ({
       title: "Aktionen",
 
       render: (record) => (
-        <Menu
-          shadow="md"
-          width={200}
-          closeOnItemClick={false}
-          closeOnClickOutside={false}
-        >
+        <Menu shadow="md" width={200}>
           <Menu.Target>
             <Button variant="light">Aktionen</Button>
           </Menu.Target>

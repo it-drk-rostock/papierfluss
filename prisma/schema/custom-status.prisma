@@ -1,0 +1,49 @@
+// Custom status definitions for FormV2
+// Replaces the hardcoded SubmissionStatus enum with user-defined workflows
+
+model FormStatusV2 {
+  id        String  @id @default(uuid())
+  name      String // Internal key (e.g. "ongoing", "in_review")
+  label     String // Display label (e.g. "In Bearbeitung")
+  color     String  @default("gray") // Mantine color
+  order     Int // Display ordering
+  isInitial Boolean @default(false) // Only one per form — new submissions start here
+  isFinal   Boolean @default(false) // Terminal state — no outgoing transitions
+
+  form   FormV2 @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId String
+
+  // Transitions FROM this status
+  outgoingTransitions FormStatusTransitionV2[] @relation("TransitionFrom")
+  // Transitions TO this status
+  incomingTransitions FormStatusTransitionV2[] @relation("TransitionTo")
+
+  // Submissions currently in this status
+  submissions FormSubmissionV2[]
+
+  // Custom actions transitioning TO this status
+  targetActions FormActionV2[]
+
+  @@unique([formId, name]) // Status names are unique within a form
+  @@index([formId])
+}
+
+// A valid transition between two statuses
+model FormStatusTransitionV2 {
+  id          String  @id @default(uuid())
+  permissions String? // json-logic rules (same format as reviewFormPermissions)
+  label       String? // Optional button label override (e.g. "Genehmigen" instead of just target status name)
+
+  fromStatus   FormStatusV2 @relation("TransitionFrom", fields: [fromStatusId], references: [id], onDelete: Cascade)
+  fromStatusId String
+  toStatus     FormStatusV2 @relation("TransitionTo", fields: [toStatusId], references: [id], onDelete: Cascade)
+  toStatusId   String
+
+  @@unique([fromStatusId, toStatusId]) // Only one transition per direction
+  @@index([fromStatusId])
+  @@index([toStatusId])
+}
+
+
+
+

@@ -1,0 +1,20 @@
+model FormSubmissionLogV2 {
+  id           String           @id @default(uuid())
+  actionType   String           // 'SAVE', 'ARCHIVE', 'TRIGGER_ACTION'
+  details      Json?            // For 'SAVE' stores diffs: { field: { old, new } }. For others: metadata, notes, webhook payloads
+  createdAt    DateTime         @default(now())
+
+  // Relations
+  submission   FormSubmissionV2 @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submissionId String
+
+  actor        User?            @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorId      String?
+
+  formAction   FormActionV2?    @relation(fields: [formActionId], references: [id], onDelete: SetNull)
+  formActionId String?
+
+  @@index([submissionId])
+  @@index([actorId])
+  @@index([formActionId])
+}

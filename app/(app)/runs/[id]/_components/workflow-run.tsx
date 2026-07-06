@@ -47,6 +47,7 @@ export const WorkflowRun = async ({
       fields: Array<{
         label: string;
         fieldKey: string;
+        color?: string;
         data: { value: unknown; processName: string } | null;
       }>;
     };
@@ -56,13 +57,13 @@ export const WorkflowRun = async ({
 
   const formatConfiguredValue = (value: unknown): React.ReactNode => {
     if (value instanceof Date) {
-      return value.toLocaleDateString();
+      return value.toLocaleDateString("de-DE");
     }
     if (typeof value === "string") {
       // Try to parse date-like strings
       const parsed = new Date(value);
       if (!Number.isNaN(parsed.getTime())) {
-        return parsed.toLocaleDateString();
+        return parsed.toLocaleDateString("de-DE");
       }
       // Render HTTPS links as downloadable anchors
       if (value.startsWith("https://")) {
@@ -173,25 +174,35 @@ export const WorkflowRun = async ({
                   )}
                 </Group>
                 <Text>
-                  Gestartet am: {workflowRun.startedAt.toLocaleDateString()}
+                  Gestartet am: {workflowRun.startedAt.toLocaleDateString("de-DE")}
                 </Text>
                 <Text>
                   Abgeschlossen am:{" "}
-                  {workflowRun.completedAt?.toLocaleDateString()}
+                  {workflowRun.completedAt?.toLocaleDateString("de-DE")}
                 </Text>
 
                 {/* Dynamic Information Fields */}
                 {configuredFields.length > 0 && (
                   <>
                     <Divider />
-                    {configuredFields.map((field, index) => (
-                      <Text key={index}>
-                        {field.label}:{" "}
-                        {field.data
-                          ? formatConfiguredValue(field.data.value)
-                          : "Keine Daten verfügbar"}
-                      </Text>
-                    ))}
+                    <Stack gap="0">
+                      {configuredFields
+                        .filter((field) => field.data)
+                        .map((field, index) => (
+                          <Paper
+                            key={index}
+                            p="xs"
+                            radius="sm"
+                            bg={field.color || undefined}
+                            mb={field.color ? "xs" : undefined}
+                          >
+                            <Text c={field.color ? "white" : undefined}>
+                              {field.label}:{" "}
+                              {formatConfiguredValue(field.data!.value)}
+                            </Text>
+                          </Paper>
+                        ))}
+                    </Stack>
                   </>
                 )}
               </Stack>
