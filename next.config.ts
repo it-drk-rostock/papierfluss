@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true,
+    tsconfigPath: 'tsconfig.json',
   },
   logging: {
     fetches: {
@@ -16,5 +17,7 @@ const nextConfig: NextConfig = {
     },
   },
 };
+
+export default nextConfig;
 
 
