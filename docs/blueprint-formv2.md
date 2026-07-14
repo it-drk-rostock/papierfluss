@@ -8,6 +8,14 @@ This document provides a conceptual architecture blueprint for the development o
 
 Forms V2 is a digital forms and automation system. It bridges the gap between client-side rich form builders (SurveyJS) and backend automation engines (n8n), unified by a database schema managing granular access rules.
 
+### The Core Paradigm: Digital "Paper Route"
+The end goal of Forms V2 is to act like a highly dynamic, collaborative digital document—capable of acting like anything from a structured PDF form to a flexible Excel sheet. 
+
+Think of it as a digital version of a physical paper form that circulates through a department or organization where everyone fills out their respective parts. As the document moves through its lifecycle, the platform enforces:
+*   **Protected Fields**: Restricting who can modify or view specific questions/fields based on user identity, role, or the current state.
+*   **Protected Actions & Custom Workflows**: Ensuring only authorized individuals can trigger actions (such as approvals, rejections, or external integrations) at specific stages.
+*   **Custom Statuses & State Transitions**: Guiding the form step-by-step through its custom-defined process.
+
 ### Core Goals:
 1.  **Dynamic Form Layouts**: Enable administrators to build custom forms on the fly using SurveyJS Creator, storing schemas in a versioned format.
 2.  **Field-Level Protection**: Prevent unauthorized users from modifying specific fields (e.g., signature or internal approvals) both on the client (visual locking) and the server (data validation checks).

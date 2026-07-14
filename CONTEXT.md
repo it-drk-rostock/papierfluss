@@ -1,27 +1,33 @@
-# Papierfluss
+# Forms V2
 
-A document management and digital forms workflow application designed for secure, permissioned business process automation.
+A digital forms and automation system that mimics a circulating physical paper sheet (a "paper route") moving through an organization, supporting protected fields, custom workflows, and status transitions.
 
 ## Language
 
-**Field-Level Protection**:
-Enforcement of edit restrictions on specific questions/fields in a form. Protected fields are rendered as read-only on the frontend and validated on the backend.
+**Form**:
+A high-level configuration defining the layout, access rules, status lifecycles, and automation workflows for a type of document.
+_Avoid_: Questionnaire, survey template
 
-**editPermissions**:
-A custom SurveyJS Question property containing a stringified JsonLogic rule that determines if the current user is authorized to edit the field.
+**Form Version**:
+An immutable, versioned snapshot of a Form's schema (SurveyJS layout) and metadata configuration.
+_Avoid_: Form snapshot
 
-**Data Comparison Check**:
-The server-side validation process that compares the saved database state (`oldData`) against the incoming request payload (`newData`) for all fields where the user lacks `editPermissions`, ensuring no unauthorized modifications occurred.
+**Form Submission**:
+A filled-out instance of a Form Version containing the response data, its current status, and history.
+_Avoid_: Response, record, entry
 
-**FormSubmissionLogV2**:
-The database model that represents a single audit trail entry for a versioned form submission (`FormSubmissionV2`).
+**Form Status**:
+A configured state in the lifecycle of a Form Submission representing a station in its paper route (e.g., "Draft", "In Review", "Approved").
+_Avoid_: State, stage
 
-**Audit Trail (V2)**:
-The chronological log system that records historical events—specifically archiving, saving (with field-level diffs), and triggering custom actions—on a versioned form submission.
+**Form Status Transition**:
+A direct path connecting two Form Statuses, allowing the submission to advance or roll back, guarded by logic rules.
+_Avoid_: Status change
 
-## Example Dialogue
+**Form Action**:
+An interactive button on a Form Submission that can collect additional input (via a schema), run an automation workflow (n8n), and optionally transition the status.
+_Avoid_: Webhook trigger, button
 
-**Developer**: I want to make sure the controlling department can't edit the CEO's release signature field on this form.
-**Domain Expert**: We can use **Field-Level Protection** for that! Just add the **editPermissions** rule on the signature field in the form editor to only allow the CEO role.
-**Developer**: Got it. And on the backend, when saving the form submission, the server will run the **Data Comparison Check** using the database's `oldData` to make sure the controller didn't modify that field, even if they bypass the UI lock.
-**Developer**: Also, we need an **Audit Trail (V2)** to trace who made changes. Each save, archive, or custom action trigger will create a **FormSubmissionLogV2** entry, storing key changes and action metadata.
+**Protected Field**:
+A field/question in a Form Version whose edit rights are restricted by a logic rule (evaluated on both client and server).
+_Avoid_: Locked field, read-only question
