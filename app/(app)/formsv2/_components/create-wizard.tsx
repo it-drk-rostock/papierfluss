@@ -18,7 +18,8 @@ import {
   MultiSelect,
   Grid,
   ThemeIcon,
-  List
+  List,
+  Anchor
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { 
@@ -128,8 +129,28 @@ export const CreateWizard = () => {
   };
 
   return (
-    <Card withBorder padding="xl" radius="md" style={{ boxShadow: "var(--mantine-shadow-md)" }}>
-      <Stepper active={activeStep} onStepClick={setActiveStep} breakpoint="sm" color="red">
+    <Stack gap="lg">
+      {/* Back navigation */}
+      <Group>
+        <Anchor component={Link} href="/formsv2" size="sm" c="red" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <IconArrowLeft size={16} />
+          Zurück zur Formularübersicht
+        </Anchor>
+      </Group>
+
+      {/* Header Title Section */}
+      <div>
+        <Title order={1} size="h2" style={{ fontWeight: 800 }} mb="xs">
+          Neues Formular anlegen (V2 Wizard)
+        </Title>
+        <Text size="sm" c="dimmed">
+          Konfigurieren Sie Ihr Formular Schritt für Schritt. Alle Änderungen werden bei Abschluss 
+          gesichert.
+        </Text>
+      </div>
+
+      <Card withBorder padding="xl" radius="md" style={{ boxShadow: "var(--mantine-shadow-md)" }}>
+      <Stepper active={activeStep} onStepClick={setActiveStep}  color="red">
         {/* Step 1: Base Config */}
         <Stepper.Step 
           label="1. Basis-Konfiguration" 
@@ -454,5 +475,6 @@ export const CreateWizard = () => {
         )}
       </Group>
     </Card>
+    </Stack>
   );
 };
