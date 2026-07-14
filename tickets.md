@@ -13,9 +13,9 @@ Configure a lightweight, fast unit and integration testing suite in the reposito
 
 **Blocked by:** None — can start immediately.
 
-- [ ] Install `vitest` and dependencies in `devDependencies`.
-- [ ] Configure `vitest.config.ts` or add a `test` script block in `package.json`.
-- [ ] Implement a basic sanity test that queries a mocked schema or environment to ensure the test runner passes successfully.
+- [x] Install `vitest` and dependencies in `devDependencies`.
+- [x] Configure `vitest.config.ts` or add a `test` script block in `package.json`.
+- [x] Implement a basic sanity test that queries a mocked schema or environment to ensure the test runner passes successfully.
 
 ---
 
@@ -26,12 +26,12 @@ Establish the directory structure for Forms V2 pages under `app/(app)/formsv2` w
 
 **Blocked by:** None — can start immediately.
 
-- [ ] Create folder structure `app/(app)/formsv2/_components` and `app/(app)/formsv2/_lib`.
-- [ ] Create `app/(app)/formsv2/page.tsx` as a protected list view page of all V2 forms.
-- [ ] Create `app/(app)/formsv2/[id]/page.tsx` to fill out a brand-new submission for Form V2 `[id]`.
-- [ ] Create `app/(app)/formsv2/submissions/[id]/page.tsx` to view, edit, or review an existing Submission V2 `[id]`.
-- [ ] Create `app/(app)/formsv2/create/page.tsx` as a protected onboarding wizard page.
-- [ ] Add basic shell/layout structure to these pages using Mantine.
+- [x] Create folder structure `app/(app)/formsv2/_components` and `app/(app)/formsv2/_lib`.
+- [x] Create `app/(app)/formsv2/page.tsx` as a protected list view page of all V2 forms.
+- [x] Create `app/(app)/formsv2/[id]/page.tsx` to fill out a brand-new submission for Form V2 `[id]`.
+- [x] Create `app/(app)/formsv2/submissions/[id]/page.tsx` to view, edit, or review an existing Submission V2 `[id]`.
+- [x] Create `app/(app)/formsv2/create/page.tsx` as a protected onboarding wizard page.
+- [x] Add basic shell/layout structure to these pages using Mantine.
 
 ---
 
@@ -47,7 +47,6 @@ Refine and standardize the `useServerAction` utility hook in `hooks/use-server-a
 - [ ] Verify that `useOrpcServerAction` works correctly on the client side with custom interceptors and Mantine notifications.
 
 ---
-
 
 ## 1. [SCHEMA] Database Schema & Core Models Migration
 
@@ -70,6 +69,7 @@ Renaming and establishing the new permission fields on the `FormV2` model in the
 An action/endpoint that retrieves the navigation folder structure, dynamically hiding any folders or subfolders that contain zero forms (or child folders) accessible to the active user.
 
 **Blocked by:**
+
 - 1. [SCHEMA] Database Schema & Core Models Migration
 - 0. [PREFACTOR] Setup Vitest Testing Framework
 - 0.1. [SETUP] Create Forms V2 Page Folder Structure & Base Routing
@@ -87,6 +87,7 @@ An action/endpoint that retrieves the navigation folder structure, dynamically h
 Secure fetching of submission data. Before sending a submission's payload to the client, the server must parse the linked SurveyJS schema, evaluate the `viewPermissionRule` JSON-logic rule for each field, and delete any fields the user has no rights to see.
 
 **Blocked by:**
+
 - 1. [SCHEMA] Database Schema & Core Models Migration
 - 0. [PREFACTOR] Setup Vitest Testing Framework
 
@@ -103,6 +104,7 @@ Secure fetching of submission data. Before sending a submission's payload to the
 Secure saving of submission updates. When a submission is saved or modified, the server must compute the diff of modified fields and evaluate the `editPermissionRule` JSON-logic property for each changed question, rejecting the save if any protected field is unauthorized.
 
 **Blocked by:**
+
 - 3. [BACKEND + TESTS] Server-Side Field-Level Masking (Fetch Submission)
 
 - [ ] Build the save draft/submission server action.
@@ -119,6 +121,7 @@ Secure saving of submission updates. When a submission is saved or modified, the
 Validation on deleting workflow statuses. An administrator must be blocked from deleting a lifecycle status if active submissions currently reside in it, or be forced to provide a migration target status.
 
 **Blocked by:**
+
 - 1. [SCHEMA] Database Schema & Core Models Migration
 - 0. [PREFACTOR] Setup Vitest Testing Framework
 
@@ -136,6 +139,7 @@ Validation on deleting workflow statuses. An administrator must be blocked from 
 Automatic versioning constraints on saving form configurations. A version is mutable only while there are zero submissions; once a submission exists, editing layout saves automatically clone the version and increment the version counter.
 
 **Blocked by:**
+
 - 4. [BACKEND + TESTS] Server-Side Field Validation (Save Submission)
 
 - [ ] Implement the save form schema action handler.
@@ -152,6 +156,7 @@ Automatic versioning constraints on saving form configurations. A version is mut
 Executing transitions and custom actions on submissions. Validates execution permissions, updates submission status, fires registered n8n webhooks, and writes standard `'STATUS_TRANSITION'` audit logs.
 
 **Blocked by:**
+
 - 4. [BACKEND + TESTS] Server-Side Field Validation (Save Submission)
 - 5. [BACKEND + TESTS] Status Deletion Safety & Submission Migration
 - 0.2. [SETUP] Standardize Client Server Action Hook
@@ -171,6 +176,7 @@ Executing transitions and custom actions on submissions. Validates execution per
 A 5-step form creation wizard using Mantine `Accordion` or `Stepper` components, committing progress to the database at the end of each step as an inactive draft form.
 
 **Blocked by:**
+
 - 1. [SCHEMA] Database Schema & Core Models Migration
 - 0.1. [SETUP] Create Forms V2 Page Folder Structure & Base Routing
 - 0.2. [SETUP] Standardize Client Server Action Hook
@@ -193,6 +199,7 @@ A 5-step form creation wizard using Mantine `Accordion` or `Stepper` components,
 Incremental AI assistants in the stepped form wizard, allowing the administrator to use natural language prompts at each step to draft layouts, statuses, transitions, or action sets.
 
 **Blocked by:**
+
 - 8. [UI] Stepped Form Creation Wizard (UI & DB Sync)
 
 - [ ] Setup the server actions calling the AI SDK.
