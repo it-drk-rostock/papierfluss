@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest"
   },
   "prisma": {
     "schema": "./prisma"
@@ -88,7 +89,9 @@
     "postcss-simple-vars": "^7.0.1",
     "prisma": "^7.8.0",
     "tsx": "^4.22.4",
-    "typescript": "^6"
+    "typescript": "^6",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.10"
   },
   "overrides": {
     "@types/react": "19.2.17",
