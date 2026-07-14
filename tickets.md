@@ -42,9 +42,9 @@ Refine and standardize the `useServerAction` utility hook in `hooks/use-server-a
 
 **Blocked by:** None — can start immediately.
 
-- [ ] Inspect and refine `hooks/use-server-action.ts` for clean typescript typings on inputs and outputs.
-- [ ] Ensure that it maps nested ORPC error structures (e.g. from Zod or validation rules) to friendly user-facing messages.
-- [ ] Verify that `useOrpcServerAction` works correctly on the client side with custom interceptors and Mantine notifications.
+- [x] Inspect and refine `hooks/use-server-action-v2.ts` for clean typescript typings on inputs and outputs (implemented as a V2 hook file to keep existing workflows/V1 untouched).
+- [x] Ensure that it maps nested ORPC error structures (e.g. from Zod or validation rules) to friendly user-facing messages.
+- [x] Verify that `useOrpcServerAction` works correctly on the client side with custom interceptors and Mantine notifications.
 
 ---
 
