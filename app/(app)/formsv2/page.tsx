@@ -8,7 +8,7 @@ async function FormsV2List() {
   const session = await authQuery();
 
   // Render the Client Component dashboard and pass the session
-  return <FormsV2Dashboard session={session} />;
+  return <FormsV2Dashboard />;
 }
 
 export default function Page() {
