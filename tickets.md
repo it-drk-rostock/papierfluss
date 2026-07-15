@@ -55,11 +55,10 @@ Renaming and establishing the new permission fields on the `FormV2` model in the
 
 **Blocked by:** None — can start immediately.
 
-- [ ] Modify `prisma/schema/formv2.prisma` to rename permission fields:
+- [x] Modify `prisma/schema/formv2.prisma` to rename permission fields:
   - Form Configuration: `editFormPermissions`, `deleteFormPermissions`
   - Submission Access: `createSubmissionPermissions`, `readSubmissionPermissions`, `deleteSubmissionPermissions`, `archiveSubmissionPermissions`
-- [ ] Run the Prisma migration (`npx prisma migrate dev`) to update the database schema.
-- [ ] Verify that the generated Prisma client builds successfully and includes the updated properties.
+- [x] Dont run any prisma migration commands we will manually Verify that the generated Prisma client builds successfully and includes the updated properties.
 
 ---
 

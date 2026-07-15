@@ -23,11 +23,12 @@ model FormV2 {
   isActive              Boolean         @default(true)
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
-  createFormPermissions String?
-  readFormPermissions   String?
-  updateFormPermissions String?
-  deleteFormPermissions String?
-  archiveFormPermissions String?
+  editFormPermissions           String?
+  deleteFormPermissions         String?
+  createSubmissionPermissions   String?
+  readSubmissionPermissions     String?
+  deleteSubmissionPermissions   String?
+  archiveSubmissionPermissions String?
   createdBy             User?           @relation("FormCreatorV2", fields: [createdById], references: [id], onDelete: SetNull)
   createdById           String?
   teams                 Team[]
