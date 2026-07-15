@@ -73,10 +73,10 @@ An action/endpoint that retrieves the navigation folder structure, dynamically h
 - 0. [PREFACTOR] Setup Vitest Testing Framework
 - 0.1. [SETUP] Create Forms V2 Page Folder Structure & Base Routing
 
-- [ ] Implement a function/action `getAccessibleFolderTree` that queries all visible `FormV2` entries using `readSubmissionPermissions`.
-- [ ] Implement an in-memory loop traversing up the parent folder hierarchy from accessible forms to compile the set of visible folders.
-- [ ] Hide any empty folder paths from the navigation response.
-- [ ] Write Vitest integration tests simulating a nested folder structure (e.g. `IT -> Internal -> Junior`) where subfolder elements are shown/hidden correctly based on user roles and teams.
+- [x] Implement a function/action `getAccessibleFolderTree` that queries all visible `FormV2` entries using `readSubmissionPermissions`.
+- [x] Implement an in-memory loop traversing up the parent folder hierarchy from accessible forms to compile the set of visible folders.
+- [x] Hide any empty folder paths from the navigation response.
+- [x] Write Vitest integration tests simulating a nested folder structure (e.g. `IT -> Internal -> Junior`) where subfolder elements are shown/hidden correctly based on user roles and teams.
 
 ---
 
