@@ -1,5 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { getAccessibleFolderTree } from "@/app/(app)/formsv2/_actions";
+import {
+  getAccessibleFolderTree,
+  createFolderV2,
+  updateFolderV2,
+  deleteFolderV2,
+  reorderFoldersV2,
+} from "@/app/(app)/formsv2/_actions";
 import prisma from "@/lib/prisma";
 import { authQuery } from "@/server/utils/auth-query";
 
@@ -9,16 +15,33 @@ vi.mock("@/server/utils/auth-query", () => ({
 }));
 
 // Mock the prisma client module
-vi.mock("@/lib/prisma", () => ({
-  default: {
+vi.mock("@/lib/prisma", () => {
+  const mockClient = {
     formFolderV2: {
       findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      updateMany: vi.fn(),
     },
     formV2: {
       findMany: vi.fn(),
+      updateMany: vi.fn(),
     },
-  },
-}));
+    $transaction: vi.fn(async (arg) => {
+      if (typeof arg === "function") {
+        return await arg(mockClient);
+      }
+      return arg;
+    }),
+  };
+  return {
+    default: mockClient,
+  };
+});
+
+
 
 describe("Forms V2 Dynamic Folder Visibility Filtering", () => {
   // Define mock dataset for folders
@@ -222,3 +245,141 @@ describe("Forms V2 Dynamic Folder Visibility Filtering", () => {
     expect(juniorFolder.forms[0].id).toBe("form-3");
   });
 });
+
+describe("Form Folder V2 Server Actions Mutations", () => {
+  it("should enforce admin authorization for mutations", async () => {
+    vi.mocked(authQuery).mockResolvedValue({
+      user: { id: "user-id", role: "user" },
+    } as any);
+
+    await expect(createFolderV2("New Folder")).rejects.toThrow("Unauthorized");
+    await expect(updateFolderV2("folder-1", "New Folder")).rejects.toThrow("Unauthorized");
+    await expect(deleteFolderV2("folder-1")).rejects.toThrow("Unauthorized");
+    await expect(reorderFoldersV2([])).rejects.toThrow("Unauthorized");
+  });
+
+  it("should compute the max order at the correct sibling level and insert folder", async () => {
+    vi.mocked(authQuery).mockResolvedValue({
+      user: { id: "admin-id", role: "admin" },
+    } as any);
+
+    // Mock finding siblings at root level (parentId: null)
+    vi.mocked(prisma.formFolderV2.findMany).mockResolvedValue([
+      { id: "f-1", name: "F1", order: 2, parentId: null },
+      { id: "f-2", name: "F2", order: 5, parentId: null },
+    ] as any);
+
+    // Mock create call
+    const mockCreated = { id: "f-new", name: "New Folder", order: 6, parentId: null };
+    vi.mocked(prisma.formFolderV2.create).mockResolvedValue(mockCreated as any);
+
+    const result = await createFolderV2("New Folder", null);
+
+    expect(prisma.formFolderV2.findMany).toHaveBeenCalledWith({
+      where: { parentId: null },
+      select: { order: true },
+    });
+    expect(prisma.formFolderV2.create).toHaveBeenCalledWith({
+      data: {
+        name: "New Folder",
+        parentId: null,
+        order: 6,
+      },
+    });
+    expect(result).toEqual(mockCreated);
+  });
+
+  it("should update form folder name", async () => {
+    vi.mocked(authQuery).mockResolvedValue({
+      user: { id: "admin-id", role: "admin" },
+    } as any);
+
+    const mockUpdated = { id: "f-1", name: "Updated Name", order: 1, parentId: null };
+    vi.mocked(prisma.formFolderV2.update).mockResolvedValue(mockUpdated as any);
+
+    const result = await updateFolderV2("f-1", "Updated Name");
+
+    expect(prisma.formFolderV2.update).toHaveBeenCalledWith({
+      where: { id: "f-1" },
+      data: { name: "Updated Name" },
+    });
+    expect(result).toEqual(mockUpdated);
+  });
+
+  it("should safety delete folder by reparenting subfolders and forms to its parent", async () => {
+    vi.mocked(authQuery).mockResolvedValue({
+      user: { id: "admin-id", role: "admin" },
+    } as any);
+
+    // Mock findUnique to return folder's parentId
+    vi.mocked(prisma.formFolderV2.findUnique).mockResolvedValue({
+      id: "f-2",
+      parentId: "f-1",
+    } as any);
+
+    vi.mocked(prisma.formFolderV2.delete).mockResolvedValue({ id: "f-2" } as any);
+
+    const result = await deleteFolderV2("f-2");
+
+    // Check findUnique call
+    expect(prisma.formFolderV2.findUnique).toHaveBeenCalledWith({
+      where: { id: "f-2" },
+      select: { parentId: true },
+    });
+
+    // Check updateMany to reparent subfolders
+    expect(prisma.formFolderV2.updateMany).toHaveBeenCalledWith({
+      where: { parentId: "f-2" },
+      data: { parentId: "f-1" },
+    });
+
+    // Check updateMany to reparent forms
+    expect(prisma.formV2.updateMany).toHaveBeenCalledWith({
+      where: { folderId: "f-2" },
+      data: { folderId: "f-1" },
+    });
+
+    // Check delete folder
+    expect(prisma.formFolderV2.delete).toHaveBeenCalledWith({
+      where: { id: "f-2" },
+    });
+
+    expect(result).toEqual({ id: "f-2" });
+  });
+
+  it("should throw error if folder to delete is not found", async () => {
+    vi.mocked(authQuery).mockResolvedValue({
+      user: { id: "admin-id", role: "admin" },
+    } as any);
+
+    vi.mocked(prisma.formFolderV2.findUnique).mockResolvedValue(null);
+
+    await expect(deleteFolderV2("f-nonexistent")).rejects.toThrow("Folder not found");
+  });
+
+  it("should execute batch folder updates in transaction", async () => {
+    vi.mocked(authQuery).mockResolvedValue({
+      user: { id: "admin-id", role: "admin" },
+    } as any);
+
+    const foldersToReorder = [
+      { id: "f-1", parentId: "p-1", order: 0 },
+      { id: "f-2", parentId: null, order: 1 },
+    ];
+
+    await reorderFoldersV2(foldersToReorder);
+
+    // Check if transaction method is called
+    expect(prisma.$transaction).toHaveBeenCalled();
+    // Check if update is called for each item
+    expect(prisma.formFolderV2.update).toHaveBeenCalledWith({
+      where: { id: "f-1" },
+      data: { parentId: "p-1", order: 0 },
+    });
+    expect(prisma.formFolderV2.update).toHaveBeenCalledWith({
+      where: { id: "f-2" },
+      data: { parentId: null, order: 1 },
+    });
+  });
+});
+

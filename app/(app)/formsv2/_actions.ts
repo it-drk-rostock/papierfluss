@@ -206,3 +206,115 @@ export const getAccessibleFolderTree = async (): Promise<AccessibleFolderTreeV2>
     forms: rootForms,
   };
 };
+
+/**
+ * Helper to verify that the active user has the admin role.
+ */
+async function verifyAdmin() {
+  const { user } = await authQuery();
+  if (user.role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+}
+
+/**
+ * Creates a new form folder at the specified parent level.
+ * Computes maximum order index at target sibling level and inserts new folder.
+ */
+export const createFolderV2 = async (name: string, parentId?: string | null) => {
+  await verifyAdmin();
+  const normalizedParentId = parentId || null;
+
+  const siblings = await prisma.formFolderV2.findMany({
+    where: { parentId: normalizedParentId },
+    select: { order: true },
+  });
+
+  const maxOrder = siblings.reduce((max, s) => Math.max(max, s.order), -1);
+  const nextOrder = maxOrder + 1;
+
+  const newFolder = await prisma.formFolderV2.create({
+    data: {
+      name,
+      parentId: normalizedParentId,
+      order: nextOrder,
+    },
+  });
+
+  return newFolder;
+};
+
+/**
+ * Renames an existing form folder.
+ */
+export const updateFolderV2 = async (id: string, name: string) => {
+  await verifyAdmin();
+
+  const updatedFolder = await prisma.formFolderV2.update({
+    where: { id },
+    data: { name },
+  });
+
+  return updatedFolder;
+};
+
+/**
+ * Deletes a form folder, safety reparenting all child subfolders and forms to the parent of the deleted folder.
+ */
+export const deleteFolderV2 = async (id: string) => {
+  await verifyAdmin();
+
+  return await prisma.$transaction(async (tx) => {
+    const folder = await tx.formFolderV2.findUnique({
+      where: { id },
+      select: { parentId: true },
+    });
+
+    if (!folder) {
+      throw new Error("Folder not found");
+    }
+
+    const targetParentId = folder.parentId;
+
+    // Reparent subfolders
+    await tx.formFolderV2.updateMany({
+      where: { parentId: id },
+      data: { parentId: targetParentId },
+    });
+
+    // Reparent forms
+    await tx.formV2.updateMany({
+      where: { folderId: id },
+      data: { folderId: targetParentId },
+    });
+
+    // Delete folder
+    const deleted = await tx.formFolderV2.delete({
+      where: { id },
+    });
+
+    return deleted;
+  });
+};
+
+/**
+ * Batch updates folder hierarchy and ordering in a single transaction.
+ */
+export const reorderFoldersV2 = async (
+  folders: Array<{ id: string; parentId: string | null; order: number }>
+) => {
+  await verifyAdmin();
+
+  await prisma.$transaction(
+    folders.map((f) =>
+      prisma.formFolderV2.update({
+        where: { id: f.id },
+        data: {
+          parentId: f.parentId,
+          order: f.order,
+        },
+      })
+    )
+  );
+};
+
