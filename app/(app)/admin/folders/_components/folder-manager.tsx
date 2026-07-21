@@ -135,7 +135,7 @@ export function FolderManager({ folders }: { folders: FolderRecord[] }) {
     router.refresh();
   };
 
-  const mutate = async (action: () => Promise<unknown>, message: string) => {
+  const runFolderMutation = async (action: () => Promise<unknown>, message: string) => {
     try {
       await action();
       modals.closeAll();
@@ -151,14 +151,24 @@ export function FolderManager({ folders }: { folders: FolderRecord[] }) {
     }
   };
 
+  const canOpenFolderMutation = () => {
+    if (!dirty) return true;
+    notifications.show({
+      color: "yellow",
+      message: "Layout zuerst speichern oder Seite neu laden",
+    });
+    return false;
+  };
+
   const openCreate = (parentId: string | null) => {
+    if (!canOpenFolderMutation()) return;
     modals.open({
       title: "Ordner erstellen",
       children: (
         <FolderNameForm
           submitLabel="Erstellen"
           onSubmit={async (name) => {
-            await mutate(
+            await runFolderMutation(
               () => createFolderV2(name, parentId),
               "Ordner wurde erstellt"
             );
@@ -169,6 +179,7 @@ export function FolderManager({ folders }: { folders: FolderRecord[] }) {
   };
 
   const openRename = (id: string, name: string) => {
+    if (!canOpenFolderMutation()) return;
     modals.open({
       title: "Ordner umbenennen",
       children: (
@@ -176,7 +187,7 @@ export function FolderManager({ folders }: { folders: FolderRecord[] }) {
           initialName={name}
           submitLabel="Speichern"
           onSubmit={async (nextName) => {
-            await mutate(
+            await runFolderMutation(
               () => updateFolderV2(id, nextName),
               "Ordner wurde umbenannt"
             );
@@ -187,6 +198,7 @@ export function FolderManager({ folders }: { folders: FolderRecord[] }) {
   };
 
   const openDelete = (id: string, name: string) => {
+    if (!canOpenFolderMutation()) return;
     modals.openConfirmModal({
       title: "Ordner l\u00f6schen",
       children: (
@@ -198,7 +210,7 @@ export function FolderManager({ folders }: { folders: FolderRecord[] }) {
       labels: { confirm: "L\u00f6schen", cancel: "Abbrechen" },
       confirmProps: { color: "red" },
       onConfirm: () =>
-        mutate(() => deleteFolderV2(id), "Ordner wurde gel\u00f6scht"),
+        runFolderMutation(() => deleteFolderV2(id), "Ordner wurde gel\u00f6scht"),
     });
   };
 
@@ -296,7 +308,7 @@ export function FolderManager({ folders }: { folders: FolderRecord[] }) {
           onClick={async () => {
             setSaving(true);
             try {
-              const saved = await mutate(
+              const saved = await runFolderMutation(
                 () => reorderFoldersV2(serializeTree(tree)),
                 "Ordnerlayout wurde gespeichert"
               );

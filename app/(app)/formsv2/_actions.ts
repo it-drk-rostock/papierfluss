@@ -226,7 +226,7 @@ function normalizeFolderName(name: string) {
 }
 
 function validateFolderLayout(
-  folders: Array<{ id: string; parentId: string | null; order: number }>
+  folders: Array<{ id: string; parentId: string | null }>
 ) {
   const parentById = new Map(folders.map((folder) => [folder.id, folder.parentId]));
 
@@ -305,11 +305,30 @@ export const deleteFolderV2 = async (id: string) => {
 
     const targetParentId = folder.parentId;
 
-    // Reparent subfolders
-    await tx.formFolderV2.updateMany({
-      where: { parentId: id },
-      data: { parentId: targetParentId },
-    });
+    const [children, siblings] = await Promise.all([
+      tx.formFolderV2.findMany({
+        where: { parentId: id },
+        select: { id: true },
+        orderBy: [{ order: "asc" }, { name: "asc" }],
+      }),
+      tx.formFolderV2.findMany({
+        where: { parentId: targetParentId, id: { not: id } },
+        select: { order: true },
+      }),
+    ]);
+    const maxOrder = siblings.reduce(
+      (maximum, sibling) => Math.max(maximum, sibling.order),
+      -1
+    );
+
+    await Promise.all(
+      children.map((child, index) =>
+        tx.formFolderV2.update({
+          where: { id: child.id },
+          data: { parentId: targetParentId, order: maxOrder + index + 1 },
+        })
+      )
+    );
 
     // Reparent forms
     await tx.formV2.updateMany({
@@ -333,7 +352,18 @@ export const reorderFoldersV2 = async (
   folders: Array<{ id: string; parentId: string | null; order: number }>
 ) => {
   await verifyAdmin();
-  validateFolderLayout(folders);
+  const storedFolders = await prisma.formFolderV2.findMany({
+    select: { id: true, parentId: true },
+  });
+  const parentById = new Map(
+    storedFolders.map((folder) => [folder.id, folder.parentId])
+  );
+  for (const folder of folders) {
+    parentById.set(folder.id, folder.parentId);
+  }
+  validateFolderLayout(
+    Array.from(parentById, ([id, parentId]) => ({ id, parentId }))
+  );
 
   await prisma.$transaction(
     folders.map((f) =>

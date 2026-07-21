@@ -249,6 +249,7 @@ describe("Forms V2 Dynamic Folder Visibility Filtering", () => {
 describe("Form Folder V2 Server Actions Mutations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.formFolderV2.findMany).mockResolvedValue([]);
   });
 
   it("should enforce admin authorization for mutations", async () => {
@@ -331,6 +332,12 @@ describe("Form Folder V2 Server Actions Mutations", () => {
     } as any);
 
     vi.mocked(prisma.formFolderV2.delete).mockResolvedValue({ id: "f-2" } as any);
+    vi.mocked(prisma.formFolderV2.findMany)
+      .mockResolvedValueOnce([
+        { id: "child-1", order: 0 },
+        { id: "child-2", order: 1 },
+      ] as any)
+      .mockResolvedValueOnce([{ order: 4 }] as any);
 
     const result = await deleteFolderV2("f-2");
 
@@ -340,10 +347,13 @@ describe("Form Folder V2 Server Actions Mutations", () => {
       select: { parentId: true },
     });
 
-    // Check updateMany to reparent subfolders
-    expect(prisma.formFolderV2.updateMany).toHaveBeenCalledWith({
-      where: { parentId: "f-2" },
-      data: { parentId: "f-1" },
+    expect(prisma.formFolderV2.update).toHaveBeenCalledWith({
+      where: { id: "child-1" },
+      data: { parentId: "f-1", order: 5 },
+    });
+    expect(prisma.formFolderV2.update).toHaveBeenCalledWith({
+      where: { id: "child-2" },
+      data: { parentId: "f-1", order: 6 },
     });
 
     // Check updateMany to reparent forms
@@ -358,6 +368,31 @@ describe("Form Folder V2 Server Actions Mutations", () => {
     });
 
     expect(result).toEqual({ id: "f-2" });
+  });
+
+  it("should reparent children and forms to root when deleting a root folder", async () => {
+    vi.mocked(authQuery).mockResolvedValue({
+      user: { id: "admin-id", role: "admin" },
+    } as any);
+    vi.mocked(prisma.formFolderV2.findUnique).mockResolvedValue({
+      id: "root",
+      parentId: null,
+    } as any);
+    vi.mocked(prisma.formFolderV2.findMany)
+      .mockResolvedValueOnce([{ id: "child", order: 0 }] as any)
+      .mockResolvedValueOnce([]);
+    vi.mocked(prisma.formFolderV2.delete).mockResolvedValue({ id: "root" } as any);
+
+    await deleteFolderV2("root");
+
+    expect(prisma.formFolderV2.update).toHaveBeenCalledWith({
+      where: { id: "child" },
+      data: { parentId: null, order: 0 },
+    });
+    expect(prisma.formV2.updateMany).toHaveBeenCalledWith({
+      where: { folderId: "root" },
+      data: { folderId: null },
+    });
   });
 
   it("should throw error if folder to delete is not found", async () => {
@@ -404,6 +439,24 @@ describe("Form Folder V2 Server Actions Mutations", () => {
       reorderFoldersV2([
         { id: "f-1", parentId: "f-2", order: 0 },
         { id: "f-2", parentId: "f-1", order: 0 },
+      ])
+    ).rejects.toThrow("Folder hierarchy cannot contain cycles");
+
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("should reject a partial reorder that creates a cycle with stored ancestry", async () => {
+    vi.mocked(authQuery).mockResolvedValue({
+      user: { id: "admin-id", role: "admin" },
+    } as any);
+    vi.mocked(prisma.formFolderV2.findMany).mockResolvedValue([
+      { id: "f-1", parentId: null },
+      { id: "f-2", parentId: "f-1" },
+    ] as any);
+
+    await expect(
+      reorderFoldersV2([
+        { id: "f-1", parentId: "f-2", order: 0 },
       ])
     ).rejects.toThrow("Folder hierarchy cannot contain cycles");
 
