@@ -29,6 +29,8 @@ Implement Forms V2: a highly dynamic, collaborative digital document and workflo
 11. As an administrator, I want to edit a form layout without breaking existing, active submissions, so that those submissions can continue to use the version they were started on.
 12. As a developer, I want custom actions to trigger external n8n workflows, so that I can integrate Papierfluss with external systems.
 13. As a user, I want the system to block unauthorized field modifications on the server side, so that malicious API requests cannot edit protected signature or approval fields.
+14. As an administrator, I want to edit, rename, delete, and reorder folders in a tree dashboard, so that I can organize the navigation structure.
+15. As a user, I want the sidebar to render forms grouped by their folders, so that navigation is logical.
 
 ## Implementation Decisions
 
@@ -44,6 +46,7 @@ Implement Forms V2: a highly dynamic, collaborative digital document and workflo
 *   **Conventions for Audit Logs**: Simple conventions are used inside the existing `FormSubmissionLogV2` model:
     *   For status transitions: `actionType` is `'STATUS_TRANSITION'` and `details` JSON holds the `from` and `to` status names.
 *   **Folder Visibility**: Calculated dynamically in-memory by traversing parent hierarchies starting from accessible forms (folders containing zero visible forms or visible subfolders are dynamically hidden).
+*   **Folder Management & Reordering**: Administrators manage folder hierarchies using an admin tree dashboard with Mantine's drag-and-drop support. Structure changes are persisted back to the database in a batch update transaction (`reorderFoldersV2`) modifying `parentId` and `order`. Deleting a folder reparents child folders and forms to the parent level or root to prevent accidental loss of forms or subfolders.
 
 ## Testing Decisions
 

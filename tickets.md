@@ -80,6 +80,36 @@ An action/endpoint that retrieves the navigation folder structure, dynamically h
 
 ---
 
+## 2.1. [BACKEND + UI + TESTS] Folder Management & Navigation Render
+
+**What to build:**
+An administrative dashboard for creating, renaming, deleting, and reordering Form Folders, and rendering this dynamic hierarchical layout inside the application layout sidebar under "Formulare(V2)".
+
+**Blocked by:**
+
+- 2. [BACKEND + TESTS] Dynamic Folder Visibility Filtering
+
+- [x] Implement Server Actions in `app/(app)/formsv2/_actions.ts`:
+  - `createFolderV2(name: string, parentId?: string | null)`: Computes maximum order index at target sibling level and inserts new folder.
+  - `updateFolderV2(id: string, name: string)`: Renames folder.
+  - `deleteFolderV2(id: string)`: Reparents subfolders and forms to the parent of the deleted folder, then deletes the folder.
+  - `reorderFoldersV2(folders: Array<{ id: string; parentId: string | null; order: number }>)`: Batch updates folder hierarchy and ordering in a single transaction.
+- [x] Add navigation card for "Formular-Ordner (V2)" to `app/(app)/admin/_components/admin-links.tsx` routing to `/admin/folders`.
+- [x] Create administrative folder manager view at `app/(app)/admin/folders/page.tsx`:
+  - Render folder hierarchy using Mantine `Tree` component.
+  - Support drag-and-drop hierarchy reordering using Mantine's `onDragDrop` and `moveTreeNode` helpers.
+  - Provide inline modal forms (using Mantine Modals) to create, rename, and delete folders (with confirm modal).
+  - Add a "Layout speichern" button that calls `reorderFoldersV2` to persist changes.
+- [x] Integrate with application layout `components/app-layout.tsx`:
+  - Query folder tree on the client using React Query and `getAccessibleFolderTree`.
+  - Render accessible folders and forms recursively as nested Mantine `NavLink` components.
+  - Clicking a folder toggles collapse/expand state; clicking a form navigates to `/formsv2/[id]`.
+- [x] Write Vitest tests covering:
+  - CRUD operations and deletion safety rules.
+  - Batch transaction reordering.
+
+---
+
 ## 3. [BACKEND + TESTS] Server-Side Field-Level Masking (Fetch Submission)
 
 **What to build:**

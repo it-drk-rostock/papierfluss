@@ -35,6 +35,7 @@ import {
   IconArrowLeft,
   IconDeviceFloppy
 } from "@tabler/icons-react";
+import Link from "next/link";
 
 export const CreateWizard = () => {
   const [activeStep, setActiveStep] = useState(0);
@@ -337,7 +338,7 @@ export const CreateWizard = () => {
               Bestimmen Sie die Aktions-Schaltflächen, die Benutzern angezeigt werden, und verknüpfen Sie sie mit Berechtigungen.
             </Text>
 
-            <Grid align="end" gutter="sm">
+            <Grid align="end" gap="sm">
               <Grid.Col span={4}>
                 <TextInput
                   label="Button Beschriftung"

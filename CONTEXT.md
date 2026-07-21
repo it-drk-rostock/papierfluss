@@ -31,3 +31,7 @@ _Avoid_: Webhook trigger, button
 **Protected Field**:
 A field/question in a Form Version whose edit rights are restricted by a logic rule (evaluated on both client and server).
 _Avoid_: Locked field, read-only question
+
+**Form Folder**:
+A nested hierarchical folder structure used to organize Forms in the navigation tree.
+_Avoid_: Category, directory, area
