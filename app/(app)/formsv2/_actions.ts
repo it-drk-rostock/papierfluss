@@ -217,12 +217,40 @@ async function verifyAdmin() {
   }
 }
 
+function normalizeFolderName(name: string) {
+  const normalizedName = name.trim();
+  if (!normalizedName) {
+    throw new Error("Folder name is required");
+  }
+  return normalizedName;
+}
+
+function validateFolderLayout(
+  folders: Array<{ id: string; parentId: string | null; order: number }>
+) {
+  const parentById = new Map(folders.map((folder) => [folder.id, folder.parentId]));
+
+  for (const folder of folders) {
+    const visited = new Set<string>();
+    let currentId: string | null = folder.id;
+
+    while (currentId) {
+      if (visited.has(currentId)) {
+        throw new Error("Folder hierarchy cannot contain cycles");
+      }
+      visited.add(currentId);
+      currentId = parentById.get(currentId) ?? null;
+    }
+  }
+}
+
 /**
  * Creates a new form folder at the specified parent level.
  * Computes maximum order index at target sibling level and inserts new folder.
  */
 export const createFolderV2 = async (name: string, parentId?: string | null) => {
   await verifyAdmin();
+  const normalizedName = normalizeFolderName(name);
   const normalizedParentId = parentId || null;
 
   const siblings = await prisma.formFolderV2.findMany({
@@ -235,7 +263,7 @@ export const createFolderV2 = async (name: string, parentId?: string | null) => 
 
   const newFolder = await prisma.formFolderV2.create({
     data: {
-      name,
+      name: normalizedName,
       parentId: normalizedParentId,
       order: nextOrder,
     },
@@ -249,10 +277,11 @@ export const createFolderV2 = async (name: string, parentId?: string | null) => 
  */
 export const updateFolderV2 = async (id: string, name: string) => {
   await verifyAdmin();
+  const normalizedName = normalizeFolderName(name);
 
   const updatedFolder = await prisma.formFolderV2.update({
     where: { id },
-    data: { name },
+    data: { name: normalizedName },
   });
 
   return updatedFolder;
@@ -304,6 +333,7 @@ export const reorderFoldersV2 = async (
   folders: Array<{ id: string; parentId: string | null; order: number }>
 ) => {
   await verifyAdmin();
+  validateFolderLayout(folders);
 
   await prisma.$transaction(
     folders.map((f) =>

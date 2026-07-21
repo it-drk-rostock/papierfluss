@@ -247,6 +247,10 @@ describe("Forms V2 Dynamic Folder Visibility Filtering", () => {
 });
 
 describe("Form Folder V2 Server Actions Mutations", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should enforce admin authorization for mutations", async () => {
     vi.mocked(authQuery).mockResolvedValue({
       user: { id: "user-id", role: "user" },
@@ -287,6 +291,15 @@ describe("Form Folder V2 Server Actions Mutations", () => {
       },
     });
     expect(result).toEqual(mockCreated);
+  });
+
+  it("should reject blank folder names", async () => {
+    vi.mocked(authQuery).mockResolvedValue({
+      user: { id: "admin-id", role: "admin" },
+    } as any);
+
+    await expect(createFolderV2("   ")).rejects.toThrow("Folder name is required");
+    await expect(updateFolderV2("f-1", "   ")).rejects.toThrow("Folder name is required");
   });
 
   it("should update form folder name", async () => {
@@ -380,6 +393,21 @@ describe("Form Folder V2 Server Actions Mutations", () => {
       where: { id: "f-2" },
       data: { parentId: null, order: 1 },
     });
+  });
+
+  it("should reject cyclic folder layouts", async () => {
+    vi.mocked(authQuery).mockResolvedValue({
+      user: { id: "admin-id", role: "admin" },
+    } as any);
+
+    await expect(
+      reorderFoldersV2([
+        { id: "f-1", parentId: "f-2", order: 0 },
+        { id: "f-2", parentId: "f-1", order: 0 },
+      ])
+    ).rejects.toThrow("Folder hierarchy cannot contain cycles");
+
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 });
 

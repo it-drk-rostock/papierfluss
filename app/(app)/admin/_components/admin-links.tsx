@@ -37,6 +37,11 @@ export const AdminLinks = async () => {
         title="Formulare"
         description="Verwalten Sie Formulare."
       />
+      <AdminCards
+        href="/admin/folders"
+        title="Formular-Ordner (V2)"
+        description="Verwalten Sie Ordnerstruktur und Reihenfolge."
+      />
     </SimpleGrid>
   );
 };
