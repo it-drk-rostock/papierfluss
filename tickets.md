@@ -120,10 +120,10 @@ Secure fetching of submission data. Before sending a submission's payload to the
 - 1. [SCHEMA] Database Schema & Core Models Migration
 - 0. [PREFACTOR] Setup Vitest Testing Framework
 
-- [ ] Build the retrieve submission action handler.
-- [ ] Read the linked `FormVersionV2` SurveyJS schema from the database.
-- [ ] Strip (delete) keys from the submission `data` JSON object if they map to a question with a `viewPermissionRule` that evaluates to `false` for the current user session context.
-- [ ] Write Vitest tests verifying that a submitter cannot view sensitive internal fields (like `managerNotes`) while an authorized manager can.
+- [x] Build the retrieve submission action handler.
+- [x] Read the linked `FormVersionV2` SurveyJS schema from the database.
+- [x] Strip (delete) keys from the submission `data` JSON object if they map to a question with a `viewPermissionRule` that evaluates to `false` for the current user session context.
+- [x] Write Vitest tests verifying that a submitter cannot view sensitive internal fields (like `managerNotes`) while an authorized manager can.
 
 ---
 
@@ -136,11 +136,11 @@ Secure saving of submission updates. When a submission is saved or modified, the
 
 - 3. [BACKEND + TESTS] Server-Side Field-Level Masking (Fetch Submission)
 
-- [ ] Build the save draft/submission server action.
-- [ ] Load the existing submission payload (`oldData`) and compare it to the incoming update (`newData`) to isolate the modified fields.
-- [ ] Look up the `editPermissionRule` for all modified fields in the SurveyJS schema.
-- [ ] Run `json-logic-js` checks against the user session context and throw an error/abort the transaction if any unauthorized field was changed.
-- [ ] Write Vitest tests asserting that attempts by a submitter to overwrite protected columns (like manager signatures) are successfully blocked and logged.
+- [x] Build the save draft/submission server action.
+- [x] Load the existing submission payload (`oldData`) and compare it to the incoming update (`newData`) to isolate the modified fields.
+- [x] Look up the `editPermissionRule` for all modified fields in the SurveyJS schema.
+- [x] Run `json-logic-js` checks against the user session context and throw an error/abort the transaction if any unauthorized field was changed.
+- [x] Write Vitest tests asserting that attempts by a submitter to overwrite protected columns (like manager signatures) are successfully blocked and logged.
 
 ---
 
@@ -154,11 +154,11 @@ Validation on deleting workflow statuses. An administrator must be blocked from 
 - 1. [SCHEMA] Database Schema & Core Models Migration
 - 0. [PREFACTOR] Setup Vitest Testing Framework
 
-- [ ] Build the delete status action endpoint.
-- [ ] Query for active (non-archived) submissions currently matching the status being deleted.
-- [ ] Reject deletion with an error if active submissions exist and no migration fallback status is supplied.
-- [ ] If a fallback status is provided, update all affected submissions in a transaction to point to the fallback status before deleting the status.
-- [ ] Write Vitest tests covering both successful migration deletion and blocked deletion scenarios.
+- [x] Build the delete status action endpoint.
+- [x] Query for active (non-archived) submissions currently matching the status being deleted.
+- [x] Reject deletion with an error if active submissions exist and no migration fallback status is supplied.
+- [x] If a fallback status is provided, update all affected submissions in a transaction to point to the fallback status before deleting the status.
+- [x] Write Vitest tests covering both successful migration deletion and blocked deletion scenarios.
 
 ---
 
@@ -171,11 +171,11 @@ Automatic versioning constraints on saving form configurations. A version is mut
 
 - 4. [BACKEND + TESTS] Server-Side Field Validation (Save Submission)
 
-- [ ] Implement the save form schema action handler.
-- [ ] Query if any `FormSubmissionV2` records link to the current `FormVersionV2`.
-- [ ] If submissions exist: clone the `FormVersionV2` records, increment the `version` field, save the updated schema in the new version, and redirect the editor context to it.
-- [ ] Verify that existing submissions remain pinned to the older version's layout.
-- [ ] Write Vitest tests asserting version freezing on submission creation and auto-increment on subsequent schema edits.
+- [x] Implement the save form schema action handler.
+- [x] Query if any `FormSubmissionV2` records link to the current `FormVersionV2`.
+- [x] If submissions exist: clone the `FormVersionV2` records, increment the `version` field, save the updated schema in the new version, and redirect the editor context to it.
+- [x] Verify that existing submissions remain pinned to the older version's layout.
+- [x] Write Vitest tests asserting version freezing on submission creation and auto-increment on subsequent schema edits.
 
 ---
 
