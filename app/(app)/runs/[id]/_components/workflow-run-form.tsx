@@ -5,9 +5,10 @@ import { Survey } from "survey-react-ui";
 import "survey-core/survey-core.css";
 import "survey-core/i18n/german";
 import { Box, LoadingOverlay } from "@mantine/core";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { modals } from "@mantine/modals";
 import { useEnhancedAction2 } from "@/hooks/use-action";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { ButtonAction2 } from "@/components/button-action-2";
 import {
   createSignedUploadUrls,
@@ -38,6 +39,8 @@ export const WorkflowRunForm = ({
 }: {
   submission: FormSubmissionProps;
 }) => {
+  const { session } = useAuthSession();
+  const currentUserEmail = session?.user.email ?? "";
   const { execute: executeUpdate, status: statusUpdate } = useEnhancedAction2({
     action: saveProcessRun,
     hideModals: true,
@@ -203,6 +206,11 @@ export const WorkflowRunForm = ({
     submission.status,
     executeUpdate,
   ]);
+
+  // Update runtime context without recreating the model or resetting answers.
+  useEffect(() => {
+    model.setVariable("currentUserEmail", currentUserEmail);
+  }, [model, currentUserEmail]);
 
   return (
     <Box pos="relative">

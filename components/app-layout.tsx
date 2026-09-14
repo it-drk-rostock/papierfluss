@@ -28,29 +28,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getWorkflowsAndForms } from "@/app/(app)/_actions";
 import { modals } from "@mantine/modals";
 import { CreateFeedbackForm } from "./create-feedback-form";
-import {
-  getAccessibleFolderTree,
-  type FolderNodeV2,
-} from "@/app/(app)/formsv2/_actions";
-
-const FolderNavigation = ({ folder }: { folder: FolderNodeV2 }) => (
-  <NavLink
-    label={folder.name}
-    leftSection={<IconFolder size={16} stroke={1.5} />}
-  >
-    {folder.forms.map((form) => (
-      <NavLink
-        key={form.id}
-        component={Link}
-        href={"/formsv2/" + form.id}
-        label={form.title}
-      />
-    ))}
-    {folder.children.map((child) => (
-      <FolderNavigation key={child.id} folder={child} />
-    ))}
-  </NavLink>
-);
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
@@ -60,20 +37,12 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
     queryKey: ["workflowsAndForms"],
     queryFn: getWorkflowsAndForms,
   });
-  const { data: folderTreeV2, isPending: isPendingFolderTreeV2 } = useQuery({
-    queryKey: ["accessibleFolderTreeV2"],
-    queryFn: getAccessibleFolderTree,
-  });
 
   const { hasAccess, session } = useAuthSession();
   const workflows = data?.workflows ?? [];
   const forms = data?.forms ?? [];
   const disablePortale = !isPending && workflows.length === 0;
   const disableFormulare = !isPending && forms.length === 0;
-  const disableFormulareV2 =
-    !isPendingFolderTreeV2 &&
-    !folderTreeV2?.folders.length &&
-    !folderTreeV2?.forms.length;
 
   return (
     <AppShell
@@ -193,34 +162,6 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               leftSection={<IconUserShield size={16} stroke={1.5} />}
             />
           )}
-          <NavLink
-            label="Formulare(V2)"
-            href="#required-for-focus"
-            leftSection={<IconClipboard size={16} stroke={1.5} />}
-            disabled={disableFormulareV2}
-          >
-            <NavLink component={Link} href="/formsv2" label="Alle Formulare" />
-            {isPendingFolderTreeV2 ? (
-              <NavLink
-                label="Formulare werden geladen"
-                leftSection={<Loader size="xs" />}
-              />
-            ) : (
-              <>
-                {folderTreeV2?.forms.map((form) => (
-                  <NavLink
-                    key={form.id}
-                    component={Link}
-                    href={"/formsv2/" + form.id}
-                    label={form.title}
-                  />
-                ))}
-                {folderTreeV2?.folders.map((folder) => (
-                  <FolderNavigation key={folder.id} folder={folder} />
-                ))}
-              </>
-            )}
-          </NavLink>
         </Stack>
       </AppShell.Navbar>
       <AppShell.Main>

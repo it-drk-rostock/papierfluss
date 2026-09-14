@@ -190,12 +190,12 @@ Executing transitions and custom actions on submissions. Validates execution per
 - 5. [BACKEND + TESTS] Status Deletion Safety & Submission Migration
 - 0.2. [SETUP] Standardize Client Server Action Hook
 
-- [ ] Implement the trigger action action handler.
-- [ ] Verify the action permissions against the user context (status constraints are checked inside the action's json-logic `permissions` field).
-- [ ] Transition the submission's status to the action's configured `toStatusId` or transition's `toStatusId`.
-- [ ] Create a log entry in `FormSubmissionLogV2` with `actionType: 'STATUS_TRANSITION'` and `details: { from, to }`.
-- [ ] If n8n webhooks are attached, trigger them asynchronously.
-- [ ] Write Vitest tests validating correct status updates, transition permissions checks, and audit logging.
+- [x] Implement the trigger action action handler.
+- [x] Verify the action permissions against the user context (status constraints are checked inside the action's json-logic `permissions` field).
+- [x] Transition the submission's status to the action's configured `toStatusId` or transition's `toStatusId`.
+- [x] Create a log entry in `FormSubmissionLogV2` with `actionType: 'STATUS_TRANSITION'` and `details: { from, to }`.
+- [x] If n8n webhooks are attached, trigger them asynchronously.
+- [x] Write Vitest tests validating correct status updates, transition permissions checks, and audit logging.
 
 ---
 
@@ -210,15 +210,15 @@ A 5-step form creation wizard using Mantine `Accordion` or `Stepper` components,
 - 0.1. [SETUP] Create Forms V2 Page Folder Structure & Base Routing
 - 0.2. [SETUP] Standardize Client Server Action Hook
 
-- [ ] Build the multi-step frontend configuration form:
+- [x] Build the multi-step frontend configuration form:
   - Step 1: Title, description, and SurveyJS layout.
   - Step 2: Custom Status configuration.
   - Step 3: Status Transition configuration.
   - Step 4: Custom Action configuration.
   - Step 5: n8n Workflow Connections.
-- [ ] Save configurations to the database at the conclusion of each step with `isActive: false` (draft).
-- [ ] Add a final "Publish" step that sets `isActive: true` on the database.
-- [ ] Update form listing queries to filter out forms where `isActive` is false for non-admin views.
+- [x] Save configurations to the database at the conclusion of each step with `isActive: false` (draft).
+- [x] Add a final "Publish" step that sets `isActive: true` on the database.
+- [x] Update form listing queries to filter out forms where `isActive` is false for non-admin views.
 
 ---
 
@@ -231,7 +231,8 @@ Incremental AI assistants in the stepped form wizard, allowing the administrator
 
 - 8. [UI] Stepped Form Creation Wizard (UI & DB Sync)
 
-- [ ] Setup the server actions calling the AI SDK.
-- [ ] Provide active teams and role choices as background context in the LLM system instructions.
-- [ ] Feed step-specific instructions and examples to the AI model to guarantee structured JSON output.
-- [ ] Build UI buttons on each step (e.g. "Suggest via AI") and render the generated drafts for preview, allowing the admin to inspect and tweak the result before committing to the step database write.
+- [x] Setup the server actions calling the AI SDK.
+- [x] Provide active teams and role choices as background context in the LLM system instructions.
+- [x] Feed step-specific instructions and examples to the AI model to guarantee structured JSON output.
+- [x] Build UI buttons on each step (e.g. "Suggest via AI") and render the generated drafts for preview, allowing the admin to inspect and tweak the result before committing to the step database write.
+
