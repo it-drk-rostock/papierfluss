@@ -14,9 +14,9 @@ import { UserButton } from "./user-button";
 import {
   IconApps,
   IconClipboard,
+  IconFolder,
   IconHome,
   IconLayoutSidebarRightExpand,
-  IconMessage,
   IconMessage2Star,
   IconUserShield,
 } from "@tabler/icons-react";
@@ -162,15 +162,6 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               leftSection={<IconUserShield size={16} stroke={1.5} />}
             />
           )}
-          <NavLink
-            component={Link}
-            label="Formulare(V2)"
-            href="#required-for-focus"
-            leftSection={<IconClipboard size={16} stroke={1.5} />}
-            disabled
-          >
-            <NavLink component={Link} href="/formsv2" label="Alle Formulare" />
-          </NavLink>
         </Stack>
       </AppShell.Navbar>
       <AppShell.Main>

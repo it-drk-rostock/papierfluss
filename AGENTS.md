@@ -1,17 +1,13 @@
-# AGENTS.md
-
-Welcome to the papierfluss repository! This file guides AI agents when operating within this repository.
-
 ## Agent skills
 
 ### Issue tracker
 
-Issues and PRDs live in GitHub Issues. See `docs/agents/issue-tracker.md`.
+Issues are tracked on GitHub. External PRs are not included in the triage queue. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
-Using default labels for the five canonical roles. See `docs/agents/triage-labels.md`.
+Triage roles map to the default label strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
-Single-context repo layout. See `docs/agents/domain.md`.
+The repository uses a single-context layout with a single `CONTEXT.md` and ADRs under `docs/adr/`. See `docs/agents/domain.md`.
