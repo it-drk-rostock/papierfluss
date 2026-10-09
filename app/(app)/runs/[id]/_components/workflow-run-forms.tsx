@@ -40,12 +40,34 @@ interface FormTreeNodeData extends TreeNodeData {
   };
 }
 
+export interface WorkflowRunFormsProps {
+  processes: Array<{
+    id: string;
+    status: "open" | "ongoing" | "completed";
+    data: Record<string, unknown> | null;
+    information: Record<string, unknown> | null;
+    informationData: Record<string, unknown> | null;
+    resetProcessText: string | null;
+    process: {
+      id: string;
+      name: string;
+      description: string | null;
+      isCategory: boolean;
+      order: number;
+      schema: Record<string, unknown> | null;
+      informationSchema: Record<string, unknown> | null;
+      parentId: string | null;
+    };
+  }>;
+}
+
 interface FormNodeProps {
   node: FormTreeNodeData;
   expanded: boolean;
   hasChildren: boolean;
   elementProps: React.HTMLProps<HTMLDivElement>;
   tree: ReturnType<typeof useTree>;
+  allProcesses: WorkflowRunFormsProps["processes"];
 }
 
 const FormNode = ({
@@ -54,6 +76,7 @@ const FormNode = ({
   hasChildren,
   elementProps,
   tree,
+  allProcesses,
 }: FormNodeProps) => {
   const process = node.processData;
 
@@ -156,12 +179,18 @@ const FormNode = ({
                   )}
                   {process.information && submission && (
                     <>
-                      <WorkflowRunInformationForm submission={submission} />
+                      <WorkflowRunInformationForm
+                        submission={submission}
+                        allProcesses={allProcesses}
+                      />
                       <Divider my="md" />
                     </>
                   )}
 
-                  <WorkflowRunForm submission={submission} />
+                  <WorkflowRunForm
+                    submission={submission}
+                    allProcesses={allProcesses}
+                  />
                 </>
               ) : (
                 <Text c="dimmed" ta="center" py="xl">
@@ -176,27 +205,6 @@ const FormNode = ({
     </Stack>
   );
 };
-
-interface WorkflowRunFormsProps {
-  processes: Array<{
-    id: string;
-    status: "open" | "ongoing" | "completed";
-    data: Record<string, unknown> | null;
-    information: Record<string, unknown> | null;
-    informationData: Record<string, unknown> | null;
-    resetProcessText: string | null;
-    process: {
-      id: string;
-      name: string;
-      description: string | null;
-      isCategory: boolean;
-      order: number;
-      schema: Record<string, unknown> | null;
-      informationSchema: Record<string, unknown> | null;
-      parentId: string | null;
-    };
-  }>;
-}
 
 export function WorkflowRunForms({ processes }: WorkflowRunFormsProps) {
   const formTreeData = useMemo(() => {
@@ -250,6 +258,7 @@ export function WorkflowRunForms({ processes }: WorkflowRunFormsProps) {
           hasChildren={hasChildren}
           elementProps={elementProps}
           tree={tree}
+          allProcesses={processes}
         />
       )}
     />

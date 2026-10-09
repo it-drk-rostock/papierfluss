@@ -21,6 +21,7 @@ import { useMutation } from "@tanstack/react-query";
 import { showNotification } from "@/utils/notification";
 import { useCompletion } from "@ai-sdk/react";
 import { useForm } from "@mantine/form";
+import { WorkflowVariablesModal } from "./workflow-variables-modal";
 
 const defaultCreatorOptions: ICreatorOptions = {
   showTranslationTab: true,
@@ -29,6 +30,7 @@ const defaultCreatorOptions: ICreatorOptions = {
 
 export const ProcessDesignerForm = (props: {
   processId: string;
+  workflowId?: string;
   json?: object;
   theme?: object;
   name: string;
@@ -55,6 +57,7 @@ export const ProcessDesignerForm = (props: {
   });
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [variablesModalOpen, setVariablesModalOpen] = useState(false);
 
   const [creator] = useState(() => {
     // Initialize creator only once
@@ -85,6 +88,17 @@ export const ProcessDesignerForm = (props: {
       visible: true,
       title: "KI Agent",
       action: () => setDrawerOpen(true),
+      innerCss: "sv-action-bar-item--secondary",
+      showTitle: true,
+      location: "end",
+    });
+
+    // Add variables viewer action to toolbar
+    newCreator.toolbar.addAction({
+      id: "workflow-variables",
+      visible: true,
+      title: "Variablen",
+      action: () => setVariablesModalOpen(true),
       innerCss: "sv-action-bar-item--secondary",
       showTitle: true,
       location: "end",
@@ -225,6 +239,13 @@ export const ProcessDesignerForm = (props: {
           </form>
         </Stack>
       </Drawer>
+
+      <WorkflowVariablesModal
+        opened={variablesModalOpen}
+        onClose={() => setVariablesModalOpen(false)}
+        processId={props.processId}
+        workflowId={props.workflowId}
+      />
     </Box>
   );
 };
