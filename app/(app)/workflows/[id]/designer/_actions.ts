@@ -760,3 +760,175 @@ export const updateProcessPermissions = authActionClient
       message: "Prozess Berechtigungen aktualisiert",
     };
   });
+
+export interface AvailableVariable {
+  name: string;
+  sourceProcessName?: string;
+  sampleValue?: unknown;
+  count: number;
+  isSystem?: boolean;
+}
+
+export interface WorkflowVariablesResponse {
+  workflowId: string;
+  workflowName: string;
+  variables: AvailableVariable[];
+  runCount: number;
+}
+
+function extractQuestionNamesFromSchema(schema: unknown): Set<string> {
+  const names = new Set<string>();
+  const visit = (node: unknown) => {
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node)) {
+      node.forEach(visit);
+      return;
+    }
+    const obj = node as Record<string, unknown>;
+    if (typeof obj.name === "string" && obj.name && (obj.type || obj.title)) {
+      names.add(obj.name);
+    }
+    Object.values(obj).forEach(visit);
+  };
+  visit(schema);
+  return names;
+}
+
+/**
+ * Gets all available variables for a workflow by inspecting the last 10 submissions
+ * and all process schemas in the workflow.
+ */
+export const getWorkflowAvailableVariables = async (input: {
+  workflowId?: string;
+  processId?: string;
+}): Promise<WorkflowVariablesResponse> => {
+  await authQuery();
+
+  let targetWorkflowId = input.workflowId;
+
+  if (!targetWorkflowId && input.processId) {
+    const process = await prisma.process.findUnique({
+      where: { id: input.processId },
+      select: { workflowId: true },
+    });
+    if (!process) {
+      throw new Error("Prozess nicht gefunden");
+    }
+    targetWorkflowId = process.workflowId;
+  }
+
+  if (!targetWorkflowId) {
+    throw new Error("Workflow ID oder Prozess ID erforderlich");
+  }
+
+  const workflow = await prisma.workflow.findUnique({
+    where: { id: targetWorkflowId },
+    select: {
+      id: true,
+      name: true,
+      processes: {
+        select: {
+          id: true,
+          name: true,
+          schema: true,
+        },
+      },
+      runs: {
+        take: 10,
+        orderBy: { startedAt: "desc" },
+        select: {
+          id: true,
+          processes: {
+            select: {
+              id: true,
+              data: true,
+              process: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!workflow) {
+    throw new Error("Workflow nicht gefunden");
+  }
+
+  const variablesMap = new Map<string, AvailableVariable>();
+
+  // 1. Always provide currentUserEmail as a standard system variable
+  variablesMap.set("currentUserEmail", {
+    name: "currentUserEmail",
+    sourceProcessName: "System",
+    sampleValue: "nutzer@beispiel.de",
+    count: workflow.runs.length,
+    isSystem: true,
+  });
+
+  // 2. Discover question names from all process schemas in this workflow
+  for (const proc of workflow.processes) {
+    if (proc.schema && typeof proc.schema === "object") {
+      const qNames = extractQuestionNamesFromSchema(proc.schema);
+      for (const qName of qNames) {
+        if (!variablesMap.has(qName)) {
+          variablesMap.set(qName, {
+            name: qName,
+            sourceProcessName: proc.name,
+            count: 0,
+            isSystem: false,
+          });
+        }
+      }
+    }
+  }
+
+  // 3. Inspect last 10 runs to collect runtime submission keys and real sample values
+  for (const run of workflow.runs) {
+    for (const procRun of run.processes) {
+      if (procRun.data && typeof procRun.data === "object") {
+        const data = procRun.data as Record<string, unknown>;
+        for (const [key, value] of Object.entries(data)) {
+          if (value !== undefined && value !== null && value !== "") {
+            const existing = variablesMap.get(key);
+            if (existing) {
+              existing.count += 1;
+              if (existing.sampleValue === undefined) {
+                existing.sampleValue = value;
+              }
+              if (!existing.sourceProcessName) {
+                existing.sourceProcessName = procRun.process.name;
+              }
+            } else {
+              variablesMap.set(key, {
+                name: key,
+                sourceProcessName: procRun.process.name,
+                sampleValue: value,
+                count: 1,
+                isSystem: false,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Sort: system variables first, then alphabetical by name
+  const variables = Array.from(variablesMap.values()).sort((a, b) => {
+    if (a.isSystem && !b.isSystem) return -1;
+    if (!a.isSystem && b.isSystem) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return {
+    workflowId: workflow.id,
+    workflowName: workflow.name,
+    variables,
+    runCount: workflow.runs.length,
+  };
+};

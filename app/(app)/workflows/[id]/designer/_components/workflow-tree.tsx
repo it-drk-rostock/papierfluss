@@ -230,6 +230,7 @@ export function WorkflowTree({
                     content={
                       <ProcessDesignerForm
                         processId={process.id}
+                        workflowId={workflowId}
                         json={process.schema}
                         theme={process.theme}
                         name={process.name}
@@ -250,6 +251,7 @@ export function WorkflowTree({
                     content={
                       <ProcessInformationForm
                         processId={process.id}
+                        workflowId={workflowId}
                         json={process.informationSchema}
                         theme={process.theme}
                         name={process.name}

@@ -18,8 +18,15 @@ import { useMutation } from "@tanstack/react-query";
 import { showNotification } from "@/utils/notification";
 import { IDocOptions, SurveyPDF } from "survey-pdf";
 import { completeProcessRun, saveProcessRun } from "../_actions";
+import {
+  computeSurveyVariables,
+  applySurveyVariables,
+  FormProcessItem,
+} from "./apply-survey-variables";
 
-interface FormSubmissionProps {
+export type { FormProcessItem };
+
+export interface FormSubmissionProps {
   id: string;
   form: {
     id: string;
@@ -27,6 +34,7 @@ interface FormSubmissionProps {
   };
   data: Record<string, unknown> | null;
   status: "open" | "ongoing" | "completed";
+  allProcesses?: FormProcessItem[];
 }
 
 interface FileItem {
@@ -36,8 +44,10 @@ interface FileItem {
 
 export const WorkflowRunForm = ({
   submission,
+  allProcesses,
 }: {
   submission: FormSubmissionProps;
+  allProcesses?: FormProcessItem[];
 }) => {
   const { session } = useAuthSession();
   const currentUserEmail = session?.user.email ?? "";
@@ -45,6 +55,13 @@ export const WorkflowRunForm = ({
     action: saveProcessRun,
     hideModals: true,
   });
+
+  const surveyVariables = useMemo(() => {
+    return computeSurveyVariables(
+      currentUserEmail,
+      allProcesses ?? submission.allProcesses,
+    );
+  }, [currentUserEmail, allProcesses, submission.allProcesses]);
 
   const pdfDocOptions: IDocOptions = {
     fontSize: 12,
@@ -84,6 +101,8 @@ export const WorkflowRunForm = ({
   const model = useMemo(() => {
     const surveyModel = new Model(submission.form.schema);
     surveyModel.locale = "de";
+    applySurveyVariables(surveyModel, surveyVariables);
+
     surveyModel.data = submission.data;
     surveyModel.showCompleteButton = false;
     surveyModel.readOnly = submission.status === "completed";
@@ -209,8 +228,8 @@ export const WorkflowRunForm = ({
 
   // Update runtime context without recreating the model or resetting answers.
   useEffect(() => {
-    model.setVariable("currentUserEmail", currentUserEmail);
-  }, [model, currentUserEmail]);
+    applySurveyVariables(model, surveyVariables);
+  }, [model, surveyVariables]);
 
   return (
     <Box pos="relative">
